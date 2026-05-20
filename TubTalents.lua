@@ -91,14 +91,36 @@ local TT_DialogOpts = {
     },
 }
 
+SlashCmdList['TUBTALENTS'] = TubTalents_TextCommands
+SLASH_TUBTALENTS1 = "/tubtalents"
+
+function TubTalents_TextCommands(arg)
+    if arg == nil or arg == "" then
+        DEFAULT_CHAT_FRAME:AddMessage("|cFF00FF00TubTalents commands:|r\n/tubtalents minimap \n/tubtalents toggle")
+    elseif arg=="minimap" then
+        if TubTalents_Icon.hide then
+            TubTalents_ShowMinimap()
+        else
+            TubTalents_HideMinimap()
+        end
+    elseif arg=="toggle" then
+        TalentFrame_LoadUI();
+        TalentFrame_Toggle();
+    end
+
+end
+
 function TubTalents_Init()
     if event=="PLAYER_LOGIN" then
         if TubTalent_Vars == nil then
             TubTalent_Vars = {
                 Version = 1,
+                MaxTalentPoints = TT_MAX_TALENTPOINTS,
                 TalentPresets = {},
                 TalentPresetIDMax = 0
             }
+        elseif TubTalent_Vars.MaxTalentPoints == nil then
+            TubTalent_Vars.MaxTalentPoints = TT_MAX_TALENTPOINTS
         end
         TubTalents_MinimapIconRegister()
     elseif event == "ADDON_LOADED" then
@@ -124,7 +146,7 @@ function TubTalents_Init()
             local myButton = CreateFrame("Button", "TalentFramePresetsButton", TalentFrame, "UIPanelButtonTemplate")
             myButton:SetHeight(15)
             myButton:SetWidth(60)
-            myButton:SetPoint("CENTER", TalentFrame, "TOPLEFT", 255, -42)
+            myButton:SetPoint("CENTER", TalentFrame, "TOPLEFT", 305, -42)
             myButton:SetText("Presets")
 
             --Checkboxes
@@ -137,6 +159,43 @@ function TubTalents_Init()
             myCheckButton:SetChecked(false); -- or false
             myCheckButton:SetScript("OnClick",TalentFrameSimMode_OnClick);
 
+            --EditBoxes
+            local myEditBox = CreateFrame("EditBox", "TalentFrameSimModePointsBox", TalentFrame,"InputBoxTemplate")
+            myEditBox:SetHeight(80)
+            myEditBox:SetWidth(20)
+            myEditBox:SetPoint("CENTER", TalentFrame, "TOPLEFT", 265, -42); -- Position it
+            myEditBox:SetFontObject(GameFontNormalSmall)
+            myEditBox:SetAutoFocus(false)
+            myEditBox:SetNumeric()
+            myEditBox:SetMultiLine(false)
+            myEditBox:SetMaxLetters(3)
+            myEditBox:SetNumber(TubTalent_Vars.MaxTalentPoints)
+            myEditBox:Hide()
+            myEditBox:SetScript("OnEnterPressed", function(self)
+                local t = this:GetNumber()
+                if t~=0 then
+                    TubTalent_Vars.MaxTalentPoints = t
+                else 
+                    myEditBox:SetNumber(TubTalent_Vars.MaxTalentPoints)
+                end
+                TT_TalentFrame_UpdateTalentPoints()
+                this:ClearFocus()
+            end)
+            myEditBox:SetScript("OnEscapePressed", function(self)
+                this:ClearFocus()
+            end)
+            myEditBox:SetScript("OnEnter", function(self)
+                GameTooltip:SetOwner(this, "ANCHOR_BOTTOMRIGHT");
+			    GameTooltip:SetText("Enter to save");
+			    GameTooltip:Show();
+            end)
+            myEditBox:SetScript("OnLeave", function(self)
+                GameTooltip:Hide();
+            end)
+            prompt = TalentFrame:CreateFontString("TalentFrameSimModePointsBoxPrompt", "OVERLAY", "GameFontNormalSmall")
+            prompt:SetPoint("CENTER", TalentFrame, "TOPLEFT", 220, -42); -- Position it
+            prompt:SetText("Max points:")
+            prompt:Hide()
             --Update buttons to initial state...
             TT_TalentFrameButtons_OnUpdate()
 
@@ -173,7 +232,7 @@ end
 -- Minimap Setup
 function TubTalents_HideMinimap()
 	TubTalents_Icon.hide = true
-	libIcon:Hide("TubTasker icon")
+	libIcon:Hide("TubTalents icon")
 end
 
 function TubTalents_ShowMinimap()
@@ -181,8 +240,7 @@ function TubTalents_ShowMinimap()
 	if (libIcon:GetMinimapButton("TubTalents icon")) then
 		libIcon:Show("TubTalents icon")
 	else
-		TT_MinimapIconRegister()
-		--TT_Minimap_DewdropRegister()
+		TubTalents_MinimapIconRegister()
 	end
 end
 
@@ -793,7 +851,7 @@ function TT_TalentFrame_UpdateTalentPoints()
             total = total + TT_TalentPointsSpent[i]
         end
     if TT_SimMode then
-        TalentFrame.talentPoints = TT_MAX_TALENTPOINTS - total
+        TalentFrame.talentPoints = TubTalent_Vars.MaxTalentPoints - total
         TalentFrameTalentPointsText:SetText(TalentFrame.talentPoints);
     else
         local cp1, cp2 = UnitCharacterPoints("player");
@@ -1063,9 +1121,13 @@ function TalentFrameSimMode_OnClick()
     TT_SimMode = not TT_SimMode
     if TT_SimMode then
         TT_WipeCurrentSpec()
-        TalentFrame.talentPoints = TT_MAX_TALENTPOINTS
-        TalentFrameTalentPointsText:SetText(TT_MAX_TALENTPOINTS);
+        _G["TalentFrameSimModePointsBox"]:Show()
+        _G["TalentFrameSimModePointsBoxPrompt"]:Show()
+        TalentFrame.talentPoints = TubTalent_Vars.MaxTalentPoints
+        TalentFrameTalentPointsText:SetText(TubTalent_Vars.MaxTalentPoints);
     else
+        _G["TalentFrameSimModePointsBox"]:Hide()
+        _G["TalentFrameSimModePointsBoxPrompt"]:Hide()
         TT_TalentFrame_UpdateTalentPoints()
     end
     TT_TalentFrame_Update()

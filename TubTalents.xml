@@ -1,0 +1,16 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <Include file="TubTalents.lua" />
+    <Frame name="TubTalents_Listener" hidden="false">
+        <Scripts>
+            <OnLoad>
+                this:RegisterEvent("PLAYER_LOGIN");
+                this:RegisterEvent("ADDON_LOADED");
+            </OnLoad>
+            <OnEvent>
+                TubTalents_Init()
+            </OnEvent>
+        </Scripts>
+    </Frame>
+    <GameTooltip name="TT_TalentTooltipFrame" hidden="false" inherits="GameTooltipTemplate">
+	</GameTooltip>
+</Ui>

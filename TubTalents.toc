@@ -1,0 +1,18 @@
+## Interface: 11200
+## Title: TubTalents
+## Author: |ccf3CE13Ftubtubs 
+## Version: 1.0
+## DefaultState: Enabled
+## LoadOnDemand: 0
+## OptionalDeps: none
+## SavedVariablesPerCharacter: TubTalent_Vars, TubTalents_Icon
+libs\AceLibrary.lua
+libs\Dewdrop-2.0.lua
+libs\LibStub.lua
+libs\AceCore-3.0.lua
+libs\AceHook-3.0.lua
+libs\CallbackHandler-1.0.lua
+libs\LibDataBroker-1.1.lua
+libs\LibDBIcon-1.0.lua
+TubTalents.xml
+TubTalents.lua

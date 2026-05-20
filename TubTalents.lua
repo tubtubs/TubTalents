@@ -123,6 +123,22 @@ function TubTalents_Init()
             TubTalent_Vars.MaxTalentPoints = TT_MAX_TALENTPOINTS
         end
         TubTalents_MinimapIconRegister()
+        --Detecting client mods, and adjusting functionality...
+        if RQ_GetVersion then
+            --TT_Out("Reliquary detected")
+        else
+            TT_Out("Reliquary not found, falling back on old tooltips and disabling shift click links.")
+            TT_TalentTooltip = TT_TalentTooltipNoMods
+            TT_TalentFrameTalent_OnShiftClick = TT_TalentFrameTalent_OnShiftClickNoMods
+        end
+
+        if SUPERWOW_STRING then
+            --TT_Out("SuperWoW detected")
+        else
+            TT_Out("SuperWoW not found, falling back on old tooltips and disabling shift click links.")
+            TT_TalentTooltip = TT_TalentTooltipNoMods
+            TT_TalentFrameTalent_OnShiftClick = TT_TalentFrameTalent_OnShiftClickNoMods
+        end
     elseif event == "ADDON_LOADED" then
         if arg1=="Blizzard_TalentUI" then
             --If you wait for the addon to load hooking is fine, won't hook properly otherwise
@@ -226,7 +242,13 @@ function TT_TalentFrame_Init()
     TT_TalentPresets = TubTalent_Vars.TalentPresets
     --TT_TalentPresetIDMax = TubTalent_Vars.TalentPresetIDMax
     TT_RegenPresetDropdown()
-    _G["TalentFramePresetsButton"]:SetScript("OnClick",function() TT_TalentPresets_Dewdrop:Open(this) end)
+    _G["TalentFramePresetsButton"]:SetScript("OnClick",function() 
+        if TT_TalentPresets_Dewdrop:IsOpen() then
+            TT_TalentPresets_Dewdrop:Close();
+        else
+            TT_TalentPresets_Dewdrop:Open(this);
+        end
+    end)
 end
 
 -- Minimap Setup
@@ -1238,6 +1260,11 @@ end
 
 --shift click, links the current rank of the spell in chat
 --if it isn't learned yet links rank 1
+
+function TT_TalentFrameTalent_OnShiftClickNoMods()
+    TT_Out("Shift click links require SuperWoW+Reliquary client mods.")
+end
+
 function TT_TalentFrameTalent_OnShiftClick()
     tab = PanelTemplates_GetSelectedTab(TalentFrame)
     btn = this:GetID()
@@ -1305,6 +1332,11 @@ end
 --Link formatting options like :0:0 don't seem to help
 --Wouldn't usually have anything like that on spell hyperlinks anyway
 --Could make my own tooltip frame if I REALLY WANTED TO
+function TT_TalentTooltipNoMods()
+    GameTooltip:SetOwner(this, "ANCHOR_BOTTOMRIGHT");
+    GameTooltip:SetTalent(PanelTemplates_GetSelectedTab(TalentFrame), this:GetID());
+end
+
 function TT_TalentTooltip()
     btnID = this:GetID()
     tab = TalentFrame.selectedTab

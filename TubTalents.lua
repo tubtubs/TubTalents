@@ -6,6 +6,8 @@
 
 --Functions to overwrite TalentFrame functionality
 local _G = getfenv(0)
+local libIcon = LibStub("LibDBIcon-1.0");
+local libData = LibStub("LibDataBroker-1.1");
 local TT_TalentPresets_Dewdrop = AceLibrary("Dewdrop-2.0");
 
 TT_MAX_TALENTS = 3
@@ -98,6 +100,7 @@ function TubTalents_Init()
                 TalentPresetIDMax = 0
             }
         end
+        TubTalents_MinimapIconRegister()
     elseif event == "ADDON_LOADED" then
         if arg1=="Blizzard_TalentUI" then
             --If you wait for the addon to load hooking is fine, won't hook properly otherwise
@@ -159,6 +162,53 @@ function TubTalents_Init()
 
 end
 
+-- Need to move some function setups over to here...
+function TT_TalentFrame_Init()
+    TT_TalentPresets = TubTalent_Vars.TalentPresets
+    --TT_TalentPresetIDMax = TubTalent_Vars.TalentPresetIDMax
+    TT_RegenPresetDropdown()
+    _G["TalentFramePresetsButton"]:SetScript("OnClick",function() TT_TalentPresets_Dewdrop:Open(this) end)
+end
+
+-- Minimap Setup
+function TubTalents_HideMinimap()
+	TubTalents_Icon.hide = true
+	libIcon:Hide("TubTasker icon")
+end
+
+function TubTalents_ShowMinimap()
+	TubTalents_Icon.hide = false
+	if (libIcon:GetMinimapButton("TubTalents icon")) then
+		libIcon:Show("TubTalents icon")
+	else
+		TT_MinimapIconRegister()
+		--TT_Minimap_DewdropRegister()
+	end
+end
+
+function TubTalents_MinimapIconRegister()
+	if TubTalents_Icon == nil then
+		TubTalents_Icon = {
+			hide = false
+		}
+	end
+	if not TubTalents_Icon.hide then
+		local iconData = libData:NewDataObject("TubTalents icon data", {
+			OnClick = function()
+                TalentFrame_LoadUI();
+                TalentFrame_Toggle();
+			end,
+			OnTooltipShow = function(tooltip)
+				tooltip:SetText("TubTalents");
+			end,
+			icon = "Interface\\Icons\\Ability_Rogue_Disguise"
+		});
+
+		libIcon:Register("TubTalents icon", iconData, TubTalents_Icon);
+	end
+end
+
+--Preset functions
 function TT_FindTalentPreset(presetID)
     for k, v in pairs(TT_TalentPresets) do
         if v.id == tonumber(presetID) then
@@ -322,14 +372,7 @@ function TT_NewPreset(name)
     TT_RegenPresetDropdown()
 end
 
--- Need to move some function setups over to here...
-function TT_TalentFrame_Init()
-    TT_TalentPresets = TubTalent_Vars.TalentPresets
-    --TT_TalentPresetIDMax = TubTalent_Vars.TalentPresetIDMax
-    TT_RegenPresetDropdown()
-    _G["TalentFramePresetsButton"]:SetScript("OnClick",function() TT_TalentPresets_Dewdrop:Open(this) end)
-end
-
+--Dropdown Setup/Utilities
 function TT_TalentFramePreferences_DewdropRegister()
     TT_TalentPresets_Dewdrop:Register(TalentFramePresetsButton, --Bound Frame
         'point', function(parent) --Point

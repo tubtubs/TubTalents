@@ -1,4 +1,5 @@
 # TubTalents
+![screenshot](https://i.imgur.com/bu5Ioa3.png)
 * Talent Previews - Move points around without commiting
 * Talent Presets - Save staged or learned talents for later
 * Shift click talent links in chat

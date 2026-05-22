@@ -4,6 +4,36 @@
 -- the button indexes are out of order on Wallcraft, so I'll need to order them based on tier
 -- myself most likely
 
+--*LEVELING PLAN TODO*--
+--- Add it to presets
+-- New functionality in LeftClick
+-- New functionality in RightClick
+-- Add frame to scroll through the staged presets levelling plan...
+-- *Need to detect presets with no levelling plan
+-- Store currently staged levelling plan locally
+-- Store currently selected levelling plan to saved variables
+--
+--- Dropdown Changes
+-- Overwrite preset button...
+-- Add checked state for staged presets?
+-- Add current levelling plan to TubTalent_Vars
+--
+--- How to select learning plan?
+-- Presets dropdown?
+-- Levelling plan frame?
+--
+--- AutoLearn
+-- Popup frame
+-- Could just do it
+-- Check if its possible too
+-- OnLogin check for unspent points, OnLevelup check for unspent points
+-- Test talent resets...
+--
+--- Baller tier:
+-- Export preset
+-- Share preset in party/guild?
+-- Means I'll need to consider class for presets most likely...
+
 --Functions to overwrite TalentFrame functionality
 local _G = getfenv(0)
 local libIcon = LibStub("LibDBIcon-1.0");
@@ -18,13 +48,18 @@ TT_TalentPointsSpent = {
     [2] = 0,
     [3] = 0,
 } 
-TT_StagedTalents = {
-    [1] = {},
+TT_StagedTalents = { --key: Tab
+    [1] = {}, -- key: btnID val: rank
     [2] = {},
     [3] = {},
     [4] = {},
     [5] = {}
 }
+TT_StagedLevellingPlan = {
+    --Example:
+    --[10] = {tab=1, btnID=1, rank=1, icon="", spellID=1, name=""}
+}
+TT_StagedEstimatedLevel=9
 
 local TT_DialogOpts = {
     --levels...
@@ -117,6 +152,7 @@ function TubTalents_Init()
                 Version = 1,
                 MaxTalentPoints = TT_MAX_TALENTPOINTS,
                 TalentPresets = {},
+                CurrentLevellingPlan = {},
                 TalentPresetIDMax = 0
             }
         elseif TubTalent_Vars.MaxTalentPoints == nil then
@@ -325,52 +361,13 @@ function TT_TalentPresetStage(presetID)
                 if rank ~= 0 then
                     total[i] = total[i] - rank
                 end
-            end
-        end
-    end
-
-    local totals = 0
-    for i=1, 3 do
-        totals = totals + total[i]
-    end
-    --if you don't have enough talent points to stage return error and stop
-    if totals > TalentFrame.talentPoints then
-        TT_Out("Can't stage preset. Reset, or enable Sim mode.")
-        TT_TalentPresets_Dewdrop:Close()
-        return
-    end
-
-    --staging...
-    for i=1, 3 do -- re-add the points for comparison back
-        TT_TalentPointsSpent[i] = total[i] + TT_TalentPointsSpent[i]
-    end
-    for i=1, getn(t.talents) do -- just copy them over to staging...
-        for k, v in pairs (t.talents[i]) do --need to do pairs here i guess
-            TT_StagedTalents[i][k] = v
-        end
-    end
-    TT_TalentFrame_Update()
-    TT_TalentFrameButtons_OnUpdate()
-end
-
-function TT_TalentPresetLearn(presetID)
-    _, t = TT_FindTalentPreset(presetID)
- --checks
-    local total = {} --stage points locally for comparison
-    for i=1, 3 do
-        total[i] = t.points[i]
-    end
-
-    -- Check already learned talents, and subtract points
-    for i=1, 3 do
-        for k, v in pairs(t.talents[i]) do
-            local b = _G["TalentFrameTalent"..i];
-            if b ~=nil then
-                local btnID = b:GetID()
-                local _, _, _, _, rank, 
-                _, _, _ = GetTalentInfo(i, btnID);
-                if rank ~= 0 then
-                    total[i] = total[i] - rank
+                local _, _, _, _, learnedRank, _, _, _ = TT_OldGetTalentInfo(i, k);
+                local stagedRank = t.talents[i][k]
+                TT_Out(format("rank: %s learnedRank: %s", rank, learnedRank))
+                if stagedRank < learnedRank and not TT_SimMode then --if ranks match its fine
+                    TT_Out("Learned ranks conflict, can't stage preset. Reset, or enable Sim mode.")
+                    TT_TalentPresets_Dewdrop:Close()
+                    return
                 end
             end
         end
@@ -382,20 +379,29 @@ function TT_TalentPresetLearn(presetID)
     end
     --if you don't have enough talent points to stage return error and stop
     if totals > TalentFrame.talentPoints then
-        TT_Out("Not enough points, can't learn preset. Reset your talents.")
+        TT_Out("Not enough points, can't stage preset. Reset, or enable Sim mode.")
         TT_TalentPresets_Dewdrop:Close()
         return
     end
-
     --staging...
     for i=1, 3 do -- re-add the points for comparison back
         TT_TalentPointsSpent[i] = total[i] + TT_TalentPointsSpent[i]
     end
     for i=1, getn(t.talents) do -- just copy them over to staging...
         for k, v in pairs (t.talents[i]) do --need to do pairs here i guess
-            TT_StagedTalents[i][k] = v
+            local _, _, _, _, learnedRank, _, _, _ = TT_OldGetTalentInfo(i, k);
+            TT_StagedTalents[i][k] = v - learnedRank
         end
     end
+    TT_TalentFrame_Update()
+    TT_TalentFrameButtons_OnUpdate()
+end
+
+function TT_TalentPresetLearn(presetID)
+    --_, t = TT_FindTalentPreset(presetID)
+    TT_WipeCurrentSpec()
+    --Checks and staging...
+    TT_TalentPresetStage(presetID)
     TT_LearnButton_OnClick()
     TT_TalentFrame_Update()
     TT_TalentFrameButtons_OnUpdate()
@@ -445,7 +451,8 @@ function TT_NewPreset(name)
         name = name,
         id = TubTalent_Vars.TalentPresetIDMax,
         talents = t,
-        points = tp
+        points = tp,
+        levellingPlan = {} -- v1.1
     }
     table.insert(TT_TalentPresets, newPreset)
     TT_Out("Adding new profile")
@@ -1094,6 +1101,9 @@ function TT_LearnButton_OnClick()
                 local name, _, _, _, rank, _,
                 _, _ = GetTalentInfo(i,k);
                 --TT_Out(format("Learning name: %s Rank: %s",name, rank))
+                --Need to check whats learned first so it doesn't rank too high...
+                local _, _, _, _, oldRank, _, _, _ = TT_OldGetTalentInfo(i, k);
+                rank = rank - oldRank
                 if rank > 0 then
                     LearnTalentRank(i, k, rank)
                 end
@@ -1127,8 +1137,8 @@ function TT_WipeCurrentSpec()
         for m=1, MAX_NUM_TALENTS do
             local b = _G["TalentFrameTalent"..m]:GetID()
             if b ~= nil then
-                local _, _, _, _, rank, 
-                _, _, _ = GetTalentInfo(PanelTemplates_GetSelectedTab(TalentFrame), b);
+                --local _, _, _, _, rank, 
+                --_, _, _ = GetTalentInfo(PanelTemplates_GetSelectedTab(TalentFrame), b);
                 TT_StagedTalents[i][b] = 0
             else break end
         end
@@ -1235,7 +1245,27 @@ function TT_TalentFrameTalent_OnLeftClick()
             TT_StagedTalents[tab][btn] = 1
         end
     end
-    
+    rank = rank + TT_StagedTalents[tab][btn]
+    --Increase staged level...
+    TT_StagedEstimatedLevel = TT_StagedEstimatedLevel+1
+
+    --Add to levelling plan...
+    if RQ_GetVersion and SUPERWOW_STRING then
+        spellID, _ = TT_GetTalentSpellID(tab, btn)
+    else
+        spellID = 0 -- Disabled...
+    end
+    --TT_Out(format("Staging tab: %s btnID: %s rank: %s spellID: %s name: %s level: %s",
+    --    tab, btn, rank, spellID, name, TT_StagedEstimatedLevel))
+    TT_StagedLevellingPlan[TT_StagedEstimatedLevel] = {
+        tab = tab,
+        btnID = btn,
+        rank = rank,
+        icon = iconTexture,
+        spellID = spellID,
+        name = name,
+    }
+
     TT_TalentFrame_Update()
     TT_TalentTooltip()
     TT_TalentFrameButtons_OnUpdate()

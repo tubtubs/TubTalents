@@ -363,7 +363,7 @@ function TT_TalentPresetStage(presetID)
                 end
                 local _, _, _, _, learnedRank, _, _, _ = TT_OldGetTalentInfo(i, k);
                 local stagedRank = t.talents[i][k]
-                TT_Out(format("rank: %s learnedRank: %s", rank, learnedRank))
+                --TT_Out(format("rank: %s learnedRank: %s", rank, learnedRank))
                 if stagedRank < learnedRank and not TT_SimMode then --if ranks match its fine
                     TT_Out("Learned ranks conflict, can't stage preset. Reset, or enable Sim mode.")
                     TT_TalentPresets_Dewdrop:Close()

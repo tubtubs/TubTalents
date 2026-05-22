@@ -6,11 +6,11 @@
 
 --*LEVELING PLAN TODO*--
 --- Add it to presets
--- New functionality in LeftClick
--- New functionality in RightClick
+-- New functionality in LeftClick [CHECK]
+-- New functionality in RightClick [CHECK]
 -- Add frame to scroll through the staged presets levelling plan...
 -- *Need to detect presets with no levelling plan
--- Store currently staged levelling plan locally
+-- Store currently staged levelling plan locally [check]
 -- Store currently selected levelling plan to saved variables
 --
 --- Dropdown Changes
@@ -59,7 +59,15 @@ TT_StagedLevellingPlan = {
     --Example:
     --[10] = {tab=1, btnID=1, rank=1, icon="", spellID=1, name=""}
 }
-TT_StagedEstimatedLevel=9
+TT_MinLevel = 9
+TT_StagedEstimatedLevel = TT_MinLevel
+
+function TT_OutPutLevellingPlan()
+    for k, v in TT_StagedLevellingPlan do
+        TT_Out(format("level: %s tab: %s btn: %s rank: %s spellID: %s name: %s",
+            k, v.tab, v.btnID, v.rank, v.spellID, v.name))
+    end
+end
 
 local TT_DialogOpts = {
     --levels...
@@ -244,10 +252,16 @@ function TubTalents_Init()
             myEditBox:SetScript("OnLeave", function(self)
                 GameTooltip:Hide();
             end)
+            
+            --Text labels
             prompt = TalentFrame:CreateFontString("TalentFrameSimModePointsBoxPrompt", "OVERLAY", "GameFontNormalSmall")
             prompt:SetPoint("CENTER", TalentFrame, "TOPLEFT", 220, -42); -- Position it
             prompt:SetText("Max points:")
             prompt:Hide()
+
+            prompt = TalentFrame:CreateFontString("TalentFrameEstimatedLevel", "OVERLAY", "GameFontNormalSmall")
+            prompt:SetPoint("CENTER", TalentFrame, "TOP", 0, -68); -- Position it
+            prompt:SetText("Level: 9")
             --Update buttons to initial state...
             TT_TalentFrameButtons_OnUpdate()
 
@@ -447,11 +461,19 @@ function TT_NewPreset(name)
     end
 
     TubTalent_Vars.TalentPresetIDMax = TubTalent_Vars.TalentPresetIDMax+1
+    local planMinLevel = TT_MinLevel + 1
+    local planMaxLevel = planMinLevel
+    for k , v in TT_StagedLevellingPlan do
+        planMinLevel = min(planMinLevel, k)
+        planMaxLevel = max(planMaxLevel, k)
+    end
     local newPreset = {
         name = name,
         id = TubTalent_Vars.TalentPresetIDMax,
         talents = t,
         points = tp,
+        levellingPlanMinLevel = planMinLevel, --Min level might get cut...
+        levellingPlanMaxLevel = planMaxLevel,
         levellingPlan = {} -- v1.1
     }
     table.insert(TT_TalentPresets, newPreset)
@@ -876,9 +898,9 @@ end
 --Mostly overloaded for sim mode, and counting points for staged talents
 function TT_TalentFrame_UpdateTalentPoints()
     local total = 0
-        for i=1, TT_MAX_TALENTS do
-            total = total + TT_TalentPointsSpent[i]
-        end
+    for i=1, TT_MAX_TALENTS do
+        total = total + TT_TalentPointsSpent[i]
+    end
     if TT_SimMode then
         TalentFrame.talentPoints = TubTalent_Vars.MaxTalentPoints - total
         TalentFrameTalentPointsText:SetText(TalentFrame.talentPoints);
@@ -888,7 +910,19 @@ function TT_TalentFrame_UpdateTalentPoints()
         TalentFrameTalentPointsText:SetText(cp1);
         TalentFrame.talentPoints = cp1;
     end
+    TT_UpdateEstimatedLevel()
 end
+
+function TT_UpdateEstimatedLevel()
+    local total = 0
+    for i=1, TT_MAX_TALENTS do
+        local _, _, tabPoints = GetTalentTabInfo(i)
+        total = total + tabPoints
+    end
+    TT_StagedEstimatedLevel = TT_MinLevel + total
+    TalentFrameEstimatedLevel:SetText(format("Level: %s", TT_StagedEstimatedLevel))
+end
+
 
 --Mostly overloaded for sim mode
 function TT_GetTalentTabInfo(tab)
@@ -1047,6 +1081,9 @@ function TT_TalentFrameTalentIsRightClickable()
     local tab = PanelTemplates_GetSelectedTab(TalentFrame)
     local btn = this:GetID()
     --local p_check, t_check, rank_check, req_check
+    if TT_StagedTalents[tab][btn] == nil then 
+       return rightClickable
+    end
     local _, _, tier, _, rank, _, 
     _, _ = GetTalentInfo(PanelTemplates_GetSelectedTab(TalentFrame), btn);
 
@@ -1246,10 +1283,9 @@ function TT_TalentFrameTalent_OnLeftClick()
         end
     end
     rank = rank + TT_StagedTalents[tab][btn]
-    --Increase staged level...
-    TT_StagedEstimatedLevel = TT_StagedEstimatedLevel+1
 
     --Add to levelling plan...
+    TT_UpdateEstimatedLevel()
     if RQ_GetVersion and SUPERWOW_STRING then
         spellID, _ = TT_GetTalentSpellID(tab, btn)
     else
@@ -1275,7 +1311,9 @@ end
 function TT_TalentFrameTalent_OnRightClick()
     tab = PanelTemplates_GetSelectedTab(TalentFrame)
     btn = this:GetID()
-    -- can only remove staged specs, not learned ones
+    local _, _, _, _, rank, 
+    _, _, _ = GetTalentInfo(tab, btn);
+    -- probably redudant with prior safety check
     if TT_StagedTalents[tab][btn] ~= nil then 
         if TT_StagedTalents[tab][btn] - 1 >= 0 then
             TT_StagedTalents[tab][btn] = TT_StagedTalents[tab][btn] - 1
@@ -1283,6 +1321,28 @@ function TT_TalentFrameTalent_OnRightClick()
             TT_TalentPointsSpent[tab] = TT_TalentPointsSpent[tab] - 1
         end
     end
+    -- remove from levelling plan...
+    -- find a match on: tab, btn, rank, and remove it.
+    local found = 0
+    for k, v in pairs(TT_StagedLevellingPlan) do
+        --Need to look for that button id... It will be in here.
+        if v.btnID == btn and v.tab == tab and v.rank == rank then
+            found = k 
+            break
+        end
+    end
+    TT_Out("Before removing...")
+    TT_OutPutLevellingPlan()
+    TT_StagedLevellingPlan[found] = nil -- removed it...
+    local i = found
+    -- Now need to re-do all the following levels...
+    while TT_StagedLevellingPlan[i + 1] ~= nil do
+        TT_StagedLevellingPlan[i] = TT_StagedLevellingPlan[i + 1]
+        i = i+1
+    end
+    TT_UpdateEstimatedLevel()
+    TT_Out("After removing...")
+    TT_OutPutLevellingPlan()
     TT_TalentFrame_Update()
     TT_TalentTooltip()
     TT_TalentFrameButtons_OnUpdate()
@@ -1318,6 +1378,8 @@ function TT_TalentFrameTalent_OnClick()
         TT_TalentFrameTalent_OnLeftClick()
     elseif arg1 == "RightButton" and TT_TalentFrameTalentIsRightClickable() then
         TT_TalentFrameTalent_OnRightClick()
+    elseif arg1 == "RightButton" and not TT_TalentFrameTalentIsRightClickable() then
+        TT_Out("Can't remove points from learned talents")
     end
     TT_TalentPresets_Dewdrop:Close()
 end

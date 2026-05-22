@@ -13,4 +13,334 @@
     </Frame>
     <GameTooltip name="TT_TalentTooltipFrame" hidden="false" inherits="GameTooltipTemplate">
 	</GameTooltip>
+
+    <Frame name="TT_LvlPlanDisplayTemplate" virtual="true"> 
+    <!-- Icon  Level, Name, Rank
+    -->
+        <Size>
+            <AbsDimension x="245" y="60" />
+        </Size>
+        <Layers>
+            <Layer level="OVERLAY">
+                <Texture file="Interface\Icons\Ability_Rogue_Disguise" name="$parentIcon">
+                    <Size>
+                        <AbsDimension x="42" y="42"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="LEFT">
+                            <Offset>
+                                <AbsDimension x="12" y="1"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+                <FontString name="$parentLevel" text="Level: 10" justifyH="LEFT" inherits="GameFontHighlightSmallOutline">
+                    <Size>
+                        <AbsDimension x="240" y="16"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativeTo="$parentIcon">
+                            <Offset>
+                                <AbsDimension x="42" y="4"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+                <FontString name="$parentName" text="Name: Improved Lay on Hands" justifyH="LEFT" inherits="GameFontHighlightSmallOutline">
+                    <Size>
+                        <AbsDimension x="240" y="16"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="BOTTOMLEFT" relativeTo="$parentLevel">
+                            <Offset>
+                                <AbsDimension x="0" y="-16"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+                <FontString name="$parentRank" text="Rank: 5" justifyH="LEFT" inherits="GameFontHighlightSmallOutline">
+                    <Size>
+                        <AbsDimension x="240" y="16"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="BOTTOMLEFT" relativeTo="$parentName">
+                            <Offset>
+                                <AbsDimension x="0" y="-16"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\GLUES\COMMON\TextPanel-Border" tile="true">
+            <BackgroundInsets>
+                <AbsInset left="8" right="9" top="6" bottom="8" />
+            </BackgroundInsets>
+            <TileSize>
+                <AbsValue val="32" />
+            </TileSize>
+            <EdgeSize>
+                <AbsValue val="32" />
+            </EdgeSize>
+        </Backdrop>
+    </Frame>
+
+    <Frame name="TT_StagedTalentsFrame" frameStrata="HIGH" hidden="true">
+		<Anchors>
+			<Anchor point="CENTER" relativeTo="UIParent">
+				<Offset>
+					<AbsDimension x="0" y="0"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Size>
+			<AbsDimension x="300" y="420" />
+		</Size>
+		<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
+			<BackgroundInsets>
+				<AbsInset left="11" right="12" top="12" bottom="11" />
+			</BackgroundInsets>
+			<TileSize>
+				<AbsValue val="32" />
+			</TileSize>
+			<EdgeSize>
+				<AbsValue val="32" />
+			</EdgeSize>
+		</Backdrop>
+		<Layers>
+			<Layer>
+				<Texture name="$parentTitleBorder" file="Interface\DialogFrame\UI-DialogBox-Header">
+					<Size>
+						<AbsDimension x="160" y="32" />
+					</Size>
+					<Anchors>
+						<Anchor point="TOP">
+							<Offset>
+								<AbsDimension x="0" y="5" />
+							</Offset>
+						</Anchor>
+					</Anchors>
+					<TexCoords left="0.2" right="0.8" top="0" bottom="0.6" />
+				</Texture>
+				<FontString name="$parentTitleString" font="GameFontNormal" text="Levelling Plan">
+					<!--Window Title -->
+					<Size>
+						<AbsDimension x="140" y="0" />
+					</Size>
+					<Anchors>
+						<Anchor point="TOP">
+							<Offset>
+								<AbsDimension x="0" y="-5" />
+							</Offset>
+						</Anchor>
+					</Anchors>
+					<FontHeight>
+						<AbsValue val="12" />
+					</FontHeight>
+					<Color r="1" g="0.8196079" b="0" />
+					<Shadow>
+						<Color r="0" g="0" b="0" />
+						<Offset>
+							<AbsDimension x="1" y="-1" />
+						</Offset>
+					</Shadow>
+				</FontString>
+                <FontString name="$parent_NoWorking" font="GameFontNormal" text="Only enabled in Sim Mode." hidden="true">
+					<Size>
+						<AbsDimension x="180" y="0" />
+					</Size>
+					<Anchors>
+						<Anchor point="TOP">
+							<Offset>
+								<AbsDimension x="0" y="-75" />
+							</Offset>
+						</Anchor>
+					</Anchors>
+					<FontHeight>
+						<AbsValue val="12" />
+					</FontHeight>
+					<Color r="1" g="0.8196079" b="0" />
+					<Shadow>
+						<Color r="0" g="0" b="0" />
+						<Offset>
+							<AbsDimension x="1" y="-1" />
+						</Offset>
+					</Shadow>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+            <Frame name="$parentLayer2" frameStrata="HIGH">
+				<Anchors>
+					<Anchor point="BOTTOM" relativeTo="$parent">
+						<Offset>
+							<AbsDimension x="0" y="5"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Size>
+					<AbsDimension x="280" y="355" />
+				</Size>
+				<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\GLUES\COMMON\TextPanel-Border" tile="true">
+					<BackgroundInsets>
+						<AbsInset left="8" right="9" top="6" bottom="8" />
+					</BackgroundInsets>
+					<TileSize>
+						<AbsValue val="32" />
+					</TileSize>
+					<EdgeSize>
+						<AbsValue val="32" />
+					</EdgeSize>
+				</Backdrop>
+			</Frame>
+            <Button name="$parent_StagedPlanButton" inherits="TabButtonTemplate" frameStrata="FULLSCREEN" text="Staged Plan" id="1">
+				<Size>
+					<AbsDimension x="86" y="24"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parentLayer2">
+						<Offset>
+							<AbsDimension x="6" y="20"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+                    TT_StagedTalentsFrame_SwitchTab()
+					</OnClick>
+					<OnEnter>
+					GameTooltip:SetOwner(this, "ANCHOR_BOTTOMRIGHT");
+					GameTooltip:SetText("Test");
+					GameTooltip:Show();
+					</OnEnter>
+					<OnLeave>
+					GameTooltip:Hide();
+					</OnLeave>
+                    <OnLoad>
+                    PanelTemplates_SelectTab(this);
+                    PanelTemplates_TabResize(0);
+                    getglobal(this:GetName().."HighlightTexture"):SetWidth(this:GetTextWidth() + 31);
+                    </OnLoad>
+				</Scripts>
+			</Button>
+            <Button name="$parent_CurrentPlanButton" inherits="TabButtonTemplate" text="Current Plan" id="2">
+				<Size>
+					<AbsDimension x="86" y="24"/>
+				</Size>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="$parent_StagedPlanButton">
+						<Offset>
+							<AbsDimension x="86" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+                    TT_StagedTalentsFrame_SwitchTab()
+					</OnClick>
+					<OnEnter>
+					GameTooltip:SetOwner(this, "ANCHOR_BOTTOMRIGHT");
+					GameTooltip:SetText("Test");
+					GameTooltip:Show();
+					</OnEnter>
+					<OnLeave>
+					GameTooltip:Hide();
+					</OnLeave>
+                    <OnLoad>
+                    PanelTemplates_TabResize(0);
+                    getglobal(this:GetName().."HighlightTexture"):SetWidth(this:GetTextWidth() + 31);
+                    </OnLoad>
+				</Scripts>
+			</Button>
+            <Button name="$parent_PlansButton" inherits="UIPanelButtonTemplate" text="Plans">
+                <Size>
+                    <AbsDimension x="76" y="22"/>
+                </Size>
+                <Anchors>
+					<Anchor point="LEFT" relativeTo="$parent_CurrentPlanButton">
+						<Offset>
+							<AbsDimension x="96" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+                <Scripts>
+                    <OnClick>
+                    TT_StagedTalentsFrame_PlansButton_OnClick()
+                    </OnClick>
+                </Scripts>
+            </Button>
+
+			<ScrollFrame name="$parent_PlanScrollFrame" inherits="ClassTrainerListScrollFrameTemplate">
+				<Size>
+					<AbsDimension x="280" y="338"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parent">
+						<Offset>
+							<AbsDimension x="-22" y="-66"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnVerticalScroll>
+						<!-- TODO: Create new update method-->
+							FauxScrollFrame_OnVerticalScroll(28, TT_StagedTalentsFrame_Update);
+					</OnVerticalScroll>
+				</Scripts>
+			</ScrollFrame>
+
+            <Frame name="$parent_LvlPlanSpec1" inherits="TT_LvlPlanDisplayTemplate" id="1">
+                <Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parentLayer2">
+						<Offset>
+							<AbsDimension x="5" y="-5"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+            </Frame>
+            <Frame name="$parent_LvlPlanSpec2" inherits="TT_LvlPlanDisplayTemplate" id="2">
+                <Anchors>
+					<Anchor point="TOP" relativeTo="$parent_LvlPlanSpec1">
+						<Offset>
+							<AbsDimension x="0" y="-55"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+            </Frame>
+            <Frame name="$parent_LvlPlanSpec3" inherits="TT_LvlPlanDisplayTemplate" id="3">
+                <Anchors>
+					<Anchor point="TOP" relativeTo="$parent_LvlPlanSpec2">
+						<Offset>
+							<AbsDimension x="0" y="-55"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+            </Frame>
+            <Frame name="$parent_LvlPlanSpec4" inherits="TT_LvlPlanDisplayTemplate" id="4">
+                <Anchors>
+					<Anchor point="TOP" relativeTo="$parent_LvlPlanSpec3">
+						<Offset>
+							<AbsDimension x="0" y="-55"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+            </Frame>
+            <Frame name="$parent_LvlPlanSpec5" inherits="TT_LvlPlanDisplayTemplate" id="5">
+                <Anchors>
+					<Anchor point="TOP" relativeTo="$parent_LvlPlanSpec4">
+						<Offset>
+							<AbsDimension x="0" y="-55"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+            </Frame>
+        </Frames>
+        <Scripts>
+			<OnShow>
+			</OnShow>
+			<OnHide>
+			PlaySound("igCharacterInfoClose");
+			</OnHide>
+		</Scripts>
+    </Frame>
 </Ui>

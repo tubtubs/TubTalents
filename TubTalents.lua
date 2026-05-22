@@ -39,7 +39,7 @@ local _G = getfenv(0)
 local libIcon = LibStub("LibDBIcon-1.0");
 local libData = LibStub("LibDataBroker-1.1");
 local TT_TalentPresets_Dewdrop = AceLibrary("Dewdrop-2.0");
-
+local TT_LevellingPlans_DewDrop = AceLibrary("Dewdrop-2.0");
 TT_MAX_TALENTS = 3
 TT_MAX_TALENTPOINTS = 51
 TT_SimMode = false
@@ -59,8 +59,9 @@ TT_StagedLevellingPlan = {
     --Example:
     --[10] = {tab=1, btnID=1, rank=1, icon="", spellID=1, name=""}
 }
-TT_MinLevel = 9
-TT_StagedEstimatedLevel = TT_MinLevel
+TT_MINLEVEL = 9
+TT_StagedLevellingPlanMinLevel = TT_MINLEVEL
+TT_StagedEstimatedLevel = TT_MINLEVEL
 
 function TT_OutPutLevellingPlan()
     for k, v in TT_StagedLevellingPlan do
@@ -155,18 +156,24 @@ end
 
 function TubTalents_Init()
     if event=="PLAYER_LOGIN" then
-        if TubTalent_Vars == nil then
+        if TubTalent_Vars == nil or true then
             TubTalent_Vars = {
                 Version = 1,
                 MaxTalentPoints = TT_MAX_TALENTPOINTS,
                 TalentPresets = {},
-                CurrentLevellingPlan = {},
+                LevellingPlans = {},
+                CurrentLevellingPlan = 0,
+                LevellingPlanIDMax = 0,
                 TalentPresetIDMax = 0
             }
         elseif TubTalent_Vars.MaxTalentPoints == nil then
             TubTalent_Vars.MaxTalentPoints = TT_MAX_TALENTPOINTS
         end
+        if TubTalent_Vars.CurrentLevellingPlan ~= 0 then
+            _, TT_CurrentLevellingPlan = TT_FindPlan(TubTalent_Vars.CurrentLevellingPlan)
+        end
         TubTalents_MinimapIconRegister()
+        TT_StagedTalentsFramePlans_DewdropRegister()
         --Detecting client mods, and adjusting functionality...
         if RQ_GetVersion then
             --TT_Out("Reliquary detected")
@@ -263,7 +270,25 @@ function TubTalents_Init()
             prompt:SetPoint("CENTER", TalentFrame, "TOP", 0, -68); -- Position it
             prompt:SetText("Level: 9")
             --Update buttons to initial state...
+
+            TT_StagedTalentsFrame:SetParent(TalentFrame)
+            TT_StagedTalentsFrame:ClearAllPoints()
+            TT_StagedTalentsFrame:SetPoint("TOPLEFT", TalentFrame, "TOPRIGHT", -25, -20); -- Position it
+            TT_StagedTalentsFrame:Show()
+            TT_StagedTalentsFrame_StagedPlanButton:SetFrameStrata("HIGH")
+            TT_StagedTalentsFrame_CurrentPlanButton:SetFrameStrata("HIGH")
+            TT_StagedTalentsFrame_LvlPlanSpec1:SetFrameStrata("HIGH")
+            TT_StagedTalentsFrame_LvlPlanSpec2:SetFrameStrata("HIGH")
+            TT_StagedTalentsFrame_LvlPlanSpec3:SetFrameStrata("HIGH")
+            TT_StagedTalentsFrame_LvlPlanSpec4:SetFrameStrata("HIGH")
+            TT_StagedTalentsFrame_LvlPlanSpec5:SetFrameStrata("HIGH")
+            TT_StagedTalentsFrame_PlanScrollFrame:SetFrameStrata("HIGH")
+            TT_StagedTalentsFrame_PlansButton:SetFrameStrata("HIGH")
+            --TT_StagedTalentsFrame_LvlPlanSpec6:SetFrameStrata("HIGH")
+            PanelTemplates_UpdateTabs(TT_StagedTalentsFrame)
+            --PanelTemplates_SetTab(TT_StagedTalentsFrame, 1);
             TT_TalentFrameButtons_OnUpdate()
+            TT_StagedTalentsFrame_Update()
 
             --Function Overloads
             TalentFrameTalent_OnClick = TT_TalentFrameTalent_OnClick
@@ -290,6 +315,7 @@ end
 -- Need to move some function setups over to here...
 function TT_TalentFrame_Init()
     TT_TalentPresets = TubTalent_Vars.TalentPresets
+    TT_LevellingPlans = TubTalent_Vars.LevellingPlans
     --TT_TalentPresetIDMax = TubTalent_Vars.TalentPresetIDMax
     TT_RegenPresetDropdown()
     _G["TalentFramePresetsButton"]:SetScript("OnClick",function() 
@@ -407,6 +433,7 @@ function TT_TalentPresetStage(presetID)
             TT_StagedTalents[i][k] = v - learnedRank
         end
     end
+    TT_PresetLoaded = true
     TT_TalentFrame_Update()
     TT_TalentFrameButtons_OnUpdate()
 end
@@ -461,20 +488,11 @@ function TT_NewPreset(name)
     end
 
     TubTalent_Vars.TalentPresetIDMax = TubTalent_Vars.TalentPresetIDMax+1
-    local planMinLevel = TT_MinLevel + 1
-    local planMaxLevel = planMinLevel
-    for k , v in TT_StagedLevellingPlan do
-        planMinLevel = min(planMinLevel, k)
-        planMaxLevel = max(planMaxLevel, k)
-    end
     local newPreset = {
         name = name,
         id = TubTalent_Vars.TalentPresetIDMax,
         talents = t,
         points = tp,
-        levellingPlanMinLevel = planMinLevel, --Min level might get cut...
-        levellingPlanMaxLevel = planMaxLevel,
-        levellingPlan = {} -- v1.1
     }
     table.insert(TT_TalentPresets, newPreset)
     TT_Out("Adding new profile")
@@ -901,6 +919,9 @@ function TT_TalentFrame_UpdateTalentPoints()
     for i=1, TT_MAX_TALENTS do
         total = total + TT_TalentPointsSpent[i]
     end
+    if total == 0 then
+        TT_PresetLoaded = false
+    end
     if TT_SimMode then
         TalentFrame.talentPoints = TubTalent_Vars.MaxTalentPoints - total
         TalentFrameTalentPointsText:SetText(TalentFrame.talentPoints);
@@ -910,6 +931,7 @@ function TT_TalentFrame_UpdateTalentPoints()
         TalentFrameTalentPointsText:SetText(cp1);
         TalentFrame.talentPoints = cp1;
     end
+    TT_StagedTalentsFrame_Update()
     TT_UpdateEstimatedLevel()
 end
 
@@ -919,7 +941,7 @@ function TT_UpdateEstimatedLevel()
         local _, _, tabPoints = GetTalentTabInfo(i)
         total = total + tabPoints
     end
-    TT_StagedEstimatedLevel = TT_MinLevel + total
+    TT_StagedEstimatedLevel = TT_MINLEVEL + total
     TalentFrameEstimatedLevel:SetText(format("Level: %s", TT_StagedEstimatedLevel))
 end
 
@@ -1162,6 +1184,9 @@ function TT_ResetButton_OnClick()
         [2] = {},
         [3] = {}
     }
+    TT_StagedLevellingPlan = {}
+    TT_StagedEstimatedLevel = TT_MINLEVEL
+    TT_PresetLoaded = false
     TT_TalentFrame_Update()
     TT_TalentFrameButtons_OnUpdate()
 end
@@ -1169,6 +1194,7 @@ end
 --Overrides any currently learned specs, staging empty entries over them
 --Might not be necessary with how SimMode now works?
 function TT_WipeCurrentSpec()
+    TT_PresetLoaded = false
     for i=1, TT_MAX_TALENTS do
         TT_TalentPointsSpent[i] = 0
         for m=1, MAX_NUM_TALENTS do
@@ -1188,6 +1214,7 @@ end
 function TalentFrameSimMode_OnClick()
     TT_ResetButton_OnClick()
     TT_SimMode = not TT_SimMode
+    TT_StagedLevellingPlan = {}
     if TT_SimMode then
         TT_WipeCurrentSpec()
         _G["TalentFrameSimModePointsBox"]:Show()
@@ -1201,6 +1228,7 @@ function TalentFrameSimMode_OnClick()
     end
     TT_TalentFrame_Update()
     TT_TalentFrameButtons_OnUpdate()
+    TT_StagedTalentsFrame_Update()
 end
 
 function TT_SavePresetButton_OnUpdate()
@@ -1282,7 +1310,8 @@ function TT_TalentFrameTalent_OnLeftClick()
             TT_StagedTalents[tab][btn] = 1
         end
     end
-    rank = rank + TT_StagedTalents[tab][btn]
+    --rank = rank + TT_StagedTalents[tab][btn]
+    rank = rank  + 1
 
     --Add to levelling plan...
     TT_UpdateEstimatedLevel()
@@ -1293,14 +1322,17 @@ function TT_TalentFrameTalent_OnLeftClick()
     end
     --TT_Out(format("Staging tab: %s btnID: %s rank: %s spellID: %s name: %s level: %s",
     --    tab, btn, rank, spellID, name, TT_StagedEstimatedLevel))
-    TT_StagedLevellingPlan[TT_StagedEstimatedLevel] = {
-        tab = tab,
-        btnID = btn,
-        rank = rank,
-        icon = iconTexture,
-        spellID = spellID,
-        name = name,
-    }
+    if TT_SimMode then -- Only allow creating a levelling plan in sim mode
+        TT_StagedLevellingPlan[TT_StagedEstimatedLevel] = {
+            tab = tab,
+            tabName = GetTalentTabInfo(tab),
+            btnID = btn,
+            rank = rank,
+            icon = iconTexture,
+            spellID = spellID,
+            name = name,
+        }
+    end
 
     TT_TalentFrame_Update()
     TT_TalentTooltip()
@@ -1331,8 +1363,8 @@ function TT_TalentFrameTalent_OnRightClick()
             break
         end
     end
-    TT_Out("Before removing...")
-    TT_OutPutLevellingPlan()
+    --TT_Out("Before removing...")
+    --TT_OutPutLevellingPlan()
     TT_StagedLevellingPlan[found] = nil -- removed it...
     local i = found
     -- Now need to re-do all the following levels...
@@ -1341,8 +1373,8 @@ function TT_TalentFrameTalent_OnRightClick()
         i = i+1
     end
     TT_UpdateEstimatedLevel()
-    TT_Out("After removing...")
-    TT_OutPutLevellingPlan()
+    --TT_Out("After removing...")
+    --TT_OutPutLevellingPlan()
     TT_TalentFrame_Update()
     TT_TalentTooltip()
     TT_TalentFrameButtons_OnUpdate()
@@ -1376,8 +1408,10 @@ function TT_TalentFrameTalent_OnClick()
     end
     if arg1 == "LeftButton" and TT_TalentFrameTalentIsLeftClickable() then
         TT_TalentFrameTalent_OnLeftClick()
+        TT_StagedTalentsFrame_Update()
     elseif arg1 == "RightButton" and TT_TalentFrameTalentIsRightClickable() then
         TT_TalentFrameTalent_OnRightClick()
+        TT_StagedTalentsFrame_Update()
     elseif arg1 == "RightButton" and not TT_TalentFrameTalentIsRightClickable() then
         TT_Out("Can't remove points from learned talents")
     end
@@ -1520,4 +1554,278 @@ end
 function TT_Out(msg)
     DEFAULT_CHAT_FRAME:AddMessage(format("%s: %s",
         "TT", msg))
+end
+
+-- Level Plan UI
+NUM_LVLPLAN_TALENTSSHOWN = 5
+TT_CurrentTab = 1
+TT_PresetLoaded = false
+
+local TT_PlanOpts = {
+    [1] = {
+        {
+            name="Plans",
+            tooltip="",
+            notCheckable=true,
+            value="plans"
+        },
+        {
+            name="Save Plan",
+            tooltip="Enter to save",
+            notCheckable=true,
+            hasEditBox=true,
+            disabled = function() 
+                if TT_SimMode and not TT_PresetLoaded then
+                    for i=1, 3 do 
+                        if TT_TalentPointsSpent[i] > 0 then
+                            return false
+                        end
+                    end
+                end
+                return true
+             end,
+            editBoxText=function() return "" end,
+            editBoxFunc=function(s) TT_NewPlan(s) end,
+            value=""
+        },
+        {
+            name="Options",
+            tooltip="",
+            notCheckable=true,
+            value="plansoptions"
+        },
+    },
+    [2] = { --populate with plans
+        ["plans"]={
+
+        },
+        ["plansoptions"] = {
+
+        },
+    },
+    [3] = { --arg1 is loaded from the previous dropdowns value
+        ["plansmenu"] = {
+            {
+            name="Select Plan",
+            --tooltipTitle="Learn Preset",
+            tooltip="Learns the selected plan\nNot available in Sim mode",
+            notCheckable=true,
+            --disabled = function() return TT_SimMode end,
+            func=function(arg1)  TT_SelectPlan(arg1) end,
+            value=""
+            },
+            {
+            name="Stage Plan",
+            tooltip="Stages the selected plan over your current build if possible\nEnable Sim mode if you don't want to reset your talents",
+            notCheckable=true,
+            func=function(arg1)  TT_StagePlan(arg1) end,
+            value=""
+            },
+            {
+            name="Delete Plan",
+            tooltip="Deletes the selected plan",
+            notCheckable=true,
+            func=function(arg1)  TT_DeletePlan(arg1) end,
+            value=""
+            },
+        }
+    },
+}
+
+function TT_FindPlan(planID)
+    for k, v in pairs(TT_LevellingPlans) do
+        if v.id == tonumber(planID) then
+            return k, v
+        end
+    end
+    return nil
+end
+
+function TT_SelectPlan(arg)
+    _, v = TT_FindPlan(arg)
+    TubTalent_Vars.CurrentLevellingPlan = v.id
+    TT_CurrentLevellingPlan = v
+    TT_LevellingPlans_DewDrop:Close()
+end
+
+function TT_StagePlan(arg)
+--TODO
+    --If sim mode is enabled, stage it?
+end
+
+function TT_DeletePlan(arg)
+    k, v = TT_FindPlan(arg)
+    if v.id == TubTalent_Vars.CurrentLevellingPlan then
+        TT_Out("Can't delete currently selected levelling plan.")
+    else
+        TT_LevellingPlans[k] = nil
+    end
+    TT_RegenPlansDropdown()
+    TT_LevellingPlans_DewDrop:Close()
+end
+
+function TT_NewPlan(name) 
+    local planMinLevel = TT_MINLEVEL + 1
+    local planMaxLevel = planMinLevel
+    local t = {}
+
+    for k , v in pairs(TT_StagedLevellingPlan) do
+        planMinLevel = min(planMinLevel, k)
+        planMaxLevel = max(planMaxLevel, k)
+        local n = {
+            tab = v.tab,
+            tabName = v.tabName,
+            btnID = v.btnID,
+            rank = v.rank,
+            icon = v.icon,
+            spellID = v.spellID,
+            name = v.name,
+        }
+        TT_Out("Adding to new plan..." .. planMinLevel .. " " .. planMaxLevel)
+        t[k] = n
+    end
+    TubTalent_Vars.LevellingPlanIDMax = TubTalent_Vars.LevellingPlanIDMax + 1
+    local tp = {}
+    for i=1, 3 do
+        _, _, tp[i] = GetTalentTabInfo(i)
+    end
+    local newPlan = {
+        name = name,
+        points = tp,
+        id = TubTalent_Vars.LevellingPlanIDMax,
+        levellingPlanMinLevel = planMinLevel, --Min level might get cut...
+        levellingPlanMaxLevel = planMaxLevel,
+        plan = t
+    }
+    table.insert(TT_LevellingPlans, newPlan)
+    TT_RegenPlansDropdown()
+    TT_LevellingPlans_DewDrop:Close()
+end
+
+function TT_RegenPlansDropdown()
+    TT_PlanOpts[2]["plans"] = {} -- clear it out first
+    if TT_TalentPresets ~= nil then
+        for k,v in pairs(TT_LevellingPlans) do
+            local a = "ID: " .. v.id .. "\n"
+            for i=1, 3 do
+                name, _, _ = GetTalentTabInfo(i)
+                a = format("%s%s in %s\n",a,v.points[i],name)
+            end
+            a = a .. "Min Level: " .. v.levellingPlanMinLevel .. "\n"
+            a = a .. "Max Level: " .. v.levellingPlanMaxLevel .. "\n"
+            local t = {
+                name=v.name,
+                tooltipTitle=v.name,
+                tooltip=a,
+                notCheckable=true,
+                value="plansmenu:"..v.id
+            }
+            table.insert(TT_PlanOpts[2]["plans"],t)
+        end
+    end
+end
+
+function TT_StagedTalentsFrame_PlansButton_OnClick()
+    if TT_LevellingPlans_DewDrop:IsOpen() then
+        TT_LevellingPlans_DewDrop:Close();
+    else
+        TT_LevellingPlans_DewDrop:Open(this);
+    end
+end
+
+function TT_StagedTalentsFramePlans_DewdropRegister()
+    TT_LevellingPlans_DewDrop:Register(TT_StagedTalentsFrame_PlansButton, --Bound Frame
+        'point', function(parent) --Point
+            return "TOP", "BOTTOM"
+        end,
+        'children', function(level, value) TT_TalentPresets_DewdropGen(level, value, TT_PlanOpts) end,
+        'dontHook', true
+    )
+end
+
+function TT_StagedTalentsFrame_SwitchTab()
+    PanelTemplates_SelectTab(this);
+    TT_CurrentTab = this:GetID()
+    if TT_CurrentTab == 1 then
+        PanelTemplates_DeselectTab(TT_StagedTalentsFrame_CurrentPlanButton);
+    else
+        PanelTemplates_DeselectTab(TT_StagedTalentsFrame_StagedPlanButton);
+    end
+
+    PanelTemplates_UpdateTabs(TT_StagedTalentsFrame)
+    TT_StagedTalentsFrame_Update()
+end
+
+function TT_StagedTalentsFrame_Update()
+    local numDisplay, plansToDisplay
+    if TT_CurrentTab == 2 then
+        if TubTalent_Vars.CurrentLevellingPlan ~= 0 then
+            TT_StagedTalentsFrame_NoWorking:Hide()
+            numDisplay = TT_CurrentLevellingPlan.levellingPlanMaxLevel - TT_MINLEVEL
+            TT_Out("NUM DISPLAY" .. numDisplay)
+            plansToDisplay = TT_CurrentLevellingPlan.plan
+            if TT_CurrentLevellingPlan == nil then
+                TT_Out("FAILED")
+            end
+        elseif TubTalent_Vars.CurrentLevellingPlan == 0 then
+            numDisplay = 0 
+            TT_StagedTalentsFrame_NoWorking:Show()
+            TT_StagedTalentsFrame_NoWorking:SetText("No preset selected")
+            for i=1, NUM_LVLPLAN_TALENTSSHOWN do
+                local lvlPlanFrame = _G["TT_StagedTalentsFrame_LvlPlanSpec"..i]
+                lvlPlanFrame:Hide()
+            end
+            return
+        end
+    else
+        if TT_SimMode and not TT_PresetLoaded then
+            numDisplay = TT_StagedEstimatedLevel - TT_MINLEVEL
+            plansToDisplay = TT_StagedLevellingPlan
+            TT_StagedTalentsFrame_NoWorking:Hide()
+        else
+            numDisplay = 0 
+            TT_StagedTalentsFrame_NoWorking:Show()
+            TT_StagedTalentsFrame_NoWorking:SetText("Only enabled in Sim Mode.\nCannot be used with a loaded preset.")
+            for i=1, NUM_LVLPLAN_TALENTSSHOWN do
+                local lvlPlanFrame = _G["TT_StagedTalentsFrame_LvlPlanSpec"..i]
+                lvlPlanFrame:Hide()
+            end
+            return
+        end
+    end
+	--local DeckBuilderFrame_DeckButtonText, DeckBuilderFrame_DeckButton;
+	local scrollOffset = FauxScrollFrame_GetOffset(TT_StagedTalentsFrame_PlanScrollFrame);
+	local index;
+    local minIndex = TT_MINLEVEL
+		-- Deck list
+	for i=1, NUM_LVLPLAN_TALENTSSHOWN do
+        local lvlPlanFrame = _G["TT_StagedTalentsFrame_LvlPlanSpec"..i]
+
+		index = (scrollOffset) + i;
+        TT_Out(index)
+        TT_Out(numDisplay)
+		if ( index <= numDisplay) then
+            local lvlPlanLevel = _G["TT_StagedTalentsFrame_LvlPlanSpec"..i.."Level"]
+            local lvlPlanName = _G["TT_StagedTalentsFrame_LvlPlanSpec"..i.."Name"]
+            local lvlPlanRank = _G["TT_StagedTalentsFrame_LvlPlanSpec"..i.."Rank"]
+            local lvlPlanIcon = _G["TT_StagedTalentsFrame_LvlPlanSpec"..i.."Icon"]
+			lvlPlanFrame:Show()
+            TT_Out("index:" .. index+minIndex)
+            lvlPlanName:SetText(plansToDisplay[index+minIndex].name)
+            lvlPlanRank:SetText("Rank: " .. plansToDisplay[index+minIndex].rank .. " Tab: " .. plansToDisplay[index+minIndex].tabName)
+            lvlPlanLevel:SetText("Level: " .. index+minIndex)
+            lvlPlanIcon:SetTexture(plansToDisplay[index+minIndex].icon)
+
+			--DeckBuilderFrame_DeckButtonText:SetText(format("%s",EmoteButtons_DeckList[index]))
+		else
+            lvlPlanFrame:Hide()
+			--DeckBuilderFrame_DeckButton:Hide();
+		end
+	end
+	
+	-- Scrollbar stuff
+	FauxScrollFrame_Update(TT_StagedTalentsFrame_PlanScrollFrame, numDisplay , NUM_LVLPLAN_TALENTSSHOWN, 28);
+	-- numEmotes is max entries, NUM_EMOTES_SHOWN is the number of lines, last one is supposed to be pixel size
+	-- But it works best if I just shove number of elements in there. My scroll area isn't litterally moving,
+	-- I'm merely switching out the elements every time a scroll event happens.
 end

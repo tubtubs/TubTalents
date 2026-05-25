@@ -270,7 +270,7 @@
                 </Scripts>
             </Button>
 
-			<ScrollFrame name="$parent_PlanScrollFrame" inherits="ClassTrainerListScrollFrameTemplate">
+			<ScrollFrame name="$parent_PlanScrollFrame" inherits="FauxScrollFrameTemplate">
 				<Size>
 					<AbsDimension x="280" y="338"/>
 				</Size>

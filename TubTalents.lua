@@ -43,6 +43,11 @@ local TT_LevellingPlans_DewDrop = AceLibrary("Dewdrop-2.0");
 TT_MAX_TALENTS = 3
 TT_MAX_TALENTPOINTS = 51
 TT_SimMode = false
+TT_AUTOLEARN = {
+    Never=0,
+    Prompt=1,
+    FullAuto=2,
+}
 TT_TalentPointsSpent = {
     [1] = 0,
     [2] = 0,
@@ -89,6 +94,13 @@ local TT_DialogOpts = {
             editBoxFunc=function(s) TT_NewPreset(s) end,
             value=""
         },
+        {
+            name="Import Preset",
+            tooltip="Opens a window to paste in a plan",
+            notCheckable=true,
+            func=function()  TT_Out("TODO") end,
+            value=""
+        },
     },
     [2] = { --populate with presets...
 
@@ -109,6 +121,13 @@ local TT_DialogOpts = {
             tooltip="Stages the selected preset over your current build if possible\nEnable Sim mode if you don't want to reset your talents",
             notCheckable=true,
             func=function(arg1)  TT_TalentPresetStage(arg1) end,
+            value=""
+            },
+            {
+            name="Export Preset",
+            tooltip="Exports the selected preset",
+            notCheckable=true,
+            func=function(arg1)  TT_Out("TODO") end,
             value=""
             },
             {
@@ -156,7 +175,7 @@ end
 
 function TubTalents_Init()
     if event=="PLAYER_LOGIN" then
-        if TubTalent_Vars == nil or true then
+        if TubTalent_Vars == nil then
             TubTalent_Vars = {
                 Version = 1,
                 MaxTalentPoints = TT_MAX_TALENTPOINTS,
@@ -166,11 +185,14 @@ function TubTalents_Init()
                 LevellingPlanIDMax = 0,
                 TalentPresetIDMax = 0
             }
+        elseif TubTalent_Vars.AutoLearnPlans == nil then
+            TubTalent_Vars.AutoLearnPlans = 0
         elseif TubTalent_Vars.MaxTalentPoints == nil then
             TubTalent_Vars.MaxTalentPoints = TT_MAX_TALENTPOINTS
         end
         if TubTalent_Vars.CurrentLevellingPlan ~= 0 then
             _, TT_CurrentLevellingPlan = TT_FindPlan(TubTalent_Vars.CurrentLevellingPlan)
+            if TT_CurrentLevellingPlan == nil then TT_Out(TubTalent_Vars.CurrentLevellingPlan) end
         end
         TubTalents_MinimapIconRegister()
         TT_StagedTalentsFramePlans_DewdropRegister()
@@ -318,6 +340,7 @@ function TT_TalentFrame_Init()
     TT_LevellingPlans = TubTalent_Vars.LevellingPlans
     --TT_TalentPresetIDMax = TubTalent_Vars.TalentPresetIDMax
     TT_RegenPresetDropdown()
+    TT_RegenPlansDropdown()
     _G["TalentFramePresetsButton"]:SetScript("OnClick",function() 
         if TT_TalentPresets_Dewdrop:IsOpen() then
             TT_TalentPresets_Dewdrop:Close();
@@ -576,7 +599,8 @@ function TT_TalentPresets_DewdropLevelGen(opts,args)
                     'func', j.func,
                     'value', j.value,
                     'hasArrow', true,
-                    'checked', j.checked(),
+                    --'id',j.id or nil,
+                    'checked', j.checked(j.id) or nil,
                     'notCheckable', false
                 )
             end
@@ -593,7 +617,8 @@ function TT_TalentPresets_DewdropLevelGen(opts,args)
                     'value', j.value,
                     'hasArrow', false,
                     'disabled', j.disabled(),
-                    'checked', j.checked() or nil,
+                    --'id',j.id or nil,
+                    'checked', j.checked(j.id) or nil,
                     'notCheckable', j.notCheckable
                 )     
             else
@@ -1589,6 +1614,13 @@ local TT_PlanOpts = {
             value=""
         },
         {
+            name="Import Plan",
+            tooltip="Opens a window to paste in a plan",
+            notCheckable=true,
+            func=function()  TT_Out("TODO") end,
+            value=""
+        },
+        {
             name="Options",
             tooltip="",
             notCheckable=true,
@@ -1600,17 +1632,70 @@ local TT_PlanOpts = {
 
         },
         ["plansoptions"] = {
-
+            {
+                name="Auto Learn Talents",
+                tooltipTitle="",
+                tooltip="Auto learn talents as you level",
+                notCheckable=true,
+                value="plansoptionsautolearn"
+            },
         },
     },
     [3] = { --arg1 is loaded from the previous dropdowns value
+        ["plansoptionsautolearn"] = {
+            {
+                name="Never",
+                tooltip="Never automatically learn talents\nLevelling plans are just for reference",
+                notCheckable=false,
+                isRadio=true,
+                checked=function() 
+                    if TubTalent_Vars.AutoLearnPlans == TT_AUTOLEARN.Never then
+                        return true
+                    end
+                end,
+                func=function() 
+                    TubTalent_Vars.AutoLearnPlans = TT_AUTOLEARN.Never
+                end,
+                value=""
+            },
+            {
+                name="Prompt",
+                tooltip="Displays a popup to learn latest talent in levelling plans on levelup",
+                notCheckable=false,
+                isRadio=true,
+                checked=function() 
+                    if TubTalent_Vars.AutoLearnPlans == TT_AUTOLEARN.Prompt then
+                        return true
+                    end
+                end,
+                func=function() 
+                    TubTalent_Vars.AutoLearnPlans = TT_AUTOLEARN.Prompt
+                end,
+                value=""
+            },
+            {
+                name="Full Auto",
+                tooltip="Auto learn new talents on levelup",
+                notCheckable=false,
+                isRadio=true,
+                checked=function() 
+                    if TubTalent_Vars.AutoLearnPlans == TT_AUTOLEARN.FullAuto then
+                        return true
+                    end
+                end,
+                func=function() 
+                    TubTalent_Vars.AutoLearnPlans = TT_AUTOLEARN.FullAuto
+                end,
+                value=""
+            },
+        },
         ["plansmenu"] = {
             {
             name="Select Plan",
             --tooltipTitle="Learn Preset",
             tooltip="Learns the selected plan\nNot available in Sim mode",
             notCheckable=true,
-            --disabled = function() return TT_SimMode end,
+            --disabled = function() return TT_SimMode end, --I'll let you select it twice, no harm lel
             func=function(arg1)  TT_SelectPlan(arg1) end,
             value=""
             },
@@ -1618,7 +1703,15 @@ local TT_PlanOpts = {
             name="Stage Plan",
             tooltip="Stages the selected plan over your current build if possible\nEnable Sim mode if you don't want to reset your talents",
             notCheckable=true,
+            disabled = function() return not TT_SimMode end,
             func=function(arg1)  TT_StagePlan(arg1) end,
+            value=""
+            },
+            {
+            name="Export Plan",
+            tooltip="Exports the selected plan",
+            notCheckable=true,
+            func=function(arg1)  TT_Out("TODO") end,
             value=""
             },
             {
@@ -1633,7 +1726,10 @@ local TT_PlanOpts = {
 }
 
 function TT_FindPlan(planID)
-    for k, v in pairs(TT_LevellingPlans) do
+    if TubTalent_Vars.LevellingPlans == nil then
+        return nil
+    end
+    for k, v in pairs(TubTalent_Vars.LevellingPlans) do
         if v.id == tonumber(planID) then
             return k, v
         end
@@ -1646,11 +1742,31 @@ function TT_SelectPlan(arg)
     TubTalent_Vars.CurrentLevellingPlan = v.id
     TT_CurrentLevellingPlan = v
     TT_LevellingPlans_DewDrop:Close()
+    TT_StagedTalentsFrame_Update()
 end
 
 function TT_StagePlan(arg)
---TODO
-    --If sim mode is enabled, stage it?
+    k, v = TT_FindPlan(arg)
+    --Empty currently staged levelling plan...
+    TT_ResetButton_OnClick()
+    --TT_StagedLevellingPlan = {}
+    --Load this levelling plan...
+    for i=1, 3 do -- re-add the points for comparison back
+        TT_TalentPointsSpent[i] = v.points[i]
+    end
+    for k,x in pairs(v.plan) do
+        TT_Out(k)
+        TT_StagedLevellingPlan[k] = x
+        if TT_StagedTalents[x.tab][x.btnID] == nil then
+            TT_StagedTalents[x.tab][x.btnID] = 1
+        else
+            TT_StagedTalents[x.tab][x.btnID] = TT_StagedTalents[x.tab][x.btnID]+1
+        end
+    end
+    TT_LevellingPlans_DewDrop:Close()
+    TT_TalentFrame_Update()
+    TT_TalentFrameButtons_OnUpdate()
+    TT_StagedTalentsFrame_Update()
 end
 
 function TT_DeletePlan(arg)
@@ -1717,7 +1833,14 @@ function TT_RegenPlansDropdown()
                 name=v.name,
                 tooltipTitle=v.name,
                 tooltip=a,
-                notCheckable=true,
+                id=v.id,
+                notCheckable=false,
+                checked = function(id)
+                    if TubTalent_Vars.CurrentLevellingPlan ~= nil then
+                        if id == TubTalent_Vars.CurrentLevellingPlan then
+                            return true
+                        end
+                    end return false  end,
                 value="plansmenu:"..v.id
             }
             table.insert(TT_PlanOpts[2]["plans"],t)

@@ -8,31 +8,42 @@
 --- Add it to presets
 -- New functionality in LeftClick [CHECK]
 -- New functionality in RightClick [CHECK]
--- Add frame to scroll through the staged presets levelling plan...
+-- Add frame to scroll through the staged presets levelling plan... [CHECK]
 -- *Need to detect presets with no levelling plan
 -- Store currently staged levelling plan locally [check]
--- Store currently selected levelling plan to saved variables
+-- Store currently selected levelling plan to saved variables [CHECK]
 --
 --- Dropdown Changes
--- Overwrite preset button...
--- Add checked state for staged presets?
--- Add current levelling plan to TubTalent_Vars
+-- Overwrite preset button... [CUT]
+-- *I'd rather you just delete it..., tbh
+-- Add checked state for staged presets? [CHECK]
+-- Add current levelling plan to TubTalent_Vars [CHECK]
 --
 --- How to select learning plan?
--- Presets dropdown?
--- Levelling plan frame?
---
---- AutoLearn
--- Popup frame
--- Could just do it
--- Check if its possible too
+-- Presets dropdown? [INPROGRESS]
+-- *Can select, but there's no attempt at evaluating it.
+-- *Use the learn function to evaluate it, find differences? At least start with that algo.
+-- *Levelling plan frame?
+-- *Attempt to adjust? (Will complete at level x instead if x is less than max level)
+-- *Option for different max level?
+-- 
+--- AutoLearn [CHECK] --Still no safety logic...
+-- Popup frame [Check]
+-- ~~Check if its possible too~~ Check on levelling plan selection? Does it make sense to check on level up? :thinking:
 -- OnLogin check for unspent points, OnLevelup check for unspent points
--- Test talent resets...
+-- *offer catchup to spend lots of points, or show the next one if its just 1 point
 --
+--- Levelling Plan Safety Logic
+--  When spending points manually, make sure it doesn't conflict...
+--  *Disable the current plan when/if a conflict is detected
+--  Add catchup button to plans drop down
+
 --- Baller tier:
--- Export preset
--- Share preset in party/guild?
--- Means I'll need to consider class for presets most likely...
+-- Export preset PLANNED
+-- Share preset in party/guild? [Maybe...?]
+-- *Means I'll need to consider class for presets most likely...
+-- Addon Message sharing would be so very baller, I'd love to try it.
+-- *Would just have to send the table row by row? I think an initial handshaked ack would be best?
 
 --Functions to overwrite TalentFrame functionality
 local _G = getfenv(0)
@@ -174,7 +185,11 @@ function TubTalents_TextCommands(arg)
 end
 
 function TubTalents_Init()
-    if event=="PLAYER_LOGIN" then
+    if event == "PLAYER_LEVEL_UP" then
+        if TubTalent_Vars.AutoLearnPlans ~= TT_AUTOLEARN.Never then
+            TT_CatchUpPlan()
+        end
+    elseif event=="PLAYER_LOGIN" then
         if TubTalent_Vars == nil then
             TubTalent_Vars = {
                 Version = 1,
@@ -192,7 +207,7 @@ function TubTalents_Init()
         end
         if TubTalent_Vars.CurrentLevellingPlan ~= 0 then
             _, TT_CurrentLevellingPlan = TT_FindPlan(TubTalent_Vars.CurrentLevellingPlan)
-            if TT_CurrentLevellingPlan == nil then TT_Out(TubTalent_Vars.CurrentLevellingPlan) end
+            if TT_CurrentLevellingPlan == nil then TT_Out("WEE WOOO") end
         end
         TubTalents_MinimapIconRegister()
         TT_StagedTalentsFramePlans_DewdropRegister()
@@ -212,6 +227,9 @@ function TubTalents_Init()
             TT_TalentTooltip = TT_TalentTooltipNoMods
             TT_TalentFrameTalent_OnShiftClick = TT_TalentFrameTalent_OnShiftClickNoMods
         end
+        TT_TalentPresets = TubTalent_Vars.TalentPresets
+        TT_LevellingPlans = TubTalent_Vars.LevellingPlans
+        TT_CatchUpPlan()
     elseif event == "ADDON_LOADED" then
         if arg1=="Blizzard_TalentUI" then
             --If you wait for the addon to load hooking is fine, won't hook properly otherwise
@@ -336,8 +354,6 @@ end
 
 -- Need to move some function setups over to here...
 function TT_TalentFrame_Init()
-    TT_TalentPresets = TubTalent_Vars.TalentPresets
-    TT_LevellingPlans = TubTalent_Vars.LevellingPlans
     --TT_TalentPresetIDMax = TubTalent_Vars.TalentPresetIDMax
     TT_RegenPresetDropdown()
     TT_RegenPlansDropdown()
@@ -1412,6 +1428,27 @@ function TT_TalentFrameTalent_OnShiftClickNoMods()
     TT_Out("Shift click links require SuperWoW+Reliquary client mods.")
 end
 
+function TT_LearnTalentPopup_TalentButtonLoad()
+    local estLevel = UnitLevel("player")
+    local texture = TT_CurrentLevellingPlan.plan[estLevel].icon
+    local spellID = TT_CurrentLevellingPlan.plan[estLevel].spellID
+    local rank = TT_CurrentLevellingPlan.plan[estLevel].rank
+    local name = TT_CurrentLevellingPlan.plan[estLevel].name
+    TT_LearnTalentPopup.spellID=spellID
+    TT_Out(TT_LearnTalentPopup.spellID)
+    TT_LearnTalentPopupTalentButtonIcon:SetTexture(texture)
+    TT_LearnTalentPopupTalentButtonName:SetText(name)
+    TT_LearnTalentPopupTalentButtonRank:SetText("Rank: " .. rank)
+end
+
+function TT_LearnTalentPopup_TalentButtonOnEnter()
+    local estLevel = UnitLevel("player")
+    local tab = TT_CurrentLevellingPlan.plan[estLevel].btnID
+    local btn = TT_CurrentLevellingPlan.plan[estLevel].tab
+    GameTooltip:SetOwner(this, "ANCHOR_BOTTOMRIGHT");
+    GameTooltip:SetTalent(tab, btn)
+end
+
 function TT_TalentFrameTalent_OnShiftClick()
     tab = PanelTemplates_GetSelectedTab(TalentFrame)
     btn = this:GetID()
@@ -1735,6 +1772,56 @@ function TT_FindPlan(planID)
         end
     end
     return nil
+end
+
+StaticPopupDialogs["TUBTALENTS_LVLPLAN_CATCHUP_PROMPT"] = {
+text = "Do you want to catch up with the current levelling plan?",
+button1 = "Yes",
+button2 = "No",
+OnAccept = TT_CatchUpLearnPlan,
+timeout = 0,
+whileDead = true,
+hideOnEscape = true,
+preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
+}
+
+function TT_CatchUpLearnPlan()
+    local cp1, cp2 = UnitCharacterPoints("player");
+    local estLevel = max(UnitLevel("player") - cp1 + 1,10)
+    while cp1 > 0 do
+        if TT_CurrentLevellingPlan.plan[estLevel] ~= nil then
+            btn = TT_CurrentLevellingPlan.plan[estLevel].btnID
+            tab = TT_CurrentLevellingPlan.plan[estLevel].tab
+            rank = TT_CurrentLevellingPlan.plan[estLevel].rank
+            LearnTalentRank(tab, btn, rank)
+            cp1 = cp1 - 1
+            estLevel = estLevel + 1
+        else
+            TT_Out("End of leveling plan?")
+            break
+        end
+    end
+end
+
+function TT_CatchUpPlan()
+--Get unspent talent points (outside of modes)
+    local cp1, cp2 = UnitCharacterPoints("player");
+    TT_Out(format("AutoLearn: %s", TubTalent_Vars.AutoLearnPlans))
+    if cp1 > 1 then -- many points to spend...
+        if TubTalent_Vars.AutoLearnPlans == TT_AUTOLEARN.Prompt then
+            StaticPopup_Show("TUBTALENTS_LVLPLAN_CATCHUP_PROMPT")
+        elseif TubTalent_Vars.AutoLearnPlans == TT_AUTOLEARN.FullAuto then
+            TT_CatchUpLearnPlan()
+        end
+    elseif cp1 > 0 then 
+        -- offer to learn the latest talent in the levelling plan...
+        if TubTalent_Vars.AutoLearnPlans == TT_AUTOLEARN.Prompt then
+            TT_LearnTalentPopup:Show()
+        elseif TubTalent_Vars.AutoLearnPlans == TT_AUTOLEARN.FullAuto then
+            TT_CatchUpLearnPlan()
+        end
+    end
+--Viability is checked on creation, don't need validation here...
 end
 
 function TT_SelectPlan(arg)

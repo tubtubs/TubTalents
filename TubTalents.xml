@@ -5,14 +5,157 @@
             <OnLoad>
                 this:RegisterEvent("PLAYER_LOGIN");
                 this:RegisterEvent("ADDON_LOADED");
+				this:RegisterEvent("PLAYER_LEVEL_UP");
             </OnLoad>
             <OnEvent>
                 TubTalents_Init()
             </OnEvent>
         </Scripts>
     </Frame>
-    <GameTooltip name="TT_TalentTooltipFrame" hidden="false" inherits="GameTooltipTemplate">
+    <GameTooltip name="TT_TalentTooltipFrame" hidden="true" inherits="GameTooltipTemplate">
 	</GameTooltip>
+
+	<Frame name="TT_LearnTalentPopup" hidden="true" parent="UIParent" spellID="24443" frameStrata="DIALOG">
+		<Size>
+			<AbsDimension x="320" y="144"/>
+		</Size>
+		<Anchors>
+			<Anchor point="TOP">
+				<Offset>
+					<AbsDimension x="0" y="-128"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true" >
+			<BackgroundInsets>
+				<AbsInset left="11" right="12" top="12" bottom="11"/>
+			</BackgroundInsets>
+			<TileSize>
+				<AbsValue val="32"/>
+			</TileSize>
+			<EdgeSize>
+				<AbsValue val="32"/>
+			</EdgeSize>
+		</Backdrop>
+		<Layers>
+			<Layer level="ARTWORK">
+				<FontString name="$parentText" inherits="GameFontHighlight" text="Learn the next talent in your levelling plan?">
+					<Size>
+						<AbsDimension x="290" y="0"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOP">
+							<Offset>
+								<AbsDimension x="0" y="-16"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Frame name="$parentTalentButton">
+				<Size>
+					<AbsDimension x="36" y="36"/>
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOM" >
+						<Offset>
+							<AbsDimension x="0" y="76"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="Overlay">
+						<Texture name="$parentIcon" file="Interface\Icons\Ability_Rogue_Disguise">
+							<Size>
+								<AbsDimension x="36" y="36"/>
+							</Size>
+						</Texture>
+						<FontString name="$parentName" inherits="GameFontHighlight" text="Name">
+							<Size>
+								<AbsDimension x="290" y="0"/>
+							</Size>
+							<Anchors>
+								<Anchor point="BOTTOM">
+									<Offset>
+										<AbsDimension x="0" y="-16"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+						<FontString name="$parentRank" inherits="GameFontHighlight" text="Rank">
+							<Size>
+								<AbsDimension x="290" y="0"/>
+							</Size>
+							<Anchors>
+								<Anchor point="BOTTOM">
+									<Offset>
+										<AbsDimension x="0" y="-32"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnShow>
+						TT_LearnTalentPopup_TalentButtonLoad(this)
+					</OnShow>
+					<OnEnter>
+					TT_LearnTalentPopup_TalentButtonOnEnter()
+					</OnEnter>
+					<OnLeave>
+						GameTooltip:Hide()
+					</OnLeave>
+				</Scripts>
+			</Frame>
+			<Button name="$parentCloseButton" inherits="UIPanelCloseButton">
+				<Anchors>
+					<Anchor point="TOPRIGHT">
+						<Offset>
+							<AbsDimension x="-3" y="-3"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+			<Button name="$parentButton1" inherits="UIPanelButtonTemplate" id="1" Text="Okay">
+				<Size>
+					<AbsDimension x="120" y="20"/>
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOM" >
+						<Offset>
+							<AbsDimension x="-64" y="16"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						TT_CatchUpLearnPlan()
+						HideUIPanel(this:GetParent());
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parentButton2" inherits="UIPanelButtonTemplate" id="2" Text="Cancel">
+				<Size>
+					<AbsDimension x="120" y="20"/>
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOM" >
+						<Offset>
+							<AbsDimension x="64" y="16"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						HideUIPanel(this:GetParent());
+					</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+	</Frame>
 
     <Frame name="TT_LvlPlanDisplayTemplate" virtual="true"> 
     <!-- Icon  Level, Name, Rank

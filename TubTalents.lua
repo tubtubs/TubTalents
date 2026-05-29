@@ -2,16 +2,24 @@
 -- TODO: Add caching to tooltips? 
 
 ---- NEW TODO:
---- Dropdowns: 
+--- Dropdowns: [CHECK]
 --  Rename Preset or Plan [CHECK]
---  Deselect levelling plan
---  Move save options to very end of the list
---  Dynamic tooltips (at least when disabled)
+--  Deselect levelling plan [CHECK]
+--  Move save options to very end of the list [CHECK]
+--  Dynamic tooltips (at least when disabled) [CHECK]
 --- Levelling plan frame tooltips
+--- Levelling plan frame toggle button
+--- Refine Frame
+-- Talents title -> TubTalents, why not bro
+-- Level text needs to have a spot chizzled out for it or something
 --- Make your own tooltip frame for talents
 --- AddonMessage Preset and Plan sharing
 --- Attempt to make levelling plans more supporting of servers with level 1 talents?
 --- check for name conflicts and offer renames on import
+
+---KNOWN ISSUES:
+-- Selecting a plan while staging things has issues, might think it's incompatible.
+
 
 --Functions to overwrite TalentFrame functionality
 local _G = getfenv(0)
@@ -66,16 +74,6 @@ local TT_DialogOpts = {
             value="presets"
         },
         {
-            name="Save Build",
-            tooltip="Enter to save",
-            notCheckable=true,
-            hasEditBox=true,
-            disabled = function() return TT_SavePresetButton_OnUpdate() end,
-            editBoxText=function() return "" end,
-            editBoxFunc=function(s) TT_NewPreset(s) end,
-            value=""
-        },
-        {
             name="Import Preset",
             tooltip="Opens a window to paste in a preset\nMust be for your class",
             notCheckable=true,
@@ -86,8 +84,20 @@ local TT_DialogOpts = {
             name="Stage Current Build",
             tooltip="Stages current learned talents\n Only needed in SimMode",
             notCheckable=true,
+            disabledTooltip="Only useful in Sim Mode",
             disabled = function() return not TT_SimMode end,
             func=TT_StageCurrentSpec,
+            value=""
+        },
+        {
+            name="Save Preset",
+            tooltip="Enter to save",
+            notCheckable=true,
+            hasEditBox=true,
+            disabledTooltip="Start staging or spending points to save a preset",
+            disabled = function() return TT_SavePresetButton_OnUpdate() end,
+            editBoxText=function() return "" end,
+            editBoxFunc=function(s) TT_NewPreset(s) end,
             value=""
         },
     },
@@ -655,15 +665,15 @@ function TT_TalentPresets_DewdropLevelGen(opts,args)
     end
     for i,j in ipairs(opts) do
         if j.value ~= "" then -- next level
-            if j.disabled and j.disabled() then
+            if j.disabled and j.disabled(args1) then
                 TT_TalentPresets_Dewdrop:AddLine(
                     'text', j.name,
                     'tooltipTitle', j.tooltipTitle or nil,
-                    'tooltipText', j.tooltip or nil,  
+                    'tooltipText', j.disabledTooltip or nil,  
                     'textR', 0.4,
                     'textG', 0.4,
                     'textB', 0.4,
-                    'disabled', j.disabled(),
+                    'disabled', j.disabled(args1),
                     --'value', j.value,
                     'hasArrow', false,
                     'notCheckable', true
@@ -692,23 +702,31 @@ function TT_TalentPresets_DewdropLevelGen(opts,args)
                     'value', j.value,
                     'hasArrow', true,
                     --'id',j.id or nil,
+                    'arg1', j.arg1 or args1 or nil,
+                    'arg2', j.arg2 or args2 or nil,
+                    'arg3', j.arg3 or args3 or nil,
+                    'arg4', j.arg4 or args4 or nil,
                     'checked', j.checked(j.id) or nil,
                     'notCheckable', false
                 )
             end
-        elseif j.disabled and j.disabled() then
+        elseif j.disabled and j.disabled(args1) then
             if j.checked ~= nil then
                 TT_TalentPresets_Dewdrop:AddLine(
                     'text', j.name,
                     'tooltipTitle', j.tooltipTitle or nil,
-                    'tooltipText', j.tooltip or nil,  
+                    'tooltipText', j.disabledTooltip or nil,  
                     'textR', 0.4,
                     'textG', 0.4,
                     'textB', 0.4,
+                    'arg1', j.arg1 or args1 or nil,
+                    'arg2', j.arg2 or args2 or nil,
+                    'arg3', j.arg3 or args3 or nil,
+                    'arg4', j.arg4 or args4 or nil,
                     'func', j.func,
                     'value', j.value,
                     'hasArrow', false,
-                    'disabled', j.disabled(),
+                    'disabled', j.disabled(args1),
                     --'id',j.id or nil,
                     'checked', j.checked(j.id) or nil,
                     'notCheckable', j.notCheckable
@@ -717,14 +735,14 @@ function TT_TalentPresets_DewdropLevelGen(opts,args)
                 TT_TalentPresets_Dewdrop:AddLine(
                     'text', j.name,
                     'tooltipTitle', j.tooltipTitle or nil,
-                    'tooltipText', j.tooltip or nil,  
+                    'tooltipText', j.disabledTooltip or nil,  
                     'textR', 0.4,
                     'textG', 0.4,
                     'textB', 0.4,
                     'func', j.func,
                     'value', j.value,
                     'hasArrow', false,
-                    'disabled', j.disabled(),
+                    'disabled', j.disabled(args1),
                     'notCheckable', j.notCheckable
                 )    
             end
@@ -1708,25 +1726,6 @@ local TT_PlanOpts = {
             value="plans"
         },
         {
-            name="Save Plan",
-            tooltip="Enter to save",
-            notCheckable=true,
-            hasEditBox=true,
-            disabled = function() 
-                if TT_SimMode and not TT_PresetLoaded then
-                    for i=1, 3 do 
-                        if TT_TalentPointsSpent[i] > 0 then
-                            return false
-                        end
-                    end
-                end
-                return true
-             end,
-            editBoxText=function() return "" end,
-            editBoxFunc=function(s) TT_NewPlan(s) end,
-            value=""
-        },
-        {
             name="Import Plan",
             tooltip="Opens a window to paste in a plan",
             notCheckable=true,
@@ -1743,6 +1742,7 @@ local TT_PlanOpts = {
             name="Catch Up On Plan",
             tooltip="Catch up on your selected levelling plan.",
             notCheckable=true,
+            disabledTooltip="Only works if you have selected a plan\nAnd have points to spend",
             disabled = function() 
                 if TubTalent_Vars.CurrentLevellingPlan ~= 0 -- need plan selected
                 and TalentFrame.talentPoints > 0 then --need points to spend,
@@ -1751,6 +1751,26 @@ local TT_PlanOpts = {
                 return true
             end,
             func=function()  TT_CatchUpPlan() end,
+            value=""
+        },
+        {
+            name="Save Plan",
+            tooltip="Enter to save",
+            notCheckable=true,
+            hasEditBox=true,
+            disabledTooltip="Start making a plan to save one\nPlans can only be made in Sim Mode",
+            disabled = function() 
+                if TT_SimMode and not TT_PresetLoaded then
+                    for i=1, 3 do 
+                        if TT_TalentPointsSpent[i] > 0 then
+                            return false
+                        end
+                    end
+                end
+                return true
+             end,
+            editBoxText=function() return "" end,
+            editBoxFunc=function(s) TT_NewPlan(s) end,
             value=""
         },
     },
@@ -1818,17 +1838,9 @@ local TT_PlanOpts = {
         },
         ["plansmenu"] = {
             {
-            name="Select Plan",
-            --tooltipTitle="Learn Preset",
-            tooltip="Learns the selected plan\nNot available in Sim mode",
-            notCheckable=true,
-            --disabled = function() return TT_SimMode end, --I'll let you select it twice, no harm lel
-            func=function(arg1)  TT_SelectPlan(arg1) end,
-            value=""
-            },
-            {
             name="Stage Plan",
             tooltip="Stages the selected plan over your current build if possible\nEnable Sim mode if you don't want to reset your talents",
+            disabledTooltip="Must be in Sim Mode",
             notCheckable=true,
             disabled = function() return not TT_SimMode end,
             func=function(arg1)  TT_StagePlan(arg1) end,
@@ -1857,6 +1869,15 @@ local TT_PlanOpts = {
             name="Delete Plan",
             tooltip="Deletes the selected plan",
             notCheckable=true,
+            disabledTooltip="Can't delete the selected plan",
+            disabled=function(arg1) 
+                _, v = TT_FindPlan(arg1)
+                if v ~=nil and TT_CurrentLevellingPlan ~= nil 
+                and v.id == TT_CurrentLevellingPlan.id then
+                    return true
+                else 
+                    return false
+                end end,
             func=function(arg1)  TT_DeletePlan(arg1) end,
             value=""
             },
@@ -1961,11 +1982,17 @@ end
 
 function TT_SelectPlan(arg)
     _, v = TT_FindPlan(arg)
+    if TT_CurrentLevellingPlan ~= nil and v.id == TT_CurrentLevellingPlan.id then -- deselect current one
+        TT_Out("TEST")
+        TubTalent_Vars.CurrentLevellingPlan = 0
+        TT_CurrentLevellingPlan = nil
+        return
+    end
     if TT_CheckPlan(v.plan) then 
         TubTalent_Vars.CurrentLevellingPlan = v.id
         TT_CurrentLevellingPlan = v
     end
-    TT_LevellingPlans_DewDrop:Close()
+    --TT_LevellingPlans_DewDrop:Close()
     TT_StagedTalentsFrame_Update()
 end
 
@@ -2059,11 +2086,13 @@ function TT_RegenPlansDropdown()
             end
             a = a .. "Min Level: " .. v.levellingPlanMinLevel .. "\n"
             a = a .. "Max Level: " .. v.levellingPlanMaxLevel .. "\n"
+            a = a .. "|cff1eff0cClick to select this plan|r"
             local t = {
                 name=v.name,
                 tooltipTitle=v.name,
                 tooltip=a,
                 id=v.id,
+                arg1=v.id,
                 notCheckable=false,
                 checked = function(id)
                     if TubTalent_Vars.CurrentLevellingPlan ~= nil then
@@ -2071,6 +2100,10 @@ function TT_RegenPlansDropdown()
                             return true
                         end
                     end return false  end,
+                func=function(id)
+                    TT_SelectPlan(id)
+                    TT_RegenPlansDropdown()
+                end,
                 value="plansmenu:"..v.id
             }
             table.insert(TT_PlanOpts[2]["plans"],t)

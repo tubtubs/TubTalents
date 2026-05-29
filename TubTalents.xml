@@ -594,7 +594,7 @@
 					</Anchor>
 				</Anchors>
 				<ScrollChild>
-					<EditBox name="$parent_EditBox" multiLine="1" font="GameFontNormal">
+					<EditBox autoFocus="0" name="$parent_EditBox" multiLine="1" font="GameFontNormal">
 						<Size>
 							<AbsDimension x="300" y="480" />
 						</Size>

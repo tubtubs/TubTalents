@@ -1,62 +1,16 @@
 -- TODO: Add other markers for previewed talent points vs already spent points?
--- Add caching to tooltips? 
--- First test on Wallcraft found a weird quirk, will need to change my learning functions a bit
--- the button indexes are out of order on Wallcraft, so I'll need to order them based on tier
--- myself most likely
+-- TODO: Add caching to tooltips? 
 
---*LEVELING PLAN TODO*--
---- Add it to presets
--- New functionality in LeftClick [CHECK]
--- New functionality in RightClick [CHECK]
--- Add frame to scroll through the staged presets levelling plan... [CHECK]
--- *Need to detect presets with no levelling plan
--- Store currently staged levelling plan locally [check]
--- Store currently selected levelling plan to saved variables [CHECK]
---
---- Dropdown Changes
--- Overwrite preset button... [CUT]
--- *I'd rather you just delete it..., tbh
--- Add checked state for staged presets? [CHECK]
--- Add current levelling plan to TubTalent_Vars [CHECK]
---
---- How to select learning plan?
--- Presets dropdown? [INPROGRESS]
--- *Can select, but there's no attempt at evaluating it.
--- *Use the learn function to evaluate it, find differences? At least start with that algo.
--- *Levelling plan frame?
--- *Attempt to adjust? (Will complete at level x instead if x is less than max level)
--- *Option for different max level?
--- 
---- AutoLearn [CHECK] --Still no safety logic...
--- Popup frame [Check]
--- ~~Check if its possible too~~ Check on levelling plan selection? Does it make sense to check on level up? :thinking:
--- OnLogin check for unspent points, OnLevelup check for unspent points
--- *offer catchup to spend lots of points, or show the next one if its just 1 point
---
---- Levelling Plan Safety Logic [check]
---  When spending points manually, make sure it doesn't conflict... [check]
---  *Disable the current plan when/if a conflict is detected [check]
---  *Check on: Selection, Points Spent, and on Login should be plenty. [check]
---  Add catchup button to plans drop down [check]
-
---- Baller tier:
--- Export/Import preset/plans PLANNED [ IN PROGRESS ]
---- *Offer to import current spec as preset in SIM mode [CHECK]
--- Share preset in party/guild? [Maybe...?]
--- *Means I'll need to consider class for presets most likely... [CHECK]
--- *Addon Message sharing would be so very baller, I'd love to try it.
--- *Would just have to send the table row by row? I think an initial handshaked ack would be best?
--- *Ack might be needed to avoid packets/chat messages arriving out of order, vmangos isn't hella reliable for that?
--- Conditional tooltips for dropdown menu items
--- Attempt to make levelling plans more supporting of servers with level 1 talents?
--- Disable levelling plan
-
---- Settings pane (Need to kinda tab with Levelling Plan Pane)
--- Minimap button?
--- Preset/Plan sharing...? Let people disable it imo.
--- Starting level...?
---- Don't really want to test, but it should be technically possible with the constant
---- Starting to think I'd rather have dropdowns, and slash commands
+---- NEW TODO:
+--- Dropdowns: 
+--  Rename Preset or Plan
+--  Deselect levelling plan
+--  Move save options to very end of the list
+--  Dynamic tooltips (at least when disabled)
+--- Levelling plan frame tooltips
+--- Make your own tooltip frame for talents
+--- AddonMessage Preset and Plan sharing
+--- Attempt to make levelling plans more supporting of servers with level 1 talents?
 
 --Functions to overwrite TalentFrame functionality
 local _G = getfenv(0)
@@ -124,7 +78,7 @@ local TT_DialogOpts = {
             name="Import Preset",
             tooltip="Opens a window to paste in a preset\nMust be for your class",
             notCheckable=true,
-            func=function()  TT_ProfileFrame_Show(TT_PROFILEMODES.ImportPreset) end,
+            func=function()  TT_ProfileFrame_Show(TT_PROFILEMODES.ImportPreset)  TT_TalentPresets_Dewdrop:Close() end,
             value=""
         },
         {
@@ -161,7 +115,7 @@ local TT_DialogOpts = {
             name="Export Preset",
             tooltip="Exports the selected preset",
             notCheckable=true,
-            func=function(arg1)  TT_ProfileFrame_Show(TT_PROFILEMODES.ExportPreset, arg1) end,
+            func=function(arg1)  TT_ProfileFrame_Show(TT_PROFILEMODES.ExportPreset, arg1) TT_TalentPresets_Dewdrop:Close() end,
             value=""
             },
             {
@@ -595,7 +549,7 @@ function TT_RegenPresetDropdown()
             local a = "ID: " .. v.id .. "\n"
             for i=1, 3 do
                 name, _, _ = GetTalentTabInfo(i)
-                a = format("%s%s in %s\n",a,v.points[i],name) --TODO: For some reason this doesn't run well at
+                a = format("%s%s in %s\n",a,v.points[i],name)
             end
             local t = {
                 name=v.name,
@@ -1755,7 +1709,7 @@ local TT_PlanOpts = {
             name="Import Plan",
             tooltip="Opens a window to paste in a plan",
             notCheckable=true,
-            func=function()  TT_ProfileFrame_Show(TT_PROFILEMODES.ImportPlan) end,
+            func=function()  TT_ProfileFrame_Show(TT_PROFILEMODES.ImportPlan) TT_LevellingPlans_DewDrop:Close() end,
             value=""
         },
         {
@@ -1863,7 +1817,7 @@ local TT_PlanOpts = {
             name="Export Plan",
             tooltip="Exports the selected plan",
             notCheckable=true,
-            func=function(arg1)  TT_ProfileFrame_Show(TT_PROFILEMODES.ExportPlan, arg1) end,
+            func=function(arg1)  TT_ProfileFrame_Show(TT_PROFILEMODES.ExportPlan, arg1) TT_LevellingPlans_DewDrop:Close() end,
             value=""
             },
             {
@@ -2201,22 +2155,39 @@ TT_PROFILEMODES = {
     ExportPlan = 4,
 }
 
+function TT_SetupExportWindow()
+    TT_ProfileFrame_ScrollFrame_EditBox:SetScript("OnCursorChanged",
+    function() this:HighlightText() end)
+    TT_ProfileFrame_ScrollFrame_EditBox:SetScript("OnShow",
+    function() this:HighlightText() TT_ProfileFrame_ScrollFrame_EditBox:SetFocus() end)
+end
+
+function TT_SetupImportWindow()
+    TT_ProfileFrame_ScrollFrame_EditBox:SetScript("OnCursorChanged",nil)
+    TT_ProfileFrame_ScrollFrame_EditBox:SetScript("OnShow", function() 
+    TT_ProfileFrame_ScrollFrame_EditBox:SetFocus() end)
+end
+
 function TT_ProfileFrame_Show(Mode,ID)
     TT_ProfileFrameMode = Mode
     -- change titles and button prompts depending on the mode
     -- also fill in text field and auto select all text for exports
     if TT_ProfileFrameMode == TT_PROFILEMODES.ExportPreset then
+        TT_SetupExportWindow()
         TT_ProfileFrame_ScrollFrame_EditBox:SetText(TT_ExportPreset(ID))
         TT_ProfileFrameTitleString:SetText("Export Preset")
     elseif TT_ProfileFrameMode == TT_PROFILEMODES.ExportPlan then
+        TT_SetupExportWindow()
         TT_ProfileFrame_ScrollFrame_EditBox:SetText(TT_ExportPlan(ID))
         TT_ProfileFrameTitleString:SetText("Export Plan")
     elseif TT_ProfileFrameMode == TT_PROFILEMODES.ImportPreset then
+        TT_SetupImportWindow()
         TT_ProfileFrame_ScrollFrame_EditBox:SetText("")
         TT_ProfileFrameTitleString:SetText("Import Preset")
     elseif TT_ProfileFrameMode == TT_PROFILEMODES.ImportPlan then
+        TT_SetupImportWindow()
         TT_ProfileFrame_ScrollFrame_EditBox:SetText("")
-        TT_ProfileFrameTitleString:SetText("Export Preset")
+        TT_ProfileFrameTitleString:SetText("Import Plan")
     end
     TT_ProfileFrame:Show()
 end
@@ -2323,28 +2294,6 @@ function TT_ExportPreset(presetID)
     p.class, p.name, exportPresetTalents, exportPresetPoints)
     return exportPreset
 end
-
--- Plan schema
---     local n = {
---         tab = v.tab,
---         tabName = v.tabName,
---         btnID = v.btnID,
---         rank = v.rank,
---         icon = v.icon,
---         spellID = v.spellID,
---         name = v.name,
---     }
-
--- Plan object schema
---     local newPlan = {
---         class = UnitClass("player"),
---         name = name,
---         points = tp,
---         id = TubTalent_Vars.LevellingPlanIDMax,
---         levellingPlanMinLevel = planMinLevel, --Min level might get cut...
---         levellingPlanMaxLevel = planMaxLevel,
---         plan = t
---     }
 
 TT_ExportPlanTemplate = 
 [[%s[%s] = {

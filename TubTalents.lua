@@ -3,7 +3,7 @@
 
 ---- NEW TODO:
 --- Dropdowns: 
---  Rename Preset or Plan
+--  Rename Preset or Plan [CHECK]
 --  Deselect levelling plan
 --  Move save options to very end of the list
 --  Dynamic tooltips (at least when disabled)
@@ -11,6 +11,7 @@
 --- Make your own tooltip frame for talents
 --- AddonMessage Preset and Plan sharing
 --- Attempt to make levelling plans more supporting of servers with level 1 talents?
+--- check for name conflicts and offer renames on import
 
 --Functions to overwrite TalentFrame functionality
 local _G = getfenv(0)
@@ -109,6 +110,18 @@ local TT_DialogOpts = {
             tooltip="Stages the selected preset over your current build if possible\nEnable Sim mode if you don't want to reset your talents",
             notCheckable=true,
             func=function(arg1)  TT_TalentPresetStage(arg1) end,
+            value=""
+            },
+            {
+            name="Rename Preset",
+            tooltip="Enter to save",
+            notCheckable=true,
+            hasEditBox=true,
+            editBoxText=function(arg1) 
+                _, v =  TT_FindTalentPreset(arg1) 
+                return v.name 
+            end,
+            editBoxFunc=function(arg1,s) TT_RenamePreset(arg1,s) end,
             value=""
             },
             {
@@ -594,6 +607,13 @@ function TT_NewPreset(name)
     TT_RegenPresetDropdown()
 end
 
+function TT_RenamePreset(presetID, name)
+    _, v = TT_FindTalentPreset(presetID)
+    v.name = name
+    TT_RegenPresetDropdown()
+    --TT_TalentPresets_Dewdrop:Close()
+end
+
 --Dropdown Setup/Utilities
 function TT_TalentFramePreferences_DewdropRegister()
     TT_TalentPresets_Dewdrop:Register(TalentFramePresetsButton, --Bound Frame
@@ -738,7 +758,8 @@ function TT_TalentPresets_DewdropLevelGen(opts,args)
                 'hasArrow', true,
                 'notCheckable', j.notCheckable,
                 'hasEditBox', j.hasEditBox,
-                'editBoxText', j.editBoxText(),
+                'editBoxText', j.editBoxText(args1),
+                'editBoxArg1', j.arg1 or args1 or nil,
                 'editBoxFunc', j.editBoxFunc
             )
         elseif j.notCheckable and j.func == nil then -- titles
@@ -1814,6 +1835,18 @@ local TT_PlanOpts = {
             value=""
             },
             {
+            name="Rename Plan",
+            tooltip="Enter to save",
+            notCheckable=true,
+            hasEditBox=true,
+            editBoxText=function(arg1) 
+                _, v =  TT_FindPlan(arg1) 
+                return v.name 
+            end,
+            editBoxFunc=function(arg1,s) TT_RenamePlan(arg1,s) end,
+            value=""
+            },
+            {
             name="Export Plan",
             tooltip="Exports the selected plan",
             notCheckable=true,
@@ -2007,6 +2040,12 @@ function TT_NewPlan(name)
     table.insert(TT_LevellingPlans, newPlan)
     TT_RegenPlansDropdown()
     TT_LevellingPlans_DewDrop:Close()
+end
+
+function TT_RenamePlan(planID, name)
+    _, v = TT_FindPlan(planID)
+    v.name = name
+    TT_RegenPlansDropdown()
 end
 
 function TT_RegenPlansDropdown()

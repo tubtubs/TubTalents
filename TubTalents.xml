@@ -6,6 +6,7 @@
                 this:RegisterEvent("PLAYER_LOGIN");
                 this:RegisterEvent("ADDON_LOADED");
 				this:RegisterEvent("PLAYER_LEVEL_UP");
+				this:RegisterEvent("CHARACTER_POINTS_CHANGED");
             </OnLoad>
             <OnEvent>
                 TubTalents_Init()

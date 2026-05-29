@@ -34,16 +34,24 @@
 -- *offer catchup to spend lots of points, or show the next one if its just 1 point
 --
 --- Levelling Plan Safety Logic
---  When spending points manually, make sure it doesn't conflict...
---  *Disable the current plan when/if a conflict is detected
---  Add catchup button to plans drop down
+--  When spending points manually, make sure it doesn't conflict... [check]
+--  *Disable the current plan when/if a conflict is detected [check]
+--  *Check on: Selection, Points Spent, and on Login should be plenty. [check]
+--  Add catchup button to plans drop down [check]
 
 --- Baller tier:
--- Export preset PLANNED
+-- Export/Import preset/plans PLANNED
+--- *Offer to import current spec as preset in SIM mode
 -- Share preset in party/guild? [Maybe...?]
 -- *Means I'll need to consider class for presets most likely...
 -- Addon Message sharing would be so very baller, I'd love to try it.
 -- *Would just have to send the table row by row? I think an initial handshaked ack would be best?
+-- Conditional tooltips for dropdown menu items
+-- Attempt to make levelling plans more supporting of servers with level 1 talents?
+
+--- Settings pane (Need to kinda tab with Levelling Plan Pane)
+-- Minimap button
+-- Starting level...?
 
 --Functions to overwrite TalentFrame functionality
 local _G = getfenv(0)
@@ -51,6 +59,8 @@ local libIcon = LibStub("LibDBIcon-1.0");
 local libData = LibStub("LibDataBroker-1.1");
 local TT_TalentPresets_Dewdrop = AceLibrary("Dewdrop-2.0");
 local TT_LevellingPlans_DewDrop = AceLibrary("Dewdrop-2.0");
+TT_DebugMode = false
+TT_LearnedTalentsFlag = true
 TT_MAX_TALENTS = 3
 TT_MAX_TALENTPOINTS = 51
 TT_SimMode = false
@@ -189,6 +199,22 @@ function TubTalents_Init()
         if TubTalent_Vars.AutoLearnPlans ~= TT_AUTOLEARN.Never then
             TT_CatchUpPlan()
         end
+    elseif event=="CHARACTER_POINTS_CHANGED" then
+        -- check plan viability... But only if points have been spent, not gained.
+        -- also maybe find a way to exclude if they were done by the addon. 
+        -- Disable with debug mode.
+        if (arg1 < 0) then --indicates learned talents...
+            if TubTalent_Vars.CurrentLevellingPlan ~= 0  and not TT_LearnedTalentsFlag then -- indicates if learned by this addon...
+                if TT_CheckPlan(TT_CurrentLevellingPlan.plan) then
+                    TT_CatchUpPlan()
+                else
+                    TubTalent_Vars.CurrentLevellingPlan = 0 
+                    TT_CurrentLevellingPlan = nil
+                end
+            else
+                TT_LearnedTalentsFlag = false
+            end
+        end 
     elseif event=="PLAYER_LOGIN" then
         if TubTalent_Vars == nil then
             TubTalent_Vars = {
@@ -207,7 +233,20 @@ function TubTalents_Init()
         end
         if TubTalent_Vars.CurrentLevellingPlan ~= 0 then
             _, TT_CurrentLevellingPlan = TT_FindPlan(TubTalent_Vars.CurrentLevellingPlan)
-            if TT_CurrentLevellingPlan == nil then TT_Out("WEE WOOO") end
+            if TT_CurrentLevellingPlan == nil then 
+                TalentFrame_LoadUI();
+                TT_Out("Error: No levelling plan loaded... Invalid levelling plan selected.")
+                TubTalent_Vars.CurrentLevellingPlan = 0 
+                TT_CurrentLevellingPlan = nil
+            else
+                TalentFrame_LoadUI();
+                if TT_CheckPlan(TT_CurrentLevellingPlan.plan) then
+                    TT_CatchUpPlan()
+                else
+                    TubTalent_Vars.CurrentLevellingPlan = 0 
+                    TT_CurrentLevellingPlan = nil
+                end
+            end
         end
         TubTalents_MinimapIconRegister()
         TT_StagedTalentsFramePlans_DewdropRegister()
@@ -229,7 +268,7 @@ function TubTalents_Init()
         end
         TT_TalentPresets = TubTalent_Vars.TalentPresets
         TT_LevellingPlans = TubTalent_Vars.LevellingPlans
-        TT_CatchUpPlan()
+
     elseif event == "ADDON_LOADED" then
         if arg1=="Blizzard_TalentUI" then
             --If you wait for the addon to load hooking is fine, won't hook properly otherwise
@@ -1663,6 +1702,20 @@ local TT_PlanOpts = {
             notCheckable=true,
             value="plansoptions"
         },
+        {
+            name="Catch Up On Plan",
+            tooltip="Catch up on your selected levelling plan.",
+            notCheckable=true,
+            disabled = function() 
+                if TubTalent_Vars.CurrentLevellingPlan ~= 0 -- need plan selected
+                and TalentFrame.talentPoints > 0 then --need points to spend,
+                    return false
+                end
+                return true
+            end,
+            func=function()  TT_CatchUpPlan() end,
+            value=""
+        },
     },
     [2] = { --populate with plans
         ["plans"]={
@@ -1785,6 +1838,39 @@ hideOnEscape = true,
 preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
 }
 
+function TT_CheckPlan(plan)
+--Check staged talents against currently learned talents
+--If there's something learned, but not staged then raise an error message
+-- and: Warn? Disable the current levelling plan?
+-- We'll just scan learned talents, and if anything isnt in the levelling plan
+-- raise an error.
+--- If you have something extra learned, its an issue as you'll be lacking points
+--- If you're missing something from the levelling plan, we'll get there
+---- It'll fail to find something learned early though...? (Added key check)
+    --local t = {}
+    local estLevel = UnitLevel("player")
+    for i=1, 3 do
+        for m=1, MAX_NUM_TALENTS do
+            name, iconTexture, tier, column, rank, maxRank, 
+            isExceptional, meetsPrereq = TT_GetTalentInfo(i,m);
+            local found = 0 
+            if rank ~= nil and rank > 0 then -- just check every learned rank...
+                for k,v in plan do
+                    TT_Out(k)
+                    if tonumber(k) <= estLevel and v.tab == i and v.btnID == m and v.rank == rank then
+                        found = 1
+                    end
+                end
+                if found ~= 1 then
+                    TT_Out("ERROR WITH LEVELLING PROFILE")
+                    return false
+                end
+            end
+        end
+    end
+    return true
+end
+
 function TT_CatchUpLearnPlan()
     local cp1, cp2 = UnitCharacterPoints("player");
     local estLevel = max(UnitLevel("player") - cp1 + 1,10)
@@ -1796,6 +1882,7 @@ function TT_CatchUpLearnPlan()
             LearnTalentRank(tab, btn, rank)
             cp1 = cp1 - 1
             estLevel = estLevel + 1
+            TT_LearnedTalentsFlag = true
         else
             TT_Out("End of leveling plan?")
             break
@@ -1826,8 +1913,10 @@ end
 
 function TT_SelectPlan(arg)
     _, v = TT_FindPlan(arg)
-    TubTalent_Vars.CurrentLevellingPlan = v.id
-    TT_CurrentLevellingPlan = v
+    if TT_CheckPlan(v.plan) then 
+        TubTalent_Vars.CurrentLevellingPlan = v.id
+        TT_CurrentLevellingPlan = v
+    end
     TT_LevellingPlans_DewDrop:Close()
     TT_StagedTalentsFrame_Update()
 end

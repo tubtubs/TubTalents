@@ -258,17 +258,14 @@ function TubTalents_Init()
         end
         TT_TalentPresets = TubTalent_Vars.TalentPresets
         TT_LevellingPlans = TubTalent_Vars.LevellingPlans
-        TT_RegenPresetDropdown()
-        TT_RegenPlansDropdown()
+        TalentFrame_LoadUI();
         if TubTalent_Vars.CurrentLevellingPlan ~= 0 then
             _, TT_CurrentLevellingPlan = TT_FindPlan(TubTalent_Vars.CurrentLevellingPlan)
             if TT_CurrentLevellingPlan == nil then 
-                TalentFrame_LoadUI();
                 TT_Out("Error: No levelling plan loaded... Invalid levelling plan selected.")
                 TubTalent_Vars.CurrentLevellingPlan = 0 
                 TT_CurrentLevellingPlan = nil
             else
-                TalentFrame_LoadUI();
                 if TT_CheckPlan(TT_CurrentLevellingPlan.plan) then
                     TT_CatchUpPlan()
                 else
@@ -295,8 +292,6 @@ function TubTalents_Init()
             TT_TalentTooltip = TT_TalentTooltipNoMods
             TT_TalentFrameTalent_OnShiftClick = TT_TalentFrameTalent_OnShiftClickNoMods
         end
-
-
     elseif event == "ADDON_LOADED" then
         if arg1=="Blizzard_TalentUI" then
             --If you wait for the addon to load hooking is fine, won't hook properly otherwise
@@ -412,10 +407,18 @@ function TubTalents_Init()
             
             TT_OldGetTalentTabInfo = GetTalentTabInfo
             GetTalentTabInfo = TT_GetTalentTabInfo
+            TT_OldTalentFrame_OnShow = TalentFrame_OnShow
+            TalentFrame_OnShow = TT_TalentFrame_OnShow
             TT_TalentFrame_Init()
             TT_TalentFramePreferences_DewdropRegister()
         end
     end
+end
+
+function TT_TalentFrame_OnShow() 
+TT_OldTalentFrame_OnShow()
+TT_RegenPlansDropdown()
+TT_RegenPresetDropdown()
 end
 
 -- Need to move some function setups over to here...
@@ -592,7 +595,7 @@ function TT_RegenPresetDropdown()
             local a = "ID: " .. v.id .. "\n"
             for i=1, 3 do
                 name, _, _ = GetTalentTabInfo(i)
-                a = format("%s%s in %s\n",a,v.points[i],name) --TODO: For some reason this doesn't run well at first
+                a = format("%s%s in %s\n",a,v.points[i],name) --TODO: For some reason this doesn't run well at
             end
             local t = {
                 name=v.name,
@@ -2058,8 +2061,8 @@ function TT_RegenPlansDropdown()
         for k,v in pairs(TT_LevellingPlans) do
             local a = "ID: " .. v.id .. "\n"
             for i=1, 3 do
-                name, _, _ = GetTalentTabInfo(i)
-                a = format("%s%s in %s\n",a,v.points[i],name)
+                --name, _, _ = GetTalentTabInfo(i)
+                a = format("%s%s\n",a,v.points[i])
             end
             a = a .. "Min Level: " .. v.levellingPlanMinLevel .. "\n"
             a = a .. "Max Level: " .. v.levellingPlanMaxLevel .. "\n"

@@ -159,8 +159,8 @@
 	</Frame>
 
     <Frame name="TT_LvlPlanDisplayTemplate" virtual="true"> 
-    <!-- Icon  Level, Name, Rank
-    -->
+		<!-- Icon  Level, Name, Rank
+		-->
         <Size>
             <AbsDimension x="245" y="60" />
         </Size>
@@ -487,4 +487,184 @@
 			</OnHide>
 		</Scripts>
     </Frame>
+
+	<Frame name="TT_ProfileFrame" parent="UIParent" frameStrata="DIALOG" hidden="true">
+		<Anchors>
+			<Anchor point="CENTER" relativeTo="UIParent">
+				<Offset>
+					<AbsDimension x="0" y="0"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Size>
+			<AbsDimension x="400" y="600" />
+		</Size>
+		<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
+			<BackgroundInsets>
+				<AbsInset left="11" right="12" top="12" bottom="11" />
+			</BackgroundInsets>
+			<TileSize>
+				<AbsValue val="32" />
+			</TileSize>
+			<EdgeSize>
+				<AbsValue val="32" />
+			</EdgeSize>
+		</Backdrop>
+		<Layers>
+			<Layer>
+				<Texture name="$parentTitleBorder" file="Interface\DialogFrame\UI-DialogBox-Header">
+					<Size>
+						<AbsDimension x="160" y="32" />
+					</Size>
+					<Anchors>
+						<Anchor point="TOP">
+							<Offset>
+								<AbsDimension x="0" y="5" />
+							</Offset>
+						</Anchor>
+					</Anchors>
+					<TexCoords left="0.2" right="0.8" top="0" bottom="0.6" />
+				</Texture>
+				<FontString name="$parentTitleString" font="GameFontNormal" text="TITLE">
+					<!--Window Title -->
+					<Size>
+						<AbsDimension x="140" y="0" />
+					</Size>
+					<Anchors>
+						<Anchor point="TOP">
+							<Offset>
+								<AbsDimension x="0" y="-5" />
+							</Offset>
+						</Anchor>
+					</Anchors>
+					<FontHeight>
+						<AbsValue val="12" />
+					</FontHeight>
+					<Color r="1" g="0.8196079" b="0" />
+					<Shadow>
+						<Color r="0" g="0" b="0" />
+						<Offset>
+							<AbsDimension x="1" y="-1" />
+						</Offset>
+					</Shadow>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Frame name="$parentLayer2">
+				<Anchors>
+					<Anchor point="LEFT">
+						<Offset x="40" y="-50" />
+					</Anchor>
+					<Anchor point="TOP">
+						<Offset x="50" y="-50" />
+					</Anchor>
+					<Anchor point="BOTTOM">
+						<Offset x="50" y="50" />
+					</Anchor>
+				</Anchors>
+				<Size>
+					<AbsDimension x="320" y="180" />
+				</Size>
+				<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\GLUES\COMMON\TextPanel-Border" tile="true">
+					<BackgroundInsets>
+						<AbsInset left="8" right="9" top="6" bottom="8" />
+					</BackgroundInsets>
+					<TileSize>
+						<AbsValue val="32" />
+					</TileSize>
+					<EdgeSize>
+						<AbsValue val="32" />
+					</EdgeSize>
+				</Backdrop>
+			</Frame>
+			<ScrollFrame name="$parent_ScrollFrame" inherits="UIPanelScrollFrameTemplate">
+				<Size>
+					<AbsDimension x="300" y="480"/>
+				</Size>
+				<Anchors>
+					<Anchor point="LEFT">
+						<Offset x="50" y="-60" />
+					</Anchor>
+					<Anchor point="TOP">
+						<Offset x="50" y="-60" />
+					</Anchor>
+					<Anchor point="BOTTOM">
+						<Offset x="50" y="60" />
+					</Anchor>
+				</Anchors>
+				<ScrollChild>
+					<EditBox name="$parent_EditBox" multiLine="1" font="GameFontNormal">
+						<Size>
+							<AbsDimension x="300" y="480" />
+						</Size>
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeTo="$parent_ScrollFrame">
+								<Offset x="-80" y="80" />
+							</Anchor>
+							<Anchor point="BOTTOMRIGHT"  relativeTo="$parent_ScrollFrame">
+								<Offset x="20" y="20" />
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnTextChanged>
+								local scrollBar = getglobal(this:GetParent():GetName().."ScrollBar")
+								this:GetParent():UpdateScrollChildRect();
+								local min;
+								local max;
+								min, max = scrollBar:GetMinMaxValues();
+								if ( max > 0 and (this.max ~= max) ) then
+									this.max = max;
+									scrollBar:SetValue(max);
+								end
+							</OnTextChanged>
+							<OnEnterPressed>
+							TT_ProfileFrame_SubmitButton_OnClick(); <!-- ReplaceMe -->
+							</OnEnterPressed>
+							<OnEscapePressed>
+							TT_ProfileFrame_ScrollFrame_EditBox:ClearFocus()
+							</OnEscapePressed>
+						</Scripts>
+					</EditBox>
+				</ScrollChild>
+			</ScrollFrame>
+			<Button name="$parent_SubmitButton" text="Okay" inherits="UIPanelButtonTemplate">
+				<Size>
+					<AbsDimension x="155" y="20" />
+				</Size>
+				<Anchors>
+					<Anchor point="CENTER" relativeTo="$parent">
+						<Offset>
+							<AbsDimension x="0" y="-260"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+					TT_ProfileFrame_SubmitButton_OnClick();  <!-- ReplaceMe -->
+                   </OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parent_Close" inherits="UIPanelCloseButton">
+				<Anchors>
+					<Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT">
+						<Offset>
+							<AbsDimension x="-2" y="-4"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+		</Frames>
+		<Scripts>
+			<OnLoad>             
+			tinsert(UISpecialFrames, "TT_ProfileFrame");
+			</OnLoad>
+			<OnShow>
+			PlaySound("igCharacterInfoOpen");
+			</OnShow>
+			<OnHide>
+			PlaySound("igCharacterInfoClose");
+			</OnHide>
+		</Scripts>
+	</Frame>
 </Ui>

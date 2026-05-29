@@ -124,7 +124,7 @@ local TT_DialogOpts = {
             name="Import Preset",
             tooltip="Opens a window to paste in a preset\nMust be for your class",
             notCheckable=true,
-            func=function()  TT_Out("TODO") end,
+            func=function()  TT_ProfileFrame_Show(TT_PROFILEMODES.ImportPreset) end,
             value=""
         },
         {
@@ -161,7 +161,7 @@ local TT_DialogOpts = {
             name="Export Preset",
             tooltip="Exports the selected preset",
             notCheckable=true,
-            func=function(arg1)  TT_Out("TODO") end,
+            func=function(arg1)  TT_ProfileFrame_Show(TT_PROFILEMODES.ExportPreset, arg1) end,
             value=""
             },
             {
@@ -592,7 +592,7 @@ function TT_RegenPresetDropdown()
             local a = "ID: " .. v.id .. "\n"
             for i=1, 3 do
                 name, _, _ = GetTalentTabInfo(i)
-                a = format("%s%s in %s\n",a,v.points[i],name)
+                a = format("%s%s in %s\n",a,v.points[i],name) --TODO: For some reason this doesn't run well at first
             end
             local t = {
                 name=v.name,
@@ -616,11 +616,11 @@ function TT_NewPreset(name)
         t[i] = {} -- initialize tab...
         _, _, tp[i] = GetTalentTabInfo(i)
         for m=1, MAX_NUM_TALENTS do
-                local _, _, _, _, rank, 
-                _, _, _ = TT_GetTalentInfo(i, m);
-                if rank ~=nil and rank ~= 0 then
-                    t[i][m] = rank
-                end
+            local _, _, _, _, rank, 
+            _, _, _ = TT_GetTalentInfo(i, m);
+            if rank ~=nil and rank ~= 0 then
+                t[i][m] = rank
+            end
         end
     end
 
@@ -1752,7 +1752,7 @@ local TT_PlanOpts = {
             name="Import Plan",
             tooltip="Opens a window to paste in a plan",
             notCheckable=true,
-            func=function()  TT_Out("TODO") end,
+            func=function()  TT_ProfileFrame_Show(TT_PROFILEMODES.ImportPlan) end,
             value=""
         },
         {
@@ -1860,7 +1860,7 @@ local TT_PlanOpts = {
             name="Export Plan",
             tooltip="Exports the selected plan",
             notCheckable=true,
-            func=function(arg1)  TT_Out("TODO") end,
+            func=function(arg1)  TT_ProfileFrame_Show(TT_PROFILEMODES.ExportPlan, arg1) end,
             value=""
             },
             {
@@ -2186,4 +2186,203 @@ function TT_StagedTalentsFrame_Update()
 	-- numEmotes is max entries, NUM_EMOTES_SHOWN is the number of lines, last one is supposed to be pixel size
 	-- But it works best if I just shove number of elements in there. My scroll area isn't litterally moving,
 	-- I'm merely switching out the elements every time a scroll event happens.
+end
+
+-- Import Export Code --
+TT_ProfileFrameMode = 0
+TT_PROFILEMODES = {
+    None = 0,
+    ExportPreset = 1,
+    ImportPreset = 2,
+    ExportPlan = 3,
+    ExportPlan = 4,
+}
+
+function TT_ProfileFrame_Show(Mode,ID)
+    TT_ProfileFrameMode = Mode
+    -- change titles and button prompts depending on the mode
+    -- also fill in text field and auto select all text for exports
+    if TT_ProfileFrameMode == TT_PROFILEMODES.ExportPreset then
+        TT_ProfileFrame_ScrollFrame_EditBox:SetText(TT_ExportPreset(ID))
+        TT_ProfileFrameTitleString:SetText("Export Preset")
+    elseif TT_ProfileFrameMode == TT_PROFILEMODES.ExportPlan then
+        TT_ProfileFrame_ScrollFrame_EditBox:SetText(TT_ExportPlan(ID))
+        TT_ProfileFrameTitleString:SetText("Export Plan")
+    elseif TT_ProfileFrameMode == TT_PROFILEMODES.ImportPreset then
+        TT_ProfileFrame_ScrollFrame_EditBox:SetText("")
+        TT_ProfileFrameTitleString:SetText("Import Preset")
+    elseif TT_ProfileFrameMode == TT_PROFILEMODES.ImportPlan then
+        TT_ProfileFrame_ScrollFrame_EditBox:SetText("")
+        TT_ProfileFrameTitleString:SetText("Export Preset")
+    end
+    TT_ProfileFrame:Show()
+end
+
+function TT_ProfileFrame_SubmitButton_OnClick()
+    if TT_ProfileFrameMode == TT_PROFILEMODES.ImportPreset then 
+        l = TT_ProfileFrame_ScrollFrame_EditBox:GetText();
+        f = loadstring(l);
+        if f ~= nil then
+            a = f()
+            for k,v in pairs(a) do
+                TT_Out(k)
+            end 
+        else
+            TT_Out("Imported preset is really corrupt, try re-exporting")
+            return
+        end
+
+        -- validate it...
+        if a.class == nil or a.name == nil or a.talents == nil or a.points == nil then
+            TT_Out("Imported preset is corrupt, try re-exporting")
+            return
+        end
+        if a.class ~= UnitClass("player") then
+            TT_Out("Imported preset doesn't match your class")
+            return
+        end
+        --give it a new id and add it
+        TubTalent_Vars.TalentPresetIDMax = TubTalent_Vars.TalentPresetIDMax+1
+        a.id = TubTalent_Vars.TalentPresetIDMax
+        table.insert(TT_TalentPresets, a)
+        TT_RegenPresetDropdown()
+        TT_Out("Successfully imported preset")
+    elseif TT_ProfileFrameMode == TT_PROFILEMODES.ImportPlan then
+        l = TT_ProfileFrame_ScrollFrame_EditBox:GetText();
+        f = loadstring(l);
+        if f ~= nil then
+            a = f() 
+        else
+            TT_Out("Imported plan is really corrupt, try re-exporting")
+            return
+        end
+
+        -- validate it...
+        if a.class == nil or a.name == nil or a.plan == nil or a.points == nil
+        or a.levellingPlanMinLevel== nil or a.levellingPlanMaxLevel==nil then
+            TT_Out("Imported plan is corrupt, try re-exporting")
+            return
+        end
+        if a.class ~= UnitClass("player") then
+            TT_Out("Imported plan doesn't match your class")
+            return
+        end
+        --give it a new id and add it
+        TubTalent_Vars.LevellingPlanIDMax = TubTalent_Vars.LevellingPlanIDMax + 1
+        a.id = TubTalent_Vars.LevellingPlanIDMax
+        table.insert(TT_LevellingPlans, a)
+        TT_RegenPlansDropdown()
+        TT_Out("Successfully imported plan")
+    else
+        TT_ProfileFrame:Hide();
+    end
+end
+
+TT_ExportPresetTalentsButtonsTemplate = 
+[[%s            [%s]=%s,
+]]
+
+TT_ExportPresetTalentsTabsTemplate = 
+[[%s        [%s] = {
+]]
+
+TT_ExportPresetPointsTemplate = 
+[[{
+        [1] = %s,
+        [2] = %s,
+        [3] = %s,
+    }]]
+
+TT_ExportPresetObjectTemplate =
+[[return {
+    class = "%s",
+    name = "%s",
+    id = 0,
+    talents = %s,
+    points = %s,
+}]]
+function TT_ExportPreset(presetID)
+    _, p = TT_FindTalentPreset(presetID)
+    local exportPresetPoints = format(TT_ExportPresetPointsTemplate,
+    p.points[1], p.points[2], p.points[3])
+    local exportPresetTalents = "{\n"
+    for k, v in p.talents do
+        exportPresetTalents = format(TT_ExportPresetTalentsTabsTemplate,
+        exportPresetTalents, k)
+        for m, b in p.talents[k] do
+            exportPresetTalents = format(TT_ExportPresetTalentsButtonsTemplate,
+            exportPresetTalents, m, b)
+        end
+        exportPresetTalents = exportPresetTalents .. "    },\n"
+    end
+    exportPresetTalents = exportPresetTalents .. "  }"
+    local exportPreset = format(TT_ExportPresetObjectTemplate,
+    p.class, p.name, exportPresetTalents, exportPresetPoints)
+    return exportPreset
+end
+
+-- Plan schema
+--     local n = {
+--         tab = v.tab,
+--         tabName = v.tabName,
+--         btnID = v.btnID,
+--         rank = v.rank,
+--         icon = v.icon,
+--         spellID = v.spellID,
+--         name = v.name,
+--     }
+
+-- Plan object schema
+--     local newPlan = {
+--         class = UnitClass("player"),
+--         name = name,
+--         points = tp,
+--         id = TubTalent_Vars.LevellingPlanIDMax,
+--         levellingPlanMinLevel = planMinLevel, --Min level might get cut...
+--         levellingPlanMaxLevel = planMaxLevel,
+--         plan = t
+--     }
+
+TT_ExportPlanTemplate = 
+[[%s[%s] = {
+    tab = %s,
+    tabName = "%s",
+    btnID = %s,
+    rank = %s,
+    icon = "%s",
+    spellID = %s,
+    name = "%s",
+},
+]]
+TT_ExportPlanPointsTemplate = 
+[[{
+    [1] = %s,
+    [2] = %s,
+    [3] = %s,
+}]]
+TT_ExportPlanObjectTemplate = 
+[[return {
+    class = "%s",
+    name = "%s",
+    points = %s,
+    id = 0,
+    levellingPlanMinLevel = %s,
+    levellingPlanMaxLevel = %s,
+    plan = %s,
+}]] -- leaving id at 0, gets re-assigned on import
+function TT_ExportPlan(planID)
+    _, p = TT_FindPlan(planID)
+    local exportPlanPoints = format(TT_ExportPlanPointsTemplate,
+    p.points[1], p.points[2], p.points[3])
+    local exportPlanLevels = "{\n"
+    for k,v in p.plan do
+        local t = string.gsub(v.icon,"\\","\\\\")
+        exportPlanLevels = format(TT_ExportPlanTemplate, exportPlanLevels,
+        k, v.tab, v.tabName, v.btnID, v.rank, t, v.spellID, v.name)
+    end
+    exportPlanLevels = exportPlanLevels .. "}\n"
+    local exportPlan = format(TT_ExportPlanObjectTemplate,
+    p.class, p.name, exportPlanPoints, p.levellingPlanMinLevel, 
+    p.levellingPlanMaxLevel, exportPlanLevels)
+    return exportPlan
 end

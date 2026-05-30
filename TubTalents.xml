@@ -227,6 +227,14 @@
                 <AbsValue val="32" />
             </EdgeSize>
         </Backdrop>
+		<Scripts>
+			<OnEnter>
+			TT_LvlPlanTooltip()
+			</OnEnter>
+			<OnLeave>
+			GameTooltip:Hide();
+			</OnLeave>
+		</Scripts>
     </Frame>
 
     <Frame name="TT_StagedTalentsFrame" frameStrata="HIGH" hidden="true">
@@ -472,6 +480,15 @@
             <Frame name="$parent_LvlPlanSpec5" inherits="TT_LvlPlanDisplayTemplate" id="5">
                 <Anchors>
 					<Anchor point="TOP" relativeTo="$parent_LvlPlanSpec4">
+						<Offset>
+							<AbsDimension x="0" y="-55"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+            </Frame>
+			<Frame name="$parent_LvlPlanSpec6" inherits="TT_LvlPlanDisplayTemplate" id="6">
+                <Anchors>
+					<Anchor point="TOP" relativeTo="$parent_LvlPlanSpec5">
 						<Offset>
 							<AbsDimension x="0" y="-55"/>
 						</Offset>

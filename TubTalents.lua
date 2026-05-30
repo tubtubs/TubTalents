@@ -7,15 +7,18 @@
 --  Deselect levelling plan [CHECK]
 --  Move save options to very end of the list [CHECK]
 --  Dynamic tooltips (at least when disabled) [CHECK]
---- Levelling plan frame tooltips
---- Levelling plan frame toggle button
---- Refine Frame
--- Talents title -> TubTalents, why not bro
--- Level text needs to have a spot chizzled out for it or something
---- Make your own tooltip frame for talents
---- AddonMessage Preset and Plan sharing
---- Attempt to make levelling plans more supporting of servers with level 1 talents?
+--- Levelling plan frame tooltips [check]
+--- Levelling plan frame toggle button [check]
+--- Refine Frame [check]
+-- Talents title -> TubTalents, why not bro [CHECK]
+-- Maybe just make a double tall header? Level text looks good where old title is [check]
+--- pfUI Compat
 --- check for name conflicts and offer renames on import
+-- Could also check for missing spellIDs and fill them in if your client supports it
+--- Make your own tooltip frame for talents?
+--- AddonMessage Preset and Plan sharing?
+--- Attempt to make levelling plans more supporting of servers with level 1 talents?
+--  I dont really have a way of testing. Don't want to make a server for this, ngl
 
 ---KNOWN ISSUES:
 -- Selecting a plan while staging things has issues, might think it's incompatible.
@@ -123,18 +126,6 @@ local TT_DialogOpts = {
             value=""
             },
             {
-            name="Rename Preset",
-            tooltip="Enter to save",
-            notCheckable=true,
-            hasEditBox=true,
-            editBoxText=function(arg1) 
-                _, v =  TT_FindTalentPreset(arg1) 
-                return v.name 
-            end,
-            editBoxFunc=function(arg1,s) TT_RenamePreset(arg1,s) end,
-            value=""
-            },
-            {
             name="Export Preset",
             tooltip="Exports the selected preset",
             notCheckable=true,
@@ -146,6 +137,18 @@ local TT_DialogOpts = {
             tooltip="Deletes the selected preset",
             notCheckable=true,
             func=function(arg1)  TT_TalentPresetDelete(arg1) end,
+            value=""
+            },
+            {
+            name="Rename Preset",
+            tooltip="Enter to save",
+            notCheckable=true,
+            hasEditBox=true,
+            editBoxText=function(arg1) 
+                _, v =  TT_FindTalentPreset(arg1) 
+                return v.name 
+            end,
+            editBoxFunc=function(arg1,s) TT_RenamePreset(arg1,s) end,
             value=""
             },
         }
@@ -257,17 +260,15 @@ function TubTalents_Init()
         if RQ_GetVersion then
             --TT_Out("Reliquary detected")
         else
-            TT_Out("Reliquary not found, falling back on old tooltips and disabling shift click links.")
-            TT_TalentTooltip = TT_TalentTooltipNoMods
-            TT_TalentFrameTalent_OnShiftClick = TT_TalentFrameTalent_OnShiftClickNoMods
+            --TT_Out("Reliquary not found, falling back on old tooltips and disabling shift click links.")
+            TT_NoClientMods()
         end
 
         if SUPERWOW_STRING then
             --TT_Out("SuperWoW detected")
         else
-            TT_Out("SuperWoW not found, falling back on old tooltips and disabling shift click links.")
-            TT_TalentTooltip = TT_TalentTooltipNoMods
-            TT_TalentFrameTalent_OnShiftClick = TT_TalentFrameTalent_OnShiftClickNoMods
+            --TT_Out("SuperWoW not found, falling back on old tooltips and disabling shift click links.")
+            TT_NoClientMods()
         end
     elseif event == "ADDON_LOADED" then
         if arg1=="Blizzard_TalentUI" then
@@ -288,6 +289,15 @@ function TubTalents_Init()
             myButton:SetPoint("CENTER", TalentFrame, "TOPLEFT", 115, -421)
             myButton:SetText("Reset")
             myButton:SetScript("OnClick",TT_ResetButton_OnClick)
+
+            local myButton = CreateFrame("Button", "TalentFrameLevelPlanButton", TalentFrame, "UIPanelButtonTemplate")
+            myButton:SetHeight(20)
+            myButton:SetWidth(120)
+            myButton:SetPoint("CENTER", TalentFrame, "TOPLEFT", 270, -24)
+            myButton:SetText("Levelling Plans >>")
+            myButton:SetScript("OnClick",function() if TT_StagedTalentsFrame:IsShown() then
+                TT_StagedTalentsFrame:Hide() else TT_StagedTalentsFrame:Show() 
+                end TT_LevellingPlans_DewDrop:Close() end)
 
             local myButton = CreateFrame("Button", "TalentFramePresetsButton", TalentFrame, "UIPanelButtonTemplate")
             myButton:SetHeight(15)
@@ -346,8 +356,10 @@ function TubTalents_Init()
             prompt:Hide()
 
             prompt = TalentFrame:CreateFontString("TalentFrameEstimatedLevel", "OVERLAY", "GameFontNormalSmall")
-            prompt:SetPoint("CENTER", TalentFrame, "TOP", 0, -68); -- Position it
-            prompt:SetText("Level: "..TT_MINLEVEL)
+            prompt:SetPoint("CENTER", TalentFrame, "TOPLEFT", 140, -24)
+            prompt:SetText("Estimated Level: "..TT_MINLEVEL)
+            prompt:SetFontObject("GameFontNormal")
+
             --Update buttons to initial state...
 
             TT_StagedTalentsFrame:SetParent(TalentFrame)
@@ -361,8 +373,29 @@ function TubTalents_Init()
             TT_StagedTalentsFrame_LvlPlanSpec3:SetFrameStrata("HIGH")
             TT_StagedTalentsFrame_LvlPlanSpec4:SetFrameStrata("HIGH")
             TT_StagedTalentsFrame_LvlPlanSpec5:SetFrameStrata("HIGH")
+            TT_StagedTalentsFrame_LvlPlanSpec6:SetFrameStrata("HIGH")
             TT_StagedTalentsFrame_PlanScrollFrame:SetFrameStrata("HIGH")
             TT_StagedTalentsFrame_PlansButton:SetFrameStrata("HIGH")
+            --Title frame
+            local f = CreateFrame("Frame", nil, TalentFrame)
+            f:SetFrameStrata("BACKGROUND")
+            f:SetWidth(256) 
+            f:SetHeight(32)
+
+            local t = f:CreateTexture(nil, "BACKGROUND")
+            t:SetTexture("Interface\\AddOns\\TubTalents\\txt\\header.tga") -- Or .tga
+            t:SetAllPoints(f)
+
+            f.texture = t
+            f:SetPoint("TOP", TalentFrame, "TOP", 0, 12); -- Position it
+            --f:Show()
+            f.text = f:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+            f.text:SetAllPoints(f)
+            f.text:SetText("TubTalents V2")
+            f.text:SetJustifyH("CENTER")
+            f.text:SetFontObject("GameFontNormal")
+            f:SetFrameStrata("HIGH")
+            TalentFrameTitleText:SetText("")
             --TT_StagedTalentsFrame_LvlPlanSpec6:SetFrameStrata("HIGH")
             PanelTemplates_UpdateTabs(TT_StagedTalentsFrame)
             --PanelTemplates_SetTab(TT_StagedTalentsFrame, 1);
@@ -392,10 +425,21 @@ function TubTalents_Init()
     end
 end
 
+function TT_NoClientMods()
+    TT_TalentTooltip = TT_TalentTooltipNoMods
+    TT_TalentFrameTalent_OnShiftClick = TT_TalentFrameTalent_OnShiftClickNoMods
+    TT_StagedTalentsFrame_LvlPlanSpec6:SetScript("OnEnter",nil)
+    TT_StagedTalentsFrame_LvlPlanSpec5:SetScript("OnEnter",nil)
+    TT_StagedTalentsFrame_LvlPlanSpec4:SetScript("OnEnter",nil)
+    TT_StagedTalentsFrame_LvlPlanSpec3:SetScript("OnEnter",nil)
+    TT_StagedTalentsFrame_LvlPlanSpec2:SetScript("OnEnter",nil)
+    TT_StagedTalentsFrame_LvlPlanSpec1:SetScript("OnEnter",nil)
+end
+
 function TT_TalentFrame_OnShow() 
-TT_OldTalentFrame_OnShow()
-TT_RegenPlansDropdown()
-TT_RegenPresetDropdown()
+    TT_OldTalentFrame_OnShow()
+    TT_RegenPlansDropdown()
+    TT_RegenPresetDropdown()
 end
 
 -- Need to move some function setups over to here...
@@ -1078,7 +1122,7 @@ function TT_UpdateEstimatedLevel()
         total = total + tabPoints
     end
     TT_StagedEstimatedLevel = TT_MINLEVEL + total
-    TalentFrameEstimatedLevel:SetText(format("Level: %s", TT_StagedEstimatedLevel))
+    TalentFrameEstimatedLevel:SetText(format("Estimated Level: %s", TT_StagedEstimatedLevel))
 end
 
 --Mostly overloaded for sim mode
@@ -1619,6 +1663,19 @@ function TT_TalentTooltipNoMods()
     GameTooltip:SetTalent(PanelTemplates_GetSelectedTab(TalentFrame), this:GetID());
 end
 
+function TT_LvlPlanTooltip()
+    local scrollOffset = FauxScrollFrame_GetOffset(TT_StagedTalentsFrame_PlanScrollFrame);
+    local id = this:GetID()
+    local index = id + scrollOffset + TT_MINLEVEL
+    GameTooltip:SetOwner(this, "ANCHOR_BOTTOMRIGHT");
+    if TT_CurrentTab == 2 then
+        plansToDisplay = TT_CurrentLevellingPlan.plan
+    else
+        plansToDisplay = TT_StagedLevellingPlan
+    end
+    GameTooltip:SetHyperlink(format("enchant:%s",plansToDisplay[index].spellID));
+end
+
 function TT_TalentTooltip()
     btnID = this:GetID()
     tab = TalentFrame.selectedTab
@@ -1713,7 +1770,7 @@ function TT_Out(msg)
 end
 
 -- Level Plan UI
-NUM_LVLPLAN_TALENTSSHOWN = 5
+NUM_LVLPLAN_TALENTSSHOWN = 6
 TT_CurrentTab = 1
 TT_PresetLoaded = false
 
@@ -1847,18 +1904,6 @@ local TT_PlanOpts = {
             value=""
             },
             {
-            name="Rename Plan",
-            tooltip="Enter to save",
-            notCheckable=true,
-            hasEditBox=true,
-            editBoxText=function(arg1) 
-                _, v =  TT_FindPlan(arg1) 
-                return v.name 
-            end,
-            editBoxFunc=function(arg1,s) TT_RenamePlan(arg1,s) end,
-            value=""
-            },
-            {
             name="Export Plan",
             tooltip="Exports the selected plan",
             notCheckable=true,
@@ -1879,6 +1924,18 @@ local TT_PlanOpts = {
                     return false
                 end end,
             func=function(arg1)  TT_DeletePlan(arg1) end,
+            value=""
+            },
+            {
+            name="Rename Plan",
+            tooltip="Enter to save",
+            notCheckable=true,
+            hasEditBox=true,
+            editBoxText=function(arg1) 
+                _, v =  TT_FindPlan(arg1) 
+                return v.name 
+            end,
+            editBoxFunc=function(arg1,s) TT_RenamePlan(arg1,s) end,
             value=""
             },
         }

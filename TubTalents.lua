@@ -12,17 +12,18 @@
 --- Refine Frame [check]
 -- Talents title -> TubTalents, why not bro [CHECK]
 -- Maybe just make a double tall header? Level text looks good where old title is [check]
---- pfUI Compat
---- check for name conflicts and offer renames on import
--- Could also check for missing spellIDs and fill them in if your client supports it
+--- pfUI Compat [good enough for now]
+--- check for name conflicts and offer renames on import [meh]
+-- Could also check for missing spellIDs and fill them in if your client supports it [check]
 --- Make your own tooltip frame for talents?
+--- Switch current tab/staged tab in levelling plan window
 --- AddonMessage Preset and Plan sharing?
 --- Attempt to make levelling plans more supporting of servers with level 1 talents?
 --  I dont really have a way of testing. Don't want to make a server for this, ngl
 
 ---KNOWN ISSUES:
 -- Selecting a plan while staging things has issues, might think it's incompatible.
-
+-- Catch up plan broken
 
 --Functions to overwrite TalentFrame functionality
 local _G = getfenv(0)
@@ -31,6 +32,7 @@ local libData = LibStub("LibDataBroker-1.1");
 local TT_TalentPresets_Dewdrop = AceLibrary("Dewdrop-2.0");
 local TT_LevellingPlans_DewDrop = AceLibrary("Dewdrop-2.0");
 TT_DebugMode = false
+TT_FakeNoMods = false
 TT_LearnedTalentsFlag = true
 TT_MAX_TALENTS = 3
 TT_MAX_TALENTPOINTS = 51
@@ -257,14 +259,14 @@ function TubTalents_Init()
         TubTalents_MinimapIconRegister()
         TT_StagedTalentsFramePlans_DewdropRegister()
         --Detecting client mods, and adjusting functionality...
-        if RQ_GetVersion then
+        if RQ_GetVersion and not TT_FakeNoMods then
             --TT_Out("Reliquary detected")
         else
             --TT_Out("Reliquary not found, falling back on old tooltips and disabling shift click links.")
             TT_NoClientMods()
         end
 
-        if SUPERWOW_STRING then
+        if SUPERWOW_STRING and not TT_FakeNoMods then
             --TT_Out("SuperWoW detected")
         else
             --TT_Out("SuperWoW not found, falling back on old tooltips and disabling shift click links.")
@@ -1157,9 +1159,10 @@ end
 
 --Utility function that returns a spellID for a talent given their tab/button id, and the next rank if available
 -- TODO: Optimize, consider caching tab IDs for the played class for that session after first lookup
-function TT_GetTalentSpellID(tab,btn)
+function TT_GetTalentSpellID(tab,btn,reqRank)
     local tabName, texture, points, fileName = GetTalentTabInfo(tab);
-    local name, iconTexture, tier, column, rank, maxRank, isExceptional, meetsPrereq = GetTalentInfo(tab,btnID);
+    local name, iconTexture, tier, column, stagedRank, maxRank, isExceptional, meetsPrereq = GetTalentInfo(tab,btn);
+    local rank = reqRank or stagedRank
     -- Named look ups are iffy... We could just try feeding a spellID into a tooltip and seeing what that does first, tbh.
     -- STEP: Get Spell ID for current rank
     -- Get which TalentTabID it is...
@@ -1494,7 +1497,7 @@ function TT_TalentFrameTalent_OnLeftClick()
 
     --Add to levelling plan...
     TT_UpdateEstimatedLevel()
-    if RQ_GetVersion and SUPERWOW_STRING then
+    if (RQ_GetVersion and SUPERWOW_STRING) and not TT_FakeNoMods then
         spellID, _ = TT_GetTalentSpellID(tab, btn)
     else
         spellID = 0 -- Disabled...
@@ -1673,7 +1676,10 @@ function TT_LvlPlanTooltip()
     else
         plansToDisplay = TT_StagedLevellingPlan
     end
-    GameTooltip:SetHyperlink(format("enchant:%s",plansToDisplay[index].spellID));
+    local sID = plansToDisplay[index].spellID
+    if sID ~= 0 then
+        GameTooltip:SetHyperlink(format("enchant:%s",sID))
+    end
 end
 
 function TT_TalentTooltip()
@@ -1739,9 +1745,9 @@ function TT_TalentTooltip()
         t=""
         TT_TalentTooltipFrame:SetOwner(GameTooltip, "ANCHOR_BOTTOM");
         TT_TalentTooltipFrame:SetHyperlink("enchant:"..spellId2);
-        t = TT_TalentTooltipFrameTextLeft1:GetText()
-        t = "Next Rank:\n" .. t
-        TT_TalentTooltipFrameTextLeft1:SetText(t)
+        --t = TT_TalentTooltipFrameTextLeft1:GetText()
+        --t = "Next Rank:\n" .. t
+        -- TT_TalentTooltipFrameTextLeft1:SetText(t)
         TT_TalentTooltipFrame:Show()
         TT_TalentTooltipFrame:ClearAllPoints()
         TT_TalentTooltipFrame:SetPoint("TOPLEFT", GameTooltip, "BOTTOMLEFT", 0, 0)
@@ -2321,6 +2327,15 @@ function TT_ProfileFrame_Show(Mode,ID)
     TT_ProfileFrame:Show()
 end
 
+function TT_CheckSpellIds(plan)
+    for k,v in pairs(plan) do
+        TT_Out(k)
+        if v.spellID == 0 then
+            v.spellID, _ = TT_GetTalentSpellID(v.tab, v.btnID, v.rank)
+        end
+    end
+end
+
 function TT_ProfileFrame_SubmitButton_OnClick()
     if TT_ProfileFrameMode == TT_PROFILEMODES.ImportPreset then 
         l = TT_ProfileFrame_ScrollFrame_EditBox:GetText();
@@ -2373,6 +2388,10 @@ function TT_ProfileFrame_SubmitButton_OnClick()
         --give it a new id and add it
         TubTalent_Vars.LevellingPlanIDMax = TubTalent_Vars.LevellingPlanIDMax + 1
         a.id = TubTalent_Vars.LevellingPlanIDMax
+        if (RQ_GetVersion and SUPERWOW_STRING) and not TT_FakeNoMods then
+            --re-cache spellIDs if they're missing...
+            TT_CheckSpellIds(a.plan)
+        end
         table.insert(TT_LevellingPlans, a)
         TT_RegenPlansDropdown()
         TT_Out("Successfully imported plan")

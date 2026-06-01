@@ -1696,101 +1696,102 @@ function TT_TalentTooltip()
     local name, _, tier, _, rank, maxRank, _, _ = GetTalentInfo(tab,btnID);
     
     --Setup Tooltip
-    -- adds to the first line
-    -- adds a new line to the right text of the next line every time
     TT_TalentTooltip_OnLeave() -- hide first to clear, just in case
-    GameTooltip:SetOwner(this, "ANCHOR_RIGHT");
-    GameTooltip:SetHyperlink("enchant:"..spellId1.. ":0:0:0");
-    local t = GameTooltipTextLeft2:GetText()
-    local tt = GameTooltipTextRight2:GetText()
-    local temp = "|cFFffffffRank ".. rank .. "/" .. maxRank .. "|r\n"
-    if tt ~= nil then tt = "\n" .. tt end 
-    --tier check
+    TT_TalentTooltipFrame:SetOwner(this, "ANCHOR_RIGHT");
+    TT_TalentTooltipFrame:SetHyperlink("enchant:"..spellId1.. ":0:0:0");
+    --staging rank
+    local addlines = {"|cFFffffffRank ".. rank .. "/" .. maxRank .. "|r"}
+    --staging tooltip for tier requirement
     local pointsReq = (tier-1)*5
     if ( ( pointsReq <= TalentFrame.pointsSpent ) ) then
         tierUnlocked = 1;
     else
         tierUnlocked = nil;
     end
-
     if tierUnlocked == nil then
-        temp = temp .. format("|cFFBE1B20Requires %s points in %s Talents|r\n", pointsReq, tabName)
-        if tt ~= nil then tt = "\n" .. tt end 
+        table.insert(addlines, format("|cFFFF2020Requires %s points in %s Talents|r\n", pointsReq, tabName))
     end
     local preReqTier, preReqColumn, preReqIsLearnable = TT_GetTalentPrereqs(tab,btnID)
-    --check pre-reqs
-    --Requires %s points in %s Talents
+    --staging tooltip for pre-req
     if preReqTier~=nil and preReqIsLearnable ~= 1 then
-        -- Requires %s points in %s
         local i = TALENT_BRANCH_ARRAY[preReqTier][preReqColumn].id
         local preReqName, _, _, _, _, preReqMaxRank, _, _ = GetTalentInfo(tab,i)
-        temp = temp .. format("|cFFBE1B20Requires %s points in %s|r\n",preReqMaxRank,preReqName)
-        if tt ~= nil then tt = "\n" .. tt end 
+        table.insert(addlines, format("|cFFFF2020Requires %s points in %s|r\n",preReqMaxRank,preReqName))
     end
-    -- add all the new data, and display it in the tooltip
-    t = temp .. t
-    if tt ~= nil then
-        if GameToolTipTextRight3 ~= nil then
-            tt = tt .. GameToolTipTextRigh3:GetText()
-            GameTooltipTextRight2:SetText("")
-        else
-            GameTooltipTextRight2:SetText(tt)
+    _G["TT_TalentTooltipFrameTextLeft1"]:SetFontObject(TT_TooltipText)
+    for i=1, getn(addlines) do
+        TT_TalentTooltipFrame:AddLine("Error") -- just needs to be something so it doesn't get removed
+
+        -- Shift all lines but title down addedLines times
+        for i=TT_TalentTooltipFrame:NumLines(), 2,-1 do
+            _G["TT_TalentTooltipFrameTextLeft"..i]:SetFontObject(TT_TooltipTextSmall)
+            _G["TT_TalentTooltipFrameTextLeft"..i]:SetTextColor(_G["TT_TalentTooltipFrameTextLeft"..i-1]:GetTextColor())
+            _G["TT_TalentTooltipFrameTextLeft"..i]:SetText(_G["TT_TalentTooltipFrameTextLeft"..i-1]:GetText())
+            _G["TT_TalentTooltipFrameTextLeft"..i]:SetWidth(_G["TT_TalentTooltipFrameTextLeft"..i-1]:GetWidth())
+            --Carefully check right texts
+            if _G["TT_TalentTooltipFrameTextRight"..i-1]:GetText() ~= nil then
+                _G["TT_TalentTooltipFrameTextRight"..i]:SetFontObject(TT_TooltipTextSmall)
+                _G["TT_TalentTooltipFrameTextRight"..i]:SetTextColor(_G["TT_TalentTooltipFrameTextRight"..i-1]:GetTextColor())
+                _G["TT_TalentTooltipFrameTextRight"..i]:SetText(_G["TT_TalentTooltipFrameTextRight"..i-1]:GetText())
+                _G["TT_TalentTooltipFrameTextRight"..i]:SetWidth(_G["TT_TalentTooltipFrameTextRight"..i-1]:GetWidth())
+                _G["TT_TalentTooltipFrameTextRight"..i]:Show()
+                _G["TT_TalentTooltipFrameTextRight"..i-1]:Hide()
+                _G["TT_TalentTooltipFrameTextRight"..i]:SetWidth(_G["TT_TalentTooltipFrameTextRight"..i]:GetStringWidth())
+            else
+                _G["TT_TalentTooltipFrameTextRight"..i]:SetText(nil)
+                _G["TT_TalentTooltipFrameTextRight"..i]:SetWidth(0)
+                _G["TT_TalentTooltipFrameTextRight"..i]:Hide()
+            end
         end
     end
-    GameTooltipTextLeft2:SetText(t)
-
+    -- Add staged newlines to the tooltip, after the talent name
+    for i=2, getn(addlines)+1 do
+        _G["TT_TalentTooltipFrameTextLeft"..i]:SetText(addlines[i-1])
+        _G["TT_TalentTooltipFrameTextLeft"..i]:SetWidth(
+            _G["TT_TalentTooltipFrameTextLeft"..i]:GetStringWidth()
+        )
+    end
 
     --Setup next rank tooltip (if relevant)
     if rank ~=0 and rank ~= maxRank then
         t=""
-        TT_TalentTooltipFrame:SetOwner(GameTooltip, "ANCHOR_BOTTOM");
-        TT_TalentTooltipFrame:SetHyperlink("enchant:"..spellId2);
-        --t = TT_TalentTooltipFrameTextLeft1:GetText()
-        --t = "Next Rank:\n" .. t
-        -- TT_TalentTooltipFrameTextLeft1:SetText(t)
-
-        --TT_TalentTooltipFrame:AddLine("Test")
-        --for i=8, 2,-1 do
-        --    _G["TT_TalentTooltipFrameTextLeft"..i]:SetFontObject(_G["TT_TalentTooltipFrameTextLeft"..i-1]:GetFontObject())
-        --    _G["TT_TalentTooltipFrameTextLeft"..i]:SetTextColor(_G["TT_TalentTooltipFrameTextLeft"..i-1]:GetTextColor())
-        --    _G["TT_TalentTooltipFrameTextLeft"..i]:SetText(_G["TT_TalentTooltipFrameTextLeft"..i-1]:GetText())
-        --    _G["TT_TalentTooltipFrameTextLeft"..i]:SetWidth(_G["TT_TalentTooltipFrameTextLeft"..i-1]:GetWidth())
-        --end
-        --TT_TalentTooltipFrameTextLeft2 = TT_TalentTooltipFrameTextLeft1
-        --TT_TalentTooltipFrameTextLeft3 = TT_TalentTooltipFrameTextLeft2
+        TT_NextTalentTooltipFrame:SetOwner(TT_TalentTooltipFrame, "ANCHOR_BOTTOM");
+        TT_NextTalentTooltipFrame:SetHyperlink("enchant:"..spellId2);
         for i=2, 8 do
-            _G["TT_TalentTooltipFrameTextLeft"..i]:SetFontObject(TT_TooltipTextSmall)
+            _G["TT_NextTalentTooltipFrameTextLeft"..i]:SetFontObject(TT_TooltipTextSmall)
         end
-        TT_TalentTooltipFrameTextLeft1:SetFontObject(TT_TooltipTextSmall)
-        TT_TalentTooltipFrameTextLeft1:SetText("Next Rank:")
+        TT_NextTalentTooltipFrameTextLeft1:SetFontObject(TT_TooltipTextSmall)
+        TT_NextTalentTooltipFrameTextLeft1:SetText("Next Rank:")
     end
-
+    -- Add click to stage/remove tooltips
     if TT_TalentFrameTalentIsLeftClickable() then
         if rank ~=0 and rank ~= maxRank then
+            TT_NextTalentTooltipFrame:AddLine("|cff00ff00Click to stage|r")
+            n = TT_NextTalentTooltipFrame:NumLines()
+            _G["TT_NextTalentTooltipFrameTextLeft"..n]:SetFontObject(TT_TooltipTextSmall)
+        else
             TT_TalentTooltipFrame:AddLine("|cff00ff00Click to stage|r")
             n = TT_TalentTooltipFrame:NumLines()
             _G["TT_TalentTooltipFrameTextLeft"..n]:SetFontObject(TT_TooltipTextSmall)
-        else
-            GameTooltip:AddLine("|cff00ff00Click to stage|r")
-            n = GameTooltip:NumLines()
-            _G["GameTooltipTextLeft"..n]:SetFontObject(TT_TooltipTextSmall)
         end
     end
     if TT_TalentFrameTalentIsRightClickable() then
         if rank ~=0 and rank ~= maxRank then
+            TT_NextTalentTooltipFrame:AddLine("|cff00ff00Right click to remove points|r")
+            n = TT_NextTalentTooltipFrame:NumLines()
+            _G["TT_TalentTooltipFrameTextLeft"..n]:SetFontObject(TT_TooltipTextSmall)
+        else
             TT_TalentTooltipFrame:AddLine("|cff00ff00Right click to remove points|r")
             n = TT_TalentTooltipFrame:NumLines()
-            _G["GameTooltipTextLeft"..n]:SetFontObject(TT_TooltipTextSmall)
-        else
-            GameTooltip:AddLine("|cff00ff00Right click to remove points|r")
-            n = GameTooltip:NumLines()
-            _G["GameTooltipTextLeft"..n]:SetFontObject(TT_TooltipTextSmall)
+            _G["TT_TalentTooltipFrameTextLeft"..n]:SetFontObject(TT_TooltipTextSmall)
         end
     end
-    GameTooltip:Show()
+    --TT_TalentTooltipFrame:SetWidth(TT_NextTalentTooltipFrame:GetWidth()+10)
     TT_TalentTooltipFrame:Show()
-    TT_TalentTooltipFrame:ClearAllPoints()
-    TT_TalentTooltipFrame:SetPoint("TOPLEFT", GameTooltip, "BOTTOMLEFT", 0, 0)
+    TT_NextTalentTooltipFrame:Show()
+    TT_NextTalentTooltipFrame:ClearAllPoints()
+    TT_NextTalentTooltipFrame:SetPoint("TOPLEFT", TT_TalentTooltipFrame, "BOTTOMLEFT", 0, 0)
+
 end
 
 --Learn button tooltip
@@ -1805,8 +1806,11 @@ end
 
 --Overloaded Talent button tooltip
 function TT_TalentTooltip_OnLeave()
-    GameTooltip:Hide();
+    for i=1, TT_TalentTooltipFrame:NumLines() do
+        _G["TT_TalentTooltipFrameTextRight"..i]:SetText(nil)
+    end
     TT_TalentTooltipFrame:Hide();
+    TT_NextTalentTooltipFrame:Hide();
 end
 
 function TT_Out(msg)

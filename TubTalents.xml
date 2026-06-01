@@ -15,6 +15,8 @@
     </Frame>
     <GameTooltip name="TT_TalentTooltipFrame" hidden="true" inherits="GameTooltipTemplate">
 	</GameTooltip>
+	<GameTooltip name="TT_NextTalentTooltipFrame" hidden="true" inherits="GameTooltipTemplate">
+	</GameTooltip>
 
 	<Frame name="TT_LearnTalentPopup" hidden="true" parent="UIParent" spellID="24443" frameStrata="DIALOG">
 		<Size>

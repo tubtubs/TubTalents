@@ -15,8 +15,9 @@
 --- pfUI Compat [good enough for now]
 --- check for name conflicts and offer renames on import [CHECK]
 -- Could also check for missing spellIDs and fill them in if your client supports it [check]
---- Make your own tooltip frame for talents?
--- we're going to try something else out first...?
+--- Make your own tooltip frame for talents? [CUT?]
+-- we're going to try something else out first...? [CHECK] 
+-- Decent compromise, it looks good. [CHECK]
 --- AddonMessage Preset and Plan sharing? [CUT] EXPORT IS GOOD ENOUGH - USE PASTEBIN LOL
 --- Attempt to make levelling plans more supporting of servers with level 1 talents? [CUT]
 --  I dont really have a way of testing. Don't want to make a server for this, ngl
@@ -24,12 +25,17 @@
 --- POLISH:
 -- If no plans/presets add a title that says to import or create one
 -- make current plan default tab if a plan is selected
--- When scrolling through levelling plan hide tooltips
+-- change current tab to current plan if a plan is selected
+-- Shift click talents in levelling plan
+-- Check existing levelling plans if you made them without mods?
+--- Boy do I wish I added a flag for made without mods levelling plans... Still time.
+-- When scrolling through levelling plan hide tooltips [CHECK]
+-- A prompt in Staged plan tab to click a talent to stage it when in Sim mode without a preset loaded
 
 ---KNOWN ISSUES:
 -- Selecting a plan while staging things has issues, might think it's incompatible.
--- Catch up plan broken
--- Broke preset learning staged points somewhow lel
+-- Catch up plan broken [CHECK]
+-- Broke preset learning staged points somewhow lel [CHECK] --Was still comparing known specs
 
 --Functions to overwrite TalentFrame functionality
 local _G = getfenv(0)
@@ -1347,10 +1353,11 @@ function TT_LearnButton_OnClick()
             for k,v in pairs(temp_tiers[m]) do
                 local name, _, _, _, rank, _,
                 _, _ = GetTalentInfo(i,k);
-                --TT_Out(format("Learning name: %s Rank: %s",name, rank))
+                TT_Out(format("Learning name: %s Rank: %s",name, rank))
                 --Need to check whats learned first so it doesn't rank too high...
-                local _, _, _, _, oldRank, _, _, _ = TT_OldGetTalentInfo(i, k);
-                rank = rank - oldRank
+                -- No I don't?
+                --local _, _, _, _, oldRank, _, _, _ = TT_OldGetTalentInfo(i, k);
+                --rank = rank - oldRank
                 if rank > 0 then
                     LearnTalentRank(i, k, rank)
                 end
@@ -1672,9 +1679,13 @@ function TT_TalentTooltipNoMods()
     GameTooltip:SetTalent(PanelTemplates_GetSelectedTab(TalentFrame), this:GetID());
 end
 
-function TT_LvlPlanTooltip()
+function TT_LvlPlanTooltip(cID)
     local scrollOffset = FauxScrollFrame_GetOffset(TT_StagedTalentsFrame_PlanScrollFrame);
-    local id = this:GetID()
+    local id = this:GetID() -- Seems to get messy if I sent it object as paramater
+    if this:GetID() == 0 then
+        id = cID
+        this = _G["TT_StagedTalentsFrame_LvlPlanSpec"..cID]
+    end
     local index = id + scrollOffset + TT_MINLEVEL
     GameTooltip:SetOwner(this, "ANCHOR_BOTTOMRIGHT");
     if TT_CurrentTab == 2 then
@@ -1682,10 +1693,13 @@ function TT_LvlPlanTooltip()
     else
         plansToDisplay = TT_StagedLevellingPlan
     end
-    local sID = plansToDisplay[index].spellID
+    TT_Out(format("id %s o: %s index: %s", id, scrollOffset, index))
+    local sID = plansToDisplay[index].spellID or 0 
     if sID ~= 0 then
         GameTooltip:SetHyperlink(format("enchant:%s",sID))
     end
+    GameTooltip:ClearAllPoints()
+    GameTooltip:SetPoint("TOPLEFT", this, "TOPRIGHT", 0, 0)
 end
 
 function TT_TalentTooltip()
@@ -1856,7 +1870,7 @@ local TT_PlanOpts = {
                 end
                 return true
             end,
-            func=function()  TT_CatchUpPlan() end,
+            func=function()  TT_CatchUpPlan(true) TT_LevellingPlans_DewDrop:Close() end,
             value=""
         },
         {
@@ -2028,7 +2042,7 @@ function TT_CheckPlan(plan)
     for i=1, 3 do
         for m=1, MAX_NUM_TALENTS do
             name, iconTexture, tier, column, rank, maxRank, 
-            isExceptional, meetsPrereq = TT_GetTalentInfo(i,m);
+            isExceptional, meetsPrereq = TT_OldGetTalentInfo(i,m);
             local found = 0 
             if rank ~= nil and rank > 0 then -- just check every learned rank...
                 for k,v in plan do
@@ -2065,19 +2079,20 @@ function TT_CatchUpLearnPlan()
     end
 end
 
-function TT_CatchUpPlan()
+function TT_CatchUpPlan(menu)
+    local flag = menu or false
 --Get unspent talent points (outside of modes)
     local cp1, cp2 = UnitCharacterPoints("player");
     --TT_Out(format("AutoLearn: %s", TubTalent_Vars.AutoLearnPlans))
     if cp1 > 1 then -- many points to spend...
-        if TubTalent_Vars.AutoLearnPlans == TT_AUTOLEARN.Prompt then
+        if TubTalent_Vars.AutoLearnPlans == TT_AUTOLEARN.Prompt or flag then
             StaticPopup_Show("TUBTALENTS_LVLPLAN_CATCHUP_PROMPT")
         elseif TubTalent_Vars.AutoLearnPlans == TT_AUTOLEARN.FullAuto then
             TT_CatchUpLearnPlan()
         end
     elseif cp1 > 0 then 
         -- offer to learn the latest talent in the levelling plan...
-        if TubTalent_Vars.AutoLearnPlans == TT_AUTOLEARN.Prompt then
+        if TubTalent_Vars.AutoLearnPlans == TT_AUTOLEARN.Prompt or flag then
             TT_LearnTalentPopup:Show()
         elseif TubTalent_Vars.AutoLearnPlans == TT_AUTOLEARN.FullAuto then
             TT_CatchUpLearnPlan()
@@ -2089,7 +2104,6 @@ end
 function TT_SelectPlan(arg)
     _, v = TT_FindPlan(arg)
     if TT_CurrentLevellingPlan ~= nil and v.id == TT_CurrentLevellingPlan.id then -- deselect current one
-        TT_Out("TEST")
         TubTalent_Vars.CurrentLevellingPlan = 0
         TT_CurrentLevellingPlan = nil
         return
@@ -2273,7 +2287,6 @@ function TT_StagedTalentsFrame_Update()
         if TT_SimMode and not TT_PresetLoaded then
             numDisplay = TT_StagedEstimatedLevel - TT_MINLEVEL
             plansToDisplay = TT_StagedLevellingPlan
-            --TT_Out(format("t: %s", TT_StagedEstimatedLevel))
             TT_StagedTalentsFrame_NoWorking:Hide()
         else
             numDisplay = 0 
@@ -2286,41 +2299,33 @@ function TT_StagedTalentsFrame_Update()
             return
         end
     end
-	--local DeckBuilderFrame_DeckButtonText, DeckBuilderFrame_DeckButton;
 	local scrollOffset = FauxScrollFrame_GetOffset(TT_StagedTalentsFrame_PlanScrollFrame);
 	local index;
     local minIndex = TT_MINLEVEL
-		-- Deck list
+    GameTooltip:Hide()
 	for i=1, NUM_LVLPLAN_TALENTSSHOWN do
         local lvlPlanFrame = _G["TT_StagedTalentsFrame_LvlPlanSpec"..i]
-
 		index = (scrollOffset) + i;
-        --TT_Out(index)
-        --TT_Out(numDisplay)
 		if ( index <= numDisplay) then
             local lvlPlanLevel = _G["TT_StagedTalentsFrame_LvlPlanSpec"..i.."Level"]
             local lvlPlanName = _G["TT_StagedTalentsFrame_LvlPlanSpec"..i.."Name"]
             local lvlPlanRank = _G["TT_StagedTalentsFrame_LvlPlanSpec"..i.."Rank"]
             local lvlPlanIcon = _G["TT_StagedTalentsFrame_LvlPlanSpec"..i.."Icon"]
 			lvlPlanFrame:Show()
-            --TT_Out("index:" .. index+minIndex)
             lvlPlanName:SetText(plansToDisplay[index+minIndex].name)
             lvlPlanRank:SetText("Rank: " .. plansToDisplay[index+minIndex].rank .. " Tab: " .. plansToDisplay[index+minIndex].tabName)
             lvlPlanLevel:SetText("Level: " .. index+minIndex)
             lvlPlanIcon:SetTexture(plansToDisplay[index+minIndex].icon)
-
-			--DeckBuilderFrame_DeckButtonText:SetText(format("%s",EmoteButtons_DeckList[index]))
 		else
             lvlPlanFrame:Hide()
-			--DeckBuilderFrame_DeckButton:Hide();
 		end
+        if MouseIsOver(lvlPlanFrame) then
+            TT_LvlPlanTooltip(lvlPlanFrame:GetID())
+        end
 	end
-	
+
 	-- Scrollbar stuff
 	FauxScrollFrame_Update(TT_StagedTalentsFrame_PlanScrollFrame, numDisplay , NUM_LVLPLAN_TALENTSSHOWN, 28);
-	-- numEmotes is max entries, NUM_EMOTES_SHOWN is the number of lines, last one is supposed to be pixel size
-	-- But it works best if I just shove number of elements in there. My scroll area isn't litterally moving,
-	-- I'm merely switching out the elements every time a scroll event happens.
 end
 
 -- Import Export Code --

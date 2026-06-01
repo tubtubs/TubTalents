@@ -29,6 +29,7 @@
 ---KNOWN ISSUES:
 -- Selecting a plan while staging things has issues, might think it's incompatible.
 -- Catch up plan broken
+-- Broke preset learning staged points somewhow lel
 
 --Functions to overwrite TalentFrame functionality
 local _G = getfenv(0)
@@ -1737,13 +1738,7 @@ function TT_TalentTooltip()
         end
     end
     GameTooltipTextLeft2:SetText(t)
-    if TT_TalentFrameTalentIsLeftClickable() then
-        GameTooltip:AddLine("|cff00ff00Click to stage|r")
-    end
-    if TT_TalentFrameTalentIsRightClickable() then
-        GameTooltip:AddLine("|cff00ff00Right click to remove staged points|r")
-    end
-    GameTooltip:Show()
+
 
     --Setup next rank tooltip (if relevant)
     if rank ~=0 and rank ~= maxRank then
@@ -1754,20 +1749,48 @@ function TT_TalentTooltip()
         --t = "Next Rank:\n" .. t
         -- TT_TalentTooltipFrameTextLeft1:SetText(t)
 
-
+        --TT_TalentTooltipFrame:AddLine("Test")
         --for i=8, 2,-1 do
-        --    _G["TT_TalentTooltipFrameTextLeft"..i]:SetFont(_G["TT_TalentTooltipFrameTextLeft"..i-1]:GetFont())
+        --    _G["TT_TalentTooltipFrameTextLeft"..i]:SetFontObject(_G["TT_TalentTooltipFrameTextLeft"..i-1]:GetFontObject())
         --    _G["TT_TalentTooltipFrameTextLeft"..i]:SetTextColor(_G["TT_TalentTooltipFrameTextLeft"..i-1]:GetTextColor())
         --    _G["TT_TalentTooltipFrameTextLeft"..i]:SetText(_G["TT_TalentTooltipFrameTextLeft"..i-1]:GetText())
+        --    _G["TT_TalentTooltipFrameTextLeft"..i]:SetWidth(_G["TT_TalentTooltipFrameTextLeft"..i-1]:GetWidth())
         --end
         --TT_TalentTooltipFrameTextLeft2 = TT_TalentTooltipFrameTextLeft1
         --TT_TalentTooltipFrameTextLeft3 = TT_TalentTooltipFrameTextLeft2
-        --TT_TalentTooltipFrameTextLeft1:SetFontObject("GameFontWhite")
-        --TT_TalentTooltipFrameTextLeft1:SetText("Next Rank:")
-        TT_TalentTooltipFrame:Show()
-        TT_TalentTooltipFrame:ClearAllPoints()
-        TT_TalentTooltipFrame:SetPoint("TOPLEFT", GameTooltip, "BOTTOMLEFT", 0, 0)
+        for i=2, 8 do
+            _G["TT_TalentTooltipFrameTextLeft"..i]:SetFontObject(TT_TooltipTextSmall)
+        end
+        TT_TalentTooltipFrameTextLeft1:SetFontObject(TT_TooltipTextSmall)
+        TT_TalentTooltipFrameTextLeft1:SetText("Next Rank:")
     end
+
+    if TT_TalentFrameTalentIsLeftClickable() then
+        if rank ~=0 and rank ~= maxRank then
+            TT_TalentTooltipFrame:AddLine("|cff00ff00Click to stage|r")
+            n = TT_TalentTooltipFrame:NumLines()
+            _G["TT_TalentTooltipFrameTextLeft"..n]:SetFontObject(TT_TooltipTextSmall)
+        else
+            GameTooltip:AddLine("|cff00ff00Click to stage|r")
+            n = GameTooltip:NumLines()
+            _G["GameTooltipTextLeft"..n]:SetFontObject(TT_TooltipTextSmall)
+        end
+    end
+    if TT_TalentFrameTalentIsRightClickable() then
+        if rank ~=0 and rank ~= maxRank then
+            TT_TalentTooltipFrame:AddLine("|cff00ff00Right click to remove points|r")
+            n = TT_TalentTooltipFrame:NumLines()
+            _G["GameTooltipTextLeft"..n]:SetFontObject(TT_TooltipTextSmall)
+        else
+            GameTooltip:AddLine("|cff00ff00Right click to remove points|r")
+            n = GameTooltip:NumLines()
+            _G["GameTooltipTextLeft"..n]:SetFontObject(TT_TooltipTextSmall)
+        end
+    end
+    GameTooltip:Show()
+    TT_TalentTooltipFrame:Show()
+    TT_TalentTooltipFrame:ClearAllPoints()
+    TT_TalentTooltipFrame:SetPoint("TOPLEFT", GameTooltip, "BOTTOMLEFT", 0, 0)
 end
 
 --Learn button tooltip

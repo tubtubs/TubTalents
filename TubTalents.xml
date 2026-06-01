@@ -237,6 +237,17 @@
 		</Scripts>
     </Frame>
 
+	<Font name="TT_TooltipText" font="Fonts\FRIZQT__.TTF" justifyH="LEFT" virtual="true">
+		<FontHeight>
+			<AbsValue val="12"/>
+		</FontHeight>
+	</Font>
+	<Font name="TT_TooltipTextSmall" font="Fonts\FRIZQT__.TTF" justifyH="LEFT" virtual="true">
+		<FontHeight>
+			<AbsValue val="11"/>
+		</FontHeight>
+	</Font>
+
     <Frame name="TT_StagedTalentsFrame" frameStrata="HIGH" hidden="true">
 		<Anchors>
 			<Anchor point="CENTER" relativeTo="UIParent">

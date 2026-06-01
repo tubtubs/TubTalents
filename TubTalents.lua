@@ -13,13 +13,18 @@
 -- Talents title -> TubTalents, why not bro [CHECK]
 -- Maybe just make a double tall header? Level text looks good where old title is [check]
 --- pfUI Compat [good enough for now]
---- check for name conflicts and offer renames on import [meh]
+--- check for name conflicts and offer renames on import [CHECK]
 -- Could also check for missing spellIDs and fill them in if your client supports it [check]
 --- Make your own tooltip frame for talents?
---- Switch current tab/staged tab in levelling plan window
---- AddonMessage Preset and Plan sharing?
---- Attempt to make levelling plans more supporting of servers with level 1 talents?
+-- we're going to try something else out first...?
+--- AddonMessage Preset and Plan sharing? [CUT] EXPORT IS GOOD ENOUGH - USE PASTEBIN LOL
+--- Attempt to make levelling plans more supporting of servers with level 1 talents? [CUT]
 --  I dont really have a way of testing. Don't want to make a server for this, ngl
+
+--- POLISH:
+-- If no plans/presets add a title that says to import or create one
+-- make current plan default tab if a plan is selected
+-- When scrolling through levelling plan hide tooltips
 
 ---KNOWN ISSUES:
 -- Selecting a plan while staging things has issues, might think it's incompatible.
@@ -303,9 +308,9 @@ function TubTalents_Init()
 
             local myButton = CreateFrame("Button", "TalentFramePresetsButton", TalentFrame, "UIPanelButtonTemplate")
             myButton:SetHeight(15)
-            myButton:SetWidth(60)
-            myButton:SetPoint("CENTER", TalentFrame, "TOPLEFT", 305, -42)
-            myButton:SetText("Presets")
+            myButton:SetWidth(115)
+            myButton:SetPoint("CENTER", TalentFrame, "TOPLEFT", 285, -42)
+            myButton:SetText("Talent Presets >")
 
             --Checkboxes
             local myCheckButton = CreateFrame("CheckButton", "TalentFrameSimMode", TalentFrame, "UICheckButtonTemplate");
@@ -313,7 +318,7 @@ function TubTalents_Init()
             myCheckButton.tooltip = "Click to toggle this setting.";
             myCheckButton:SetHeight(15)
             myCheckButton:SetWidth(15)
-            _G["TalentFrameSimModeText"]:SetText("Enable Sim Mode")
+            _G["TalentFrameSimModeText"]:SetText("Sim Mode")
             myCheckButton:SetChecked(false); -- or false
             myCheckButton:SetScript("OnClick",TalentFrameSimMode_OnClick);
 
@@ -321,7 +326,7 @@ function TubTalents_Init()
             local myEditBox = CreateFrame("EditBox", "TalentFrameSimModePointsBox", TalentFrame,"InputBoxTemplate")
             myEditBox:SetHeight(80)
             myEditBox:SetWidth(20)
-            myEditBox:SetPoint("CENTER", TalentFrame, "TOPLEFT", 265, -42); -- Position it
+            myEditBox:SetPoint("CENTER", TalentFrame, "TOPLEFT", 225, -42); -- Position it
             myEditBox:SetFontObject(GameFontNormalSmall)
             myEditBox:SetAutoFocus(false)
             myEditBox:SetNumeric()
@@ -353,7 +358,7 @@ function TubTalents_Init()
             
             --Text labels
             prompt = TalentFrame:CreateFontString("TalentFrameSimModePointsBoxPrompt", "OVERLAY", "GameFontNormalSmall")
-            prompt:SetPoint("CENTER", TalentFrame, "TOPLEFT", 220, -42); -- Position it
+            prompt:SetPoint("CENTER", myEditBox, "LEFT", -40, 0); -- Position it
             prompt:SetText("Max points:")
             prompt:Hide()
 
@@ -1748,6 +1753,17 @@ function TT_TalentTooltip()
         --t = TT_TalentTooltipFrameTextLeft1:GetText()
         --t = "Next Rank:\n" .. t
         -- TT_TalentTooltipFrameTextLeft1:SetText(t)
+
+
+        --for i=8, 2,-1 do
+        --    _G["TT_TalentTooltipFrameTextLeft"..i]:SetFont(_G["TT_TalentTooltipFrameTextLeft"..i-1]:GetFont())
+        --    _G["TT_TalentTooltipFrameTextLeft"..i]:SetTextColor(_G["TT_TalentTooltipFrameTextLeft"..i-1]:GetTextColor())
+        --    _G["TT_TalentTooltipFrameTextLeft"..i]:SetText(_G["TT_TalentTooltipFrameTextLeft"..i-1]:GetText())
+        --end
+        --TT_TalentTooltipFrameTextLeft2 = TT_TalentTooltipFrameTextLeft1
+        --TT_TalentTooltipFrameTextLeft3 = TT_TalentTooltipFrameTextLeft2
+        --TT_TalentTooltipFrameTextLeft1:SetFontObject("GameFontWhite")
+        --TT_TalentTooltipFrameTextLeft1:SetText("Next Rank:")
         TT_TalentTooltipFrame:Show()
         TT_TalentTooltipFrame:ClearAllPoints()
         TT_TalentTooltipFrame:SetPoint("TOPLEFT", GameTooltip, "BOTTOMLEFT", 0, 0)
@@ -2327,6 +2343,57 @@ function TT_ProfileFrame_Show(Mode,ID)
     TT_ProfileFrame:Show()
 end
 
+StaticPopupDialogs["TUBTALENTS_RENAMEIMPORTEDPLAN"] = {
+text = "Import successful, there's another plan with the same name though.\nWould you like to rename?",
+button1 = "Yes",
+button2 = "No",
+hasEditBox = 1,
+OnAccept = TT_RenamePlanPrompt,
+EditBoxOnEnterPressed=TT_RenamePlanPrompt,
+OnHide = function()
+    getglobal(this:GetName().."EditBox"):SetText("");
+end,
+OnShow = function()
+    _, v = TT_FindPlan(TubTalent_Vars.LevellingPlanIDMax)
+    getglobal(this:GetName().."EditBox"):SetText(v.name)
+end,
+timeout = 0,
+whileDead = true,
+hideOnEscape = true,
+preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
+}
+
+StaticPopupDialogs["TUBTALENTS_RENAMEIMPORTEDPRESET"] = {
+text = "Import successful, there's another preset with the same name though.\nWould you like to rename?",
+button1 = "Yes",
+button2 = "No",
+hasEditBox = 1,
+OnAccept = TT_RenamePresetPrompt,
+EditBoxOnEnterPressed=TT_RenamePresetPrompt,
+OnHide = function()
+    getglobal(this:GetName().."EditBox"):SetText("");
+end,
+OnShow = function()
+    _, v = TT_FindTalentPreset(TubTalent_Vars.TalentPresetIDMax)
+    getglobal(this:GetName().."EditBox"):SetText(v.name)
+end,
+timeout = 0,
+whileDead = true,
+hideOnEscape = true,
+preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
+}
+function TT_RenamePlanPrompt()
+    local text = getglobal(this:GetParent():GetName().."EditBox"):GetText();
+    TT_RenamePlan(TubTalent_Vars.LevellingPlanIDMax ,text)
+    this:GetParent():Hide();
+end
+
+function TT_RenamePresetPrompt()
+    local text = getglobal(this:GetParent():GetName().."EditBox"):GetText();
+    TT_RenamePreset(TubTalent_Vars.TalentPresetIDMax ,text)
+    this:GetParent():Hide();
+end
+
 function TT_CheckSpellIds(plan)
     for k,v in pairs(plan) do
         TT_Out(k)
@@ -2334,6 +2401,26 @@ function TT_CheckSpellIds(plan)
             v.spellID, _ = TT_GetTalentSpellID(v.tab, v.btnID, v.rank)
         end
     end
+end
+
+function TT_CheckPresetName(a)
+    for k, v in pairs(TT_TalentPresets) do
+        TT_Out(v.name)
+        if v.name == a.name then
+            return true
+        end
+    end
+    return false
+end
+
+function TT_CheckPlanName(a)
+    for k, v in pairs(TubTalent_Vars.LevellingPlans) do
+        TT_Out(v.name)
+        if v.name == a.name then
+            return true
+        end
+    end
+    return false
 end
 
 function TT_ProfileFrame_SubmitButton_OnClick()
@@ -2363,6 +2450,11 @@ function TT_ProfileFrame_SubmitButton_OnClick()
         TubTalent_Vars.TalentPresetIDMax = TubTalent_Vars.TalentPresetIDMax+1
         a.id = TubTalent_Vars.TalentPresetIDMax
         table.insert(TT_TalentPresets, a)
+        if TT_CheckPresetName(a) then            
+            --offer to rename it if there's another named the same
+            -- Doesn't matter if they have the same name, thought I'd offer though.
+            StaticPopup_Show("TUBTALENTS_RENAMEIMPORTEDPRESET")
+        end
         TT_RegenPresetDropdown()
         TT_Out("Successfully imported preset")
     elseif TT_ProfileFrameMode == TT_PROFILEMODES.ImportPlan then
@@ -2393,11 +2485,15 @@ function TT_ProfileFrame_SubmitButton_OnClick()
             TT_CheckSpellIds(a.plan)
         end
         table.insert(TT_LevellingPlans, a)
+        if TT_CheckPlanName(a) then            
+            --offer to rename it if there's another named the same
+            -- Doesn't matter if they have the same name, thought I'd offer though.
+            StaticPopup_Show("TUBTALENTS_RENAMEIMPORTEDPLAN")
+        end
         TT_RegenPlansDropdown()
         TT_Out("Successfully imported plan")
-    else
-        TT_ProfileFrame:Hide();
     end
+    TT_ProfileFrame:Hide();
 end
 
 TT_ExportPresetTalentsButtonsTemplate = 
@@ -2476,7 +2572,7 @@ function TT_ExportPlan(planID)
     p.points[1], p.points[2], p.points[3])
     local exportPlanLevels = "{\n"
     for k,v in p.plan do
-        local t = string.gsub(v.icon,"\\","\\\\")
+        local t = string.gsub(v.icon,"\\","\\\\") --need to double up slashes or lose them on export
         exportPlanLevels = format(TT_ExportPlanTemplate, exportPlanLevels,
         k, v.tab, v.tabName, v.btnID, v.rank, t, v.spellID, v.name)
     end

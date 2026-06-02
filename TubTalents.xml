@@ -233,6 +233,9 @@
 			<OnEnter>
 			TT_LvlPlanTooltip()
 			</OnEnter>
+			<OnMouseDown>
+				TT_LvlPlan_OnClick()
+			</OnMouseDown>
 			<OnLeave>
 			GameTooltip:Hide();
 			</OnLeave>
@@ -312,12 +315,12 @@
 				</FontString>
                 <FontString name="$parent_NoWorking" font="GameFontNormal" text="Only enabled in Sim Mode." hidden="true">
 					<Size>
-						<AbsDimension x="180" y="0" />
+						<AbsDimension x="250" y="0" />
 					</Size>
 					<Anchors>
 						<Anchor point="TOP">
 							<Offset>
-								<AbsDimension x="0" y="-75" />
+								<AbsDimension x="-5" y="-75" />
 							</Offset>
 						</Anchor>
 					</Anchors>
@@ -417,7 +420,7 @@
                     </OnLoad>
 				</Scripts>
 			</Button>
-            <Button name="$parent_PlansButton" inherits="UIPanelButtonTemplate" text="Plans">
+            <Button name="$parent_PlansButton" inherits="UIPanelButtonTemplate" text="Plans >">
                 <Size>
                     <AbsDimension x="76" y="22"/>
                 </Size>

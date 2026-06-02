@@ -4,25 +4,25 @@
 -- TODO: Cleanup
 -- Localisation.lua -> Pull a lot of strings and constants out
 -- More lua files to split up functionality if possible
+-- Remove test prints/functions
+
+-- TODO: Polish
+-- Refine Chat commands
 
 --Functions to overwrite TalentFrame functionality
 local _G = getfenv(0)
 local libIcon = LibStub("LibDBIcon-1.0");
 local libData = LibStub("LibDataBroker-1.1");
-local TT_TalentPresets_Dewdrop = AceLibrary("Dewdrop-2.0");
-local TT_LevellingPlans_DewDrop = AceLibrary("Dewdrop-2.0");
+TT_TalentPresets_Dewdrop = AceLibrary("Dewdrop-2.0");
+TT_LevellingPlans_DewDrop = AceLibrary("Dewdrop-2.0");
+--Testing
 TT_DebugMode = false
-TT_CurrentTab=1
 TT_FakeNoMods = false
+
+TT_CurrentTab = 1
 TT_LearnedTalentsFlag = true
-TT_MAX_TALENTS = 3
-TT_MAX_TALENTPOINTS = 51
 TT_SimMode = false
-TT_AUTOLEARN = {
-    Never=0,
-    Prompt=1,
-    FullAuto=2,
-}
+
 TT_TalentPointsSpent = {
     [1] = 0,
     [2] = 0,
@@ -35,121 +35,9 @@ TT_StagedTalents = { --key: Tab
     [4] = {},
     [5] = {}
 }
-TT_StagedLevellingPlan = {
-    --Example:
-    --[10] = {tab=1, btnID=1, rank=1, icon="", spellID=1, name=""}
-}
-TT_MINLEVEL = 9
+TT_StagedLevellingPlan = {}
 TT_StagedLevellingPlanMinLevel = TT_MINLEVEL
 TT_StagedEstimatedLevel = TT_MINLEVEL
-
-function TT_OutPutLevellingPlan()
-    for k, v in TT_StagedLevellingPlan do
-        TT_Out(format("level: %s tab: %s btn: %s rank: %s spellID: %s name: %s",
-            k, v.tab, v.btnID, v.rank, v.spellID, v.name))
-    end
-end
-
-local TT_DialogOpts = {
-    --levels...
-    [1] = {
-        {
-            name="Presets",
-            tooltip="",
-            notCheckable=true,
-            value="presets"
-        },
-        {
-            name="Import Preset",
-            tooltip="Opens a window to paste in a preset\nMust be for your class",
-            notCheckable=true,
-            func=function()  TT_ProfileFrame_Show(TT_PROFILEMODES.ImportPreset)  TT_TalentPresets_Dewdrop:Close() end,
-            value=""
-        },
-        {
-            name="Stage Current Build",
-            tooltip="Stages current learned talents\n Only needed in SimMode",
-            notCheckable=true,
-            disabledTooltip="Only useful in Sim Mode",
-            disabled = function() return not TT_SimMode end,
-            func=TT_StageCurrentSpec,
-            value=""
-        },
-        {
-            name="Save Preset",
-            tooltip="Enter to save",
-            notCheckable=true,
-            hasEditBox=true,
-            disabledTooltip="Start staging or spending points to save a preset",
-            disabled = function() return TT_SavePresetButton_OnUpdate() end,
-            editBoxText=function() return "" end,
-            editBoxFunc=function(s) TT_NewPreset(s) end,
-            value=""
-        },
-    },
-    [2] = { --populate with presets...
-
-    },
-    [3] = { --arg1 is loaded from the previous dropdowns value
-        ["presetmenu"] = {
-            {
-            name="Learn Preset",
-            --tooltipTitle="Learn Preset",
-            tooltip="Learns the selected preset over your current build\nNot available in Sim mode",
-            notCheckable=true,
-            disabled = function() return TT_SimMode end,
-            func=function(arg1)  TT_TalentPresetLearn(arg1) end,
-            value=""
-            },
-            {
-            name="Stage Preset",
-            tooltip="Stages the selected preset over your current build if possible\nEnable Sim mode if you don't want to reset your talents",
-            notCheckable=true,
-            func=function(arg1)  TT_TalentPresetStage(arg1) end,
-            value=""
-            },
-            {
-            name="Export Preset",
-            tooltip="Exports the selected preset",
-            notCheckable=true,
-            func=function(arg1)  TT_ProfileFrame_Show(TT_PROFILEMODES.ExportPreset, arg1) TT_TalentPresets_Dewdrop:Close() end,
-            value=""
-            },
-            {
-            name="Delete Preset",
-            tooltip="Deletes the selected preset",
-            notCheckable=true,
-            func=function(arg1)  TT_TalentPresetDelete(arg1) end,
-            value=""
-            },
-            {
-            name="Rename Preset",
-            tooltip="Enter to save",
-            notCheckable=true,
-            hasEditBox=true,
-            editBoxText=function(arg1) 
-                _, v =  TT_FindTalentPreset(arg1) 
-                return v.name 
-            end,
-            editBoxFunc=function(arg1,s) TT_RenamePreset(arg1,s) end,
-            value=""
-            },
-        }
-    },
-    [4] = {
-
-    },
-    --specials
-    --close menu
-    ["closemenu"] = {
-        text = "Close Menu",
-        textR = 0,
-        textG = 1,
-        textB = 1,
-        func =  function() self:Close() end,
-        notCheckable = true
-    },
-}
 
 SlashCmdList['TUBTALENTS'] = TubTalents_TextCommands
 SLASH_TUBTALENTS1 = "/tubtalents"
@@ -177,8 +65,7 @@ function TubTalents_Init()
         end
     elseif event=="CHARACTER_POINTS_CHANGED" then
         -- check plan viability... But only if points have been spent, not gained.
-        -- also maybe find a way to exclude if they were done by the addon. 
-        -- Disable with debug mode.
+        -- Unless spent by the addon
         if (arg1 < 0) then --indicates learned talents...
             if TubTalent_Vars.CurrentLevellingPlan ~= 0  and not TT_LearnedTalentsFlag then -- indicates if learned by this addon...
                 if TT_CheckPlan(TT_CurrentLevellingPlan.plan) then
@@ -191,7 +78,7 @@ function TubTalents_Init()
                 TT_LearnedTalentsFlag = false
             end
         end 
-    elseif event=="PLAYER_LOGIN" then
+    elseif event=="PLAYER_LOGIN" then --INIT
         if TubTalent_Vars == nil then
             TubTalent_Vars = {
                 Version = 1,
@@ -207,10 +94,7 @@ function TubTalents_Init()
         elseif TubTalent_Vars.MaxTalentPoints == nil then
             TubTalent_Vars.MaxTalentPoints = TT_MAX_TALENTPOINTS
         end
-        --convert levelling plans and presets to new format...
-        -- need to add class to presets and plans
-        -- needed for sharing safety
-        if TubTalent_Vars.Version ~= 2 then 
+        if TubTalent_Vars.Version < 2 then --Upgrading Saved variables
             for k,v in pairs(TubTalent_Vars.TalentPresets) do
                 v.class = UnitClass("player")
             end
@@ -220,13 +104,14 @@ function TubTalents_Init()
             TubTalent_Vars.ShowLevellingPlanFrame = true
             TubTalent_Vars.Version = 2
         end
+        --Convenient shorthand names for the saved variable lists
         TT_TalentPresets = TubTalent_Vars.TalentPresets
         TT_LevellingPlans = TubTalent_Vars.LevellingPlans
-        TalentFrame_LoadUI();
+        TalentFrame_LoadUI(); --Load the talent UI early
         if TubTalent_Vars.CurrentLevellingPlan ~= 0 then
             _, TT_CurrentLevellingPlan = TT_FindPlan(TubTalent_Vars.CurrentLevellingPlan)
             if TT_CurrentLevellingPlan == nil then 
-                TT_Out("Error: No levelling plan loaded... Invalid levelling plan selected.")
+                TT_Out(TT_ERRNoPlanLoaded)
                 TubTalent_Vars.CurrentLevellingPlan = 0 
                 TT_CurrentLevellingPlan = nil
                 TT_CurrentTab = 1
@@ -244,17 +129,7 @@ function TubTalents_Init()
         TubTalents_MinimapIconRegister()
         TT_StagedTalentsFramePlans_DewdropRegister()
         --Detecting client mods, and adjusting functionality...
-        if RQ_GetVersion and not TT_FakeNoMods then
-            --TT_Out("Reliquary detected")
-        else
-            --TT_Out("Reliquary not found, falling back on old tooltips and disabling shift click links.")
-            TT_NoClientMods()
-        end
-
-        if SUPERWOW_STRING and not TT_FakeNoMods then
-            --TT_Out("SuperWoW detected")
-        else
-            --TT_Out("SuperWoW not found, falling back on old tooltips and disabling shift click links.")
+        if (not (RQ_GetVersion and SUPERWOW_STRING)) or TT_FakeNoMods then
             TT_NoClientMods()
         end
     elseif event == "ADDON_LOADED" then
@@ -295,12 +170,12 @@ function TubTalents_Init()
 
             --Checkboxes
             local myCheckButton = CreateFrame("CheckButton", "TalentFrameSimMode", TalentFrame, "UICheckButtonTemplate");
-            myCheckButton:SetPoint("CENTER", TalentFrame, "TOPLEFT", 85, -42); -- Position it
+            myCheckButton:SetPoint("CENTER", TalentFrame, "TOPLEFT", 75, -42); -- Position it
             myCheckButton.tooltip = "Click to toggle this setting.";
             myCheckButton:SetHeight(24)
             myCheckButton:SetWidth(24)
             _G["TalentFrameSimModeText"]:SetText("Sim Mode")
-            myCheckButton:SetChecked(false); -- or false
+            myCheckButton:SetChecked(false);
             myCheckButton:SetScript("OnClick",TalentFrameSimMode_OnClick);
 
             --EditBoxes
@@ -354,6 +229,7 @@ function TubTalents_Init()
             TT_StagedTalentsFrame:ClearAllPoints()
             TT_StagedTalentsFrame:SetPoint("TOPLEFT", TalentFrame, "TOPRIGHT", -25, -20); -- Position it
             TT_StagedTalentsFrame:Show()
+            -- Update widget framestrata to high or it'll draw under the levelling plan frame
             TT_StagedTalentsFrame_StagedPlanButton:SetFrameStrata("HIGH")
             TT_StagedTalentsFrame_CurrentPlanButton:SetFrameStrata("HIGH")
             TT_StagedTalentsFrame_LvlPlanSpec1:SetFrameStrata("HIGH")
@@ -371,7 +247,7 @@ function TubTalents_Init()
             f:SetHeight(32)
 
             local t = f:CreateTexture(nil, "BACKGROUND")
-            t:SetTexture("Interface\\AddOns\\TubTalents\\txt\\header.tga") -- Or .tga
+            t:SetTexture("Interface\\AddOns\\TubTalents\\txt\\header.tga")
             t:SetAllPoints(f)
 
             f.texture = t
@@ -379,14 +255,12 @@ function TubTalents_Init()
             --f:Show()
             f.text = f:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
             f.text:SetAllPoints(f)
-            f.text:SetText("TubTalents V2")
+            f.text:SetText(TT_ADDONFULLNAME)
             f.text:SetJustifyH("CENTER")
             f.text:SetFontObject("GameFontNormal")
             f:SetFrameStrata("HIGH")
-            TalentFrameTitleText:SetText("")
-            --TT_StagedTalentsFrame_LvlPlanSpec6:SetFrameStrata("HIGH")
+            TalentFrameTitleText:SetText("") -- Blank out old title...
             PanelTemplates_UpdateTabs(TT_StagedTalentsFrame)
-            --PanelTemplates_SetTab(TT_StagedTalentsFrame, 1);
             TT_TalentFrameButtons_OnUpdate()
             TT_StagedTalentsFrame_Update()
 
@@ -407,22 +281,16 @@ function TubTalents_Init()
             GetTalentTabInfo = TT_GetTalentTabInfo
             TT_OldTalentFrame_OnShow = TalentFrame_OnShow
             TalentFrame_OnShow = TT_TalentFrame_OnShow
-            TT_TalentFrame_Init()
+            _G["TalentFramePresetsButton"]:SetScript("OnClick",function() 
+                if TT_TalentPresets_Dewdrop:IsOpen() then
+                    TT_TalentPresets_Dewdrop:Close();
+                else
+                    TT_TalentPresets_Dewdrop:Open(this);
+                end
+            end)
             TT_TalentFramePreferences_DewdropRegister()
         end
     end
-end
-
-function TT_NoClientMods()
-    TT_TalentTooltip = TT_TalentTooltipNoMods
-    TT_TalentFrameTalent_OnShiftClick = TT_TalentFrameTalent_OnShiftClickNoMods
-    TT_LvlPlan_OnClick = TT_TalentFrameTalent_OnShiftClickNoMods
-    TT_StagedTalentsFrame_LvlPlanSpec6:SetScript("OnEnter",nil)
-    TT_StagedTalentsFrame_LvlPlanSpec5:SetScript("OnEnter",nil)
-    TT_StagedTalentsFrame_LvlPlanSpec4:SetScript("OnEnter",nil)
-    TT_StagedTalentsFrame_LvlPlanSpec3:SetScript("OnEnter",nil)
-    TT_StagedTalentsFrame_LvlPlanSpec2:SetScript("OnEnter",nil)
-    TT_StagedTalentsFrame_LvlPlanSpec1:SetScript("OnEnter",nil)
 end
 
 function TT_TalentFrame_OnShow()
@@ -434,17 +302,6 @@ function TT_TalentFrame_OnShow()
     TT_OldTalentFrame_OnShow()
     TT_RegenPlansDropdown()
     TT_RegenPresetDropdown()
-end
-
--- Need to move some function setups over to here...
-function TT_TalentFrame_Init()
-    _G["TalentFramePresetsButton"]:SetScript("OnClick",function() 
-        if TT_TalentPresets_Dewdrop:IsOpen() then
-            TT_TalentPresets_Dewdrop:Close();
-        else
-            TT_TalentPresets_Dewdrop:Open(this);
-        end
-    end)
 end
 
 -- Minimap Setup
@@ -477,416 +334,14 @@ function TubTalents_MinimapIconRegister()
 			OnTooltipShow = function(tooltip)
 				tooltip:SetText("TubTalents");
 			end,
-			icon = "Interface\\Icons\\Ability_Rogue_Disguise"
+			icon = "Interface\\Icons\\Ability_Rogue_Disguise" --TODO: Find a different icon
 		});
 
 		libIcon:Register("TubTalents icon", iconData, TubTalents_Icon);
 	end
 end
 
---Preset functions
-function TT_FindTalentPreset(presetID)
-    if presetID == 0 then -- return current spec
-        local t = {}
-        local tp = {}
-        for i=1, 3 do
-            t[i] = {} -- initialize tab...
-            _, _, tp[i] = TT_OldGetTalentTabInfo(i)
-            for m=1, MAX_NUM_TALENTS do
-                local _, _, _, _, rank, 
-                _, _, _ = TT_OldGetTalentInfo(i, m);
-                if rank ~=nil and rank ~= 0 then
-                    t[i][m] = rank
-                    --tp[i] = tp[i] + rank
-                end
-            end
-        end
-
-        --TubTalent_Vars.TalentPresetIDMax = TubTalent_Vars.TalentPresetIDMax+1
-        local newPreset = {
-            class = UnitClass("player"),
-            name = "temp",
-            id = 0,
-            talents = t,
-            points = tp,
-        }
-        --TT_Out(format("c p1: %s p2: %s p3: %s", tp[1], tp[2], tp[3]))
-        return 0, newPreset
-    end
-    for k, v in pairs(TT_TalentPresets) do
-        if v.id == tonumber(presetID) then
-            return k, v
-        end
-    end
-    return nil
-end
-
-function TT_TalentPresetDelete(presetID)
-    k, _ = TT_FindTalentPreset(presetID) 
-    TT_TalentPresets[k] = nil
-    TT_RegenPresetDropdown()
-    TT_TalentPresets_Dewdrop:Close()
-end
-
-function TT_StageCurrentSpec()
-    TT_TalentPresetStage(0)
-end
-
-function TT_TalentPresetStage(presetID)
-    _, t = TT_FindTalentPreset(presetID)
-
-    --checks
-    local total = {} --stage points locally for comparison
-    for i=1, 3 do
-        total[i] = t.points[i]
-    end
-
-    -- Check already learned talents, and subtract points
-    for i=1, 3 do
-        for k, v in pairs(t.talents[i]) do
-            local b = _G["TalentFrameTalent"..k];
-            if b ~=nil then
-                local btnID = b:GetID()
-                local _, _, _, _, rank, 
-                _, _, _ = GetTalentInfo(i, btnID);
-                if rank ~= 0 then
-                    total[i] = total[i] - rank
-                end
-                local _, _, _, _, learnedRank, _, _, _ = TT_OldGetTalentInfo(i, k);
-                local stagedRank = t.talents[i][k]
-                --TT_Out(format("rank: %s learnedRank: %s", rank, learnedRank))
-                if stagedRank < learnedRank and not TT_SimMode then --if ranks match its fine
-                    TT_Out("Learned ranks conflict, can't stage preset. Reset, or enable Sim mode.")
-                    TT_TalentPresets_Dewdrop:Close()
-                    return
-                end
-            end
-        end
-    end
-
-    local totals = 0
-    for i=1, 3 do
-        totals = totals + total[i]
-    end
-    --if you don't have enough talent points to stage return error and stop
-    if totals > TalentFrame.talentPoints then
-        TT_Out("Not enough points, can't stage preset. Reset, or enable Sim mode.")
-        TT_TalentPresets_Dewdrop:Close()
-        return
-    end
-    --staging...
-    for i=1, 3 do -- re-add the points for comparison back
-        TT_TalentPointsSpent[i] = total[i] + TT_TalentPointsSpent[i]
-    end
-    for i=1, getn(t.talents) do -- just copy them over to staging...
-        for k, v in pairs (t.talents[i]) do --need to do pairs here i guess
-            if TT_SimMode then
-                TT_StagedTalents[i][k] = v
-            else
-                local _, _, _, _, learnedRank, _, _, _ = TT_OldGetTalentInfo(i, k);
-                TT_StagedTalents[i][k] = v - learnedRank
-            end
-        end
-    end
-    TT_PresetLoaded = true
-    TT_TalentFrame_Update()
-    TT_TalentFrameButtons_OnUpdate()
-end
-
-function TT_TalentPresetLearn(presetID)
-    --_, t = TT_FindTalentPreset(presetID)
-    TT_WipeCurrentSpec()
-    --Checks and staging...
-    TT_TalentPresetStage(presetID)
-    TT_LearnButton_OnClick()
-    TT_TalentFrame_Update()
-    TT_TalentFrameButtons_OnUpdate()
-end
-
-function TT_RegenPresetDropdown()
-    TT_DialogOpts[2]["presets"] = {} -- clear it out first
-    local count = 0 
-    if TT_TalentPresets ~= nil then
-        for k,v in pairs(TT_TalentPresets) do
-            local a = "ID: " .. v.id .. "\n"
-            for i=1, 3 do
-                name, _, _ = GetTalentTabInfo(i)
-                a = format("%s%s in %s\n",a,v.points[i],name)
-            end
-            local t = {
-                name=v.name,
-                tooltipTitle=v.name,
-                tooltip=a,
-                notCheckable=true,
-                value="presetmenu:"..v.id
-            }
-            table.insert(TT_DialogOpts[2]["presets"],t)
-            count = count + 1
-        end
-    end
-    if count == 0 then
-        local t = {
-            name="Create or import a preset",
-            tooltip="Go ahead, stage or spend some points and then save it.",
-            notCheckable=true,
-            value=""
-        }
-        table.insert(TT_DialogOpts[2]["presets"],t)
-    end
-end
-
-function TT_NewPreset(name)
-    --Scan talents
-    --Prepare package
-    --Add it to the Presets table...
-    local t = {}
-    local tp = {}
-    for i=1, 3 do
-        t[i] = {} -- initialize tab...
-        _, _, tp[i] = GetTalentTabInfo(i)
-        for m=1, MAX_NUM_TALENTS do
-            local _, _, _, _, rank, 
-            _, _, _ = TT_GetTalentInfo(i, m);
-            if rank ~=nil and rank ~= 0 then
-                t[i][m] = rank
-            end
-        end
-    end
-
-    TubTalent_Vars.TalentPresetIDMax = TubTalent_Vars.TalentPresetIDMax+1
-    local newPreset = {
-        class = UnitClass("player"),
-        name = name,
-        id = TubTalent_Vars.TalentPresetIDMax,
-        talents = t,
-        points = tp,
-    }
-    table.insert(TT_TalentPresets, newPreset)
-    TT_Out("Adding new profile")
-    TT_RegenPresetDropdown()
-end
-
-function TT_RenamePreset(presetID, name)
-    _, v = TT_FindTalentPreset(presetID)
-    v.name = name
-    TT_RegenPresetDropdown()
-    --TT_TalentPresets_Dewdrop:Close()
-end
-
---Dropdown Setup/Utilities
-function TT_TalentFramePreferences_DewdropRegister()
-    TT_TalentPresets_Dewdrop:Register(TalentFramePresetsButton, --Bound Frame
-        'point', function(parent) --Point
-            return "TOP", "BOTTOM"
-        end,
-        'children', function(level, value) TT_TalentPresets_DewdropGen(level, value, TT_DialogOpts) end,
-        'dontHook', true
-    )
-end
-
-function TT_TalentPresets_DewdropGen(level, value, opts)
-    if value ~= nil then
-        if string.find(value,":") then --accepts values after colons as arguments. Used to pass arguments a level up
-            local parsed_args = {}
-            local a = string.gfind(value, ':([^:]+)')
-            for i in a do --need to translate it to a table, a is a function
-                table.insert(parsed_args,i)
-            end 
-            -- sub out the arguments for the real value
-            value = string.gsub(value, ":.*", "")
-            TT_TalentPresets_DewdropLevelGen(opts[level][value],parsed_args)
-        else
-            TT_TalentPresets_DewdropLevelGen(opts[level][value])
-        end
-    else
-        TT_TalentPresets_DewdropLevelGen(opts[level])
-    end
-end
-
-function TT_TalentPresets_DewdropLevelGen(opts,args)
-    -- Process passed arguments...
-    local args1, args2, args3, args4 = nil
-    if args ~= nil then
-        args1, args2, args3, args4 = args[1], args[2], args[3], args[4]
-    end
-    if opts == nil then
-        return
-    end
-    for i,j in ipairs(opts) do
-        if j.value ~= "" then -- next level
-            if j.disabled and j.disabled(args1) then
-                TT_TalentPresets_Dewdrop:AddLine(
-                    'text', j.name,
-                    'tooltipTitle', j.tooltipTitle or nil,
-                    'tooltipText', j.disabledTooltip or nil,  
-                    'textR', 0.4,
-                    'textG', 0.4,
-                    'textB', 0.4,
-                    'disabled', j.disabled(args1),
-                    --'value', j.value,
-                    'hasArrow', false,
-                    'notCheckable', true
-                )
-            elseif j.notCheckable then
-                TT_TalentPresets_Dewdrop:AddLine(
-                    'text', j.name,
-                    'tooltipTitle', j.tooltipTitle or nil,
-                    'tooltipText', j.tooltip or nil,  
-                    'textR', 1,
-                    'textG', 0.82,
-                    'textB', 0,
-                    'value', j.value,
-                    'hasArrow', true,
-                    'notCheckable', true
-                )
-            else
-                TT_TalentPresets_Dewdrop:AddLine(
-                    'text', j.name,
-                    'tooltipTitle', j.tooltipTitle or nil,
-                    'tooltipText', j.tooltip or nil,  
-                    'textR', 1,
-                    'textG', 0.82,
-                    'textB', 0,
-                    'func', j.func,
-                    'value', j.value,
-                    'hasArrow', true,
-                    --'id',j.id or nil,
-                    'arg1', j.arg1 or args1 or nil,
-                    'arg2', j.arg2 or args2 or nil,
-                    'arg3', j.arg3 or args3 or nil,
-                    'arg4', j.arg4 or args4 or nil,
-                    'checked', j.checked(j.id) or nil,
-                    'notCheckable', false
-                )
-            end
-        elseif j.disabled and j.disabled(args1) then
-            if j.checked ~= nil then
-                TT_TalentPresets_Dewdrop:AddLine(
-                    'text', j.name,
-                    'tooltipTitle', j.tooltipTitle or nil,
-                    'tooltipText', j.disabledTooltip or nil,  
-                    'textR', 0.4,
-                    'textG', 0.4,
-                    'textB', 0.4,
-                    'arg1', j.arg1 or args1 or nil,
-                    'arg2', j.arg2 or args2 or nil,
-                    'arg3', j.arg3 or args3 or nil,
-                    'arg4', j.arg4 or args4 or nil,
-                    'func', j.func,
-                    'value', j.value,
-                    'hasArrow', false,
-                    'disabled', j.disabled(args1),
-                    --'id',j.id or nil,
-                    'checked', j.checked(j.id) or nil,
-                    'notCheckable', j.notCheckable
-                )     
-            else
-                TT_TalentPresets_Dewdrop:AddLine(
-                    'text', j.name,
-                    'tooltipTitle', j.tooltipTitle or nil,
-                    'tooltipText', j.disabledTooltip or nil,  
-                    'textR', 0.4,
-                    'textG', 0.4,
-                    'textB', 0.4,
-                    'func', j.func,
-                    'value', j.value,
-                    'hasArrow', false,
-                    'disabled', j.disabled(args1),
-                    'notCheckable', j.notCheckable
-                )    
-            end
-        elseif j.hasSlider then
-            TT_TalentPresets_Dewdrop:AddLine(
-                'text', j.name,
-                'tooltipTitle', j.tooltipTitle or nil,
-                'tooltipText', j.tooltip or nil,  
-                'textR', 1,
-                'textG', 0.82,
-                'textB', 0,
-                'value', j.value,
-                'hasArrow', true,
-                'notCheckable', j.notCheckable,
-                'hasSlider', j.hasSlider,
-                'sliderMin', j.sliderMin,
-                'sliderMax', j.sliderMax,
-                'sliderStep', j.sliderStep,
-                'sliderValue', j.sliderValue(),
-                'sliderFunc', j.sliderFunc
-            )
-        elseif j.hasEditBox then
-            TT_TalentPresets_Dewdrop:AddLine(
-                'text', j.name,
-                'tooltipTitle', j.tooltipTitle or nil,
-                'tooltipText', j.tooltip or nil,  
-                'textR', 1,
-                'textG', 0.82,
-                'textB', 0,
-                'value', j.value,
-                'hasArrow', true,
-                'notCheckable', j.notCheckable,
-                'hasEditBox', j.hasEditBox,
-                'editBoxText', j.editBoxText(args1),
-                'editBoxArg1', j.arg1 or args1 or nil,
-                'editBoxFunc', j.editBoxFunc
-            )
-        elseif j.notCheckable and j.func == nil then -- titles
-            TT_TalentPresets_Dewdrop:AddLine(
-                'text', j.name,
-                'tooltipTitle', j.tooltipTitle or nil,
-                'tooltipText', j.tooltip or nil,  
-                'textR', 0.1,
-                'textG', 0.8,
-                'textB', 0.1,
-                'value', j.value,
-                'hasArrow', false,
-                'notCheckable', j.notCheckable
-            )
-        elseif j.notCheckable and j.func ~= nil then -- pure functions
-            TT_TalentPresets_Dewdrop:AddLine(
-                'text', j.name,
-                'tooltipTitle', j.tooltipTitle or nil,
-                'tooltipText', j.tooltip or nil,   
-                'textR', 1,
-                'textG', 0.82,
-                'textB', 0,
-                'func', j.func,
-                'arg1', j.arg1 or args1 or nil,
-                'arg2', j.arg2 or args2 or nil,
-                'arg3', j.arg3 or args3 or nil,
-                'arg4', j.arg4 or args4 or nil,
-                'value', j.value,
-                'hasArrow', false,
-                'notCheckable', j.notCheckable
-            )                    
-        elseif j.isRadio then
-            TT_TalentPresets_Dewdrop:AddLine(
-                'text', j.name,
-                'tooltipTitle', j.tooltipTitle or nil,
-                'tooltipText', j.tooltip or nil,  
-                'textR', 1,
-                'textG', 0.82,
-                'textB', 0,
-                'isRadio', j.isRadio,
-                'func', j.func,
-                'value', j.value,
-                'hasArrow', false,
-                'checked', j.checked(),
-                'notCheckable', j.notCheckable
-            )
-        end
-    end
-
-    --Close button
-    TT_TalentPresets_Dewdrop:AddLine(
-        'text', "Close Menu",
-        'textR', 0,
-        'textG', 1,
-        'textB', 1,
-        'func', function() TT_TalentPresets_Dewdrop:Close() end,
-        'notCheckable', true
-    )
-end
-
+--Overloaded functions
 --Update functions (Mostly original code)
 function TT_TalentFrame_Update()
 	-- Setup Tabs
@@ -1133,9 +588,6 @@ end
 --Mostly overloaded for sim mode
 function TT_GetTalentTabInfo(tab)
     local name, iconTexture, pointsSpent, fileName = TT_OldGetTalentTabInfo(tab)
-    --if TT_SimMode then
-    --    pointsSpent = 0
-    --end
     if TT_SimMode then
         pointsSpent=TT_TalentPointsSpent[tab];
     else
@@ -1157,97 +609,6 @@ function TT_GetTalentInfo(tab, btn)
             rank = rank+TT_StagedTalents[tab][btn] 
         end
         return name, iconTexture, tier, column, rank, maxRank, isExceptional, meetsPrereq
-    end
-end
-
---Utility function that returns a spellID for a talent given their tab/button id, and the next rank if available
--- TODO: Optimize, consider caching tab IDs for the played class for that session after first lookup
-function TT_GetTalentSpellID(tab,btn,reqRank)
-    local tabName, texture, points, fileName = GetTalentTabInfo(tab);
-    local name, iconTexture, tier, column, stagedRank, maxRank, isExceptional, meetsPrereq = GetTalentInfo(tab,btn);
-    local rank = reqRank or stagedRank
-    -- Named look ups are iffy... We could just try feeding a spellID into a tooltip and seeing what that does first, tbh.
-    -- STEP: Get Spell ID for current rank
-    -- Get which TalentTabID it is...
-    local rows, err = RQ_GetRowCount("TalentTab")
-    local currentTabID, spellId1, spellId2
-    for i=1, rows do 
-        local row, err = RQ_GetRowByIndex("TalentTab", i)
-        -- id, name, Name_Mask, SpellIconID, RaceMask, ClassMask, orderIndex, BackgroundFile
-        bgFile = row[8]
-        if bgFile == fileName then
-            currentTabID = row[1]
-            break
-        end
-    end
-    -- Get first SpellID
-    local rows, err = RQ_GetRowCount("Talent")
-    if err ~= nil then TT_Out(err) end
-    for i=1, rows do 
-        local row, err = RQ_GetRowByIndex("Talent", i)
-        -- tID, tabid, tierid, columnindex, spellrank1, spellrank2, spellrank3, spellrank4, spellrank5
-        -- spellrank6, spellrank7, spellrank8, spellrank9, prereqtalent1, prereqtalent2, prereqtalent3
-        -- flags, requiredSpellID
-        local tID, tabID, tierID, columnID = row[1], row[2], row[3], row[4]
-        -- the column and tier IDs start at 0 in the DBC but 1 in lua
-        columnID = columnID + 1
-        tierID = tierID + 1
-        --columnID = columnID - 1
-        if tabID == currentTabID then
-            if tierID==tier then 
-                if column==columnID then --rank1 spell at index 5
-                    --which rank to get?
-                    if rank==0 then o=1 else o=rank end
-                    spellId1 = row[4+o]
-                    if rank ~= 0 and rank ~= maxRank then
-                        spellId2 = row[4+o+1]
-                    end
-                end
-            end
-        end
-    end
-    return spellId1, spellId2
-end
-
---Utility function that returns if a talent at a tab/button ID is a Pre-req
---Mostly used for right clicking buttons to remove points
-function TT_IsTalentAPreReq(tab, btn)
-    local numTalents = GetNumTalents(tab);
-    local isPreReq, preReqColumn, preReqRow, preReqRank
-    local found = 0 
-    for i=1, MAX_NUM_TALENTS do
-        local b = _G["TalentFrameTalent"..i]:GetID()
-        local tier, column, isLearnable = GetTalentPrereqs(tab, b);
-        if tier ~= nil  then -- only focus on whatever has pre-reqs
-            local btnID = TALENT_BRANCH_ARRAY[tier][column].id
-            if btn == btnID then
-                isPreReq = true
-                _, _, preReqRow, preReqColumn, preReqRank, 
-                _, _, _ = GetTalentInfo(PanelTemplates_GetSelectedTab(TalentFrame), b); 
-                found = 1
-                break
-            end
-        end
-    end
-    if found == 0 then
-        isPreReq = false
-    end
-    return isPreReq, preReqColumn, preReqRow, preReqRank
-end
-
---Utility function that finds the max tier in the current tab
-function TT_GetMaxTier()
-    for i=MAX_NUM_TALENT_TIERS, 1,-1 do
-        for m=1, NUM_TALENT_COLUMNS do
-            local b = TALENT_BRANCH_ARRAY[i][m].id
-            if b ~=nil then
-                local _, _, _, _, rank, 
-                _, _, _ = GetTalentInfo(PanelTemplates_GetSelectedTab(TalentFrame), b); 
-                if rank ~= nil and rank ~= 0 then
-                    return i
-                end
-            end
-        end
     end
 end
 
@@ -1377,23 +738,6 @@ function TT_ResetButton_OnClick()
     TT_TalentFrameButtons_OnUpdate()
 end
 
---Overrides any currently learned specs, staging empty entries over them
---Might not be necessary with how SimMode now works?
-function TT_WipeCurrentSpec()
-    TT_PresetLoaded = false
-    for i=1, TT_MAX_TALENTS do
-        TT_TalentPointsSpent[i] = 0
-        for m=1, MAX_NUM_TALENTS do
-            local b = _G["TalentFrameTalent"..m]:GetID()
-            if b ~= nil then --TODO: These conditions look buggy. Might only wipe current tab?
-                --local _, _, _, _, rank, 
-                --_, _, _ = GetTalentInfo(PanelTemplates_GetSelectedTab(TalentFrame), b);
-                TT_StagedTalents[i][b] = 0
-            else break end
-        end
-    end
-end
-
 --Sets up sim mode
 --Resets simulated specs
 --Hides learned specs, gives full points
@@ -1402,7 +746,7 @@ function TalentFrameSimMode_OnClick()
     TT_ResetButton_OnClick()
     TT_StagedLevellingPlan = {}
     if TT_SimMode then
-        TT_WipeCurrentSpec()
+        --TT_WipeCurrentSpec()
         _G["TalentFrameSimModePointsBox"]:Show()
         _G["TalentFrameSimModePointsBoxPrompt"]:Show()
         TalentFrame.talentPoints = TubTalent_Vars.MaxTalentPoints
@@ -1415,22 +759,6 @@ function TalentFrameSimMode_OnClick()
     TT_TalentFrame_Update()
     TT_TalentFrameButtons_OnUpdate()
     TT_StagedTalentsFrame_Update()
-end
-
-function TT_SavePresetButton_OnUpdate()
-    for i=1, TT_MAX_TALENTS do
-        if TT_TalentPointsSpent[i] > 0 then
-            return false
-        end
-    end
-    --check for spent talent points...?
-    for i=1, 3 do
-        _, _, pointsSpent = GetTalentTabInfo(i);
-        if pointsSpent > 0 then
-            return false
-        end
-    end
-    return true
 end
 
 --If any simulated points have been spent offer learning
@@ -1471,11 +799,9 @@ end
 function TT_TalentFrameTalent_OnLeftClick()
     tab = PanelTemplates_GetSelectedTab(TalentFrame)
     btn = this:GetID()
-    --Check for click validity...
     --Keep track of points
     TalentFrame.talentPoints = TalentFrame.talentPoints - 1
     --Keep track of which talent was clicked...
-    -- Is it enabled? Yes, always
     TT_TalentPointsSpent[tab] = TT_TalentPointsSpent[tab] + 1
     if TT_SimMode then
         name, iconTexture, tier, column, rank, maxRank, isExceptional, meetsPrereq = TT_GetTalentInfo(tab,btn);
@@ -1496,7 +822,6 @@ function TT_TalentFrameTalent_OnLeftClick()
             TT_StagedTalents[tab][btn] = 1
         end
     end
-    --rank = rank + TT_StagedTalents[tab][btn]
     rank = rank  + 1
 
     --Add to levelling plan...
@@ -1506,8 +831,6 @@ function TT_TalentFrameTalent_OnLeftClick()
     else
         spellID = 0 -- Disabled...
     end
-    --TT_Out(format("Staging tab: %s btnID: %s rank: %s spellID: %s name: %s level: %s",
-    --    tab, btn, rank, spellID, name, TT_StagedEstimatedLevel))
     if TT_SimMode then -- Only allow creating a levelling plan in sim mode
         TT_StagedLevellingPlan[TT_StagedEstimatedLevel] = {
             tab = tab,
@@ -1549,8 +872,6 @@ function TT_TalentFrameTalent_OnRightClick()
             break
         end
     end
-    --TT_Out("Before removing...")
-    --TT_OutPutLevellingPlan()
     TT_StagedLevellingPlan[found] = nil -- removed it...
     local i = found
     -- Now need to re-do all the following levels...
@@ -1559,20 +880,9 @@ function TT_TalentFrameTalent_OnRightClick()
         i = i+1
     end
     TT_UpdateEstimatedLevel()
-    --TT_Out("After removing...")
-    --TT_OutPutLevellingPlan()
     TT_TalentFrame_Update()
     TT_TalentTooltip()
     TT_TalentFrameButtons_OnUpdate()
-end
-
---shift click, links the current rank of the spell in chat
---if it isn't learned yet links rank 1
-
-function TT_TalentFrameTalent_OnShiftClickNoMods()
-    if IsShiftKeyDown() then
-        TT_Out("Shift click links require SuperWoW+Reliquary client mods.")
-    end
 end
 
 function TT_LearnTalentPopup_TalentButtonLoad()
@@ -1588,14 +898,10 @@ function TT_LearnTalentPopup_TalentButtonLoad()
     TT_LearnTalentPopupTalentButtonRank:SetText("Rank: " .. rank)
 end
 
-function TT_LearnTalentPopup_TalentButtonOnEnter()
-    local estLevel = UnitLevel("player")
-    local tab = TT_CurrentLevellingPlan.plan[estLevel].btnID
-    local btn = TT_CurrentLevellingPlan.plan[estLevel].tab
-    GameTooltip:SetOwner(this, "ANCHOR_BOTTOMRIGHT");
-    GameTooltip:SetTalent(tab, btn)
-end
 
+
+--shift click, links the current rank of the spell in chat
+--if it isn't learned yet links rank 1
 function TT_TalentFrameTalent_OnShiftClick()
     tab = PanelTemplates_GetSelectedTab(TalentFrame)
     btn = this:GetID()
@@ -1652,68 +958,13 @@ function TT_GetTalentPrereqs(tab, btn)
     end    return tier, column, isLearnable
 end
 
+
+
 --How in the world am I going to make tooltips work?
 -- I'm afraid best bet is lookup...? Probably nampower fueled. Fuck it, let's try it...
 -- SpellID lookup is clumsy and stupid, lets bust out the talent DBC lookup.
 -- DBC: Talent.dbc Need: tierID, columnIndex which is returned by GetTalentInfo. But TalentTabID?
 -- DBC: TalentTab.dbc Need: TalentTabID, using Name? 
--- TODO: Replace tooltip frame with your own frame. The newlines on rightext is janky
-
---Tooltips were a nightmare
---They're very close to the original
---Had to do unsavory things to have them look close
---Still a bit of a compromise
---They show weapon skill requirements, SuperWoW issue
---Link formatting options like :0:0 don't seem to help
---Wouldn't usually have anything like that on spell hyperlinks anyway
---Could make my own tooltip frame if I REALLY WANTED TO
-function TT_TalentTooltipNoMods()
-    GameTooltip:SetOwner(this, "ANCHOR_BOTTOMRIGHT");
-    GameTooltip:SetTalent(PanelTemplates_GetSelectedTab(TalentFrame), this:GetID());
-end
-
-function TT_LvlPlan_OnClick()
-    if IsShiftKeyDown() then
-        local id = this:GetID()
-        local scrollOffset = FauxScrollFrame_GetOffset(TT_StagedTalentsFrame_PlanScrollFrame);
-        local index = id + scrollOffset + TT_MINLEVEL
-        if TT_CurrentTab == 2 then
-            plansToDisplay = TT_CurrentLevellingPlan.plan
-        else
-            plansToDisplay = TT_StagedLevellingPlan
-        end
-        local spellId = plansToDisplay[index].spellID
-        local txt = DEFAULT_CHAT_FRAME.editBox:GetText()
-        local link = format("\124ccfffffff\124Henchant:%s\124h[%s Rank %s]\124h\124r",
-        plansToDisplay[index].spellID, plansToDisplay[index].name, plansToDisplay[index].rank)
-        txt = format("%s %s",txt, link)
-        DEFAULT_CHAT_FRAME.editBox:SetText(txt)
-    end
-end
-
-function TT_LvlPlanTooltip(cID)
-    local scrollOffset = FauxScrollFrame_GetOffset(TT_StagedTalentsFrame_PlanScrollFrame);
-    local id = this:GetID() -- Seems to get messy if I sent it object as paramater
-    if this:GetID() == 0 then
-        id = cID
-        this = _G["TT_StagedTalentsFrame_LvlPlanSpec"..cID]
-    end
-    local index = id + scrollOffset + TT_MINLEVEL
-    GameTooltip:SetOwner(this, "ANCHOR_BOTTOMRIGHT");
-    if TT_CurrentTab == 2 then
-        plansToDisplay = TT_CurrentLevellingPlan.plan
-    else
-        plansToDisplay = TT_StagedLevellingPlan
-    end
-    --TT_Out(format("id %s o: %s index: %s", id, scrollOffset, index))
-    local sID = plansToDisplay[index].spellID or 0 
-    if sID ~= 0 then
-        GameTooltip:SetHyperlink(format("enchant:%s",sID))
-    end
-    GameTooltip:ClearAllPoints()
-    GameTooltip:SetPoint("TOPLEFT", this, "TOPRIGHT", 0, 0)
-end
-
 function TT_TalentTooltip()
     btnID = this:GetID()
     tab = TalentFrame.selectedTab
@@ -1726,7 +977,7 @@ function TT_TalentTooltip()
     TT_TalentTooltipFrame:SetOwner(this, "ANCHOR_RIGHT");
     TT_TalentTooltipFrame:SetHyperlink("enchant:"..spellId1.. ":0:0:0");
     --staging rank
-    local addlines = {"|cFFffffffRank ".. rank .. "/" .. maxRank .. "|r"}
+    local addlines = {format(TT_TalentTipRank,rank,maxRank)}
     --staging tooltip for tier requirement
     local pointsReq = (tier-1)*5
     if ( ( pointsReq <= TalentFrame.pointsSpent ) ) then
@@ -1735,14 +986,14 @@ function TT_TalentTooltip()
         tierUnlocked = nil;
     end
     if tierUnlocked == nil then
-        table.insert(addlines, format("|cFFFF2020Requires %s points in %s Talents|r\n", pointsReq, tabName))
+        table.insert(addlines, format(TT_TalentTipTier, pointsReq, tabName))
     end
     local preReqTier, preReqColumn, preReqIsLearnable = TT_GetTalentPrereqs(tab,btnID)
     --staging tooltip for pre-req
     if preReqTier~=nil and preReqIsLearnable ~= 1 then
         local i = TALENT_BRANCH_ARRAY[preReqTier][preReqColumn].id
         local preReqName, _, _, _, _, preReqMaxRank, _, _ = GetTalentInfo(tab,i)
-        table.insert(addlines, format("|cFFFF2020Requires %s points in %s|r\n",preReqMaxRank,preReqName))
+        table.insert(addlines, format(TT_TalentTipPreReq,preReqMaxRank,preReqName))
     end
     _G["TT_TalentTooltipFrameTextLeft1"]:SetFontObject(TT_TooltipText)
     for i=1, getn(addlines) do
@@ -1787,27 +1038,27 @@ function TT_TalentTooltip()
             _G["TT_NextTalentTooltipFrameTextLeft"..i]:SetFontObject(TT_TooltipTextSmall)
         end
         TT_NextTalentTooltipFrameTextLeft1:SetFontObject(TT_TooltipTextSmall)
-        TT_NextTalentTooltipFrameTextLeft1:SetText("Next Rank:")
+        TT_NextTalentTooltipFrameTextLeft1:SetText(TT_TalentTipNextRank)
     end
     -- Add click to stage/remove tooltips
     if TT_TalentFrameTalentIsLeftClickable() then
         if rank ~=0 and rank ~= maxRank then
-            TT_NextTalentTooltipFrame:AddLine("|cff00ff00Click to stage|r")
+            TT_NextTalentTooltipFrame:AddLine(TT_TalentTipLeftClick)
             n = TT_NextTalentTooltipFrame:NumLines()
             _G["TT_NextTalentTooltipFrameTextLeft"..n]:SetFontObject(TT_TooltipTextSmall)
         else
-            TT_TalentTooltipFrame:AddLine("|cff00ff00Click to stage|r")
+            TT_TalentTooltipFrame:AddLine(TT_TalentTipLeftClick)
             n = TT_TalentTooltipFrame:NumLines()
             _G["TT_TalentTooltipFrameTextLeft"..n]:SetFontObject(TT_TooltipTextSmall)
         end
     end
     if TT_TalentFrameTalentIsRightClickable() then
         if rank ~=0 and rank ~= maxRank then
-            TT_NextTalentTooltipFrame:AddLine("|cff00ff00Right click to remove points|r")
+            TT_NextTalentTooltipFrame:AddLine(TT_TalentTipRightClick)
             n = TT_NextTalentTooltipFrame:NumLines()
             _G["TT_TalentTooltipFrameTextLeft"..n]:SetFontObject(TT_TooltipTextSmall)
         else
-            TT_TalentTooltipFrame:AddLine("|cff00ff00Right click to remove points|r")
+            TT_TalentTooltipFrame:AddLine(TT_TalentTipRightClick)
             n = TT_TalentTooltipFrame:NumLines()
             _G["TT_TalentTooltipFrameTextLeft"..n]:SetFontObject(TT_TooltipTextSmall)
         end
@@ -1825,7 +1076,7 @@ function TT_TalentLearnButton_OnEnter()
     GameTooltip:SetOwner(this, "ANCHOR_RIGHT");
     GameTooltip:ClearLines()
     if TT_SimMode then
-        GameTooltip:AddLine("Not available in Sim Mode", 1, 1, 1) -- Title (White)
+        GameTooltip:AddLine(TT_ERRSimMode, 1, 1, 1) -- Title (White)
     end
     GameTooltip:Show()
 end
@@ -1840,543 +1091,11 @@ function TT_TalentTooltip_OnLeave()
 end
 
 function TT_Out(msg)
-    DEFAULT_CHAT_FRAME:AddMessage(format("%s: %s",
-        "TT", msg))
-end
-
--- Level Plan UI
-NUM_LVLPLAN_TALENTSSHOWN = 6
-TT_PresetLoaded = false
-
-local TT_PlanOpts = {
-    [1] = {
-        {
-            name="Plans",
-            tooltip="",
-            notCheckable=true,
-            value="plans"
-        },
-        {
-            name="Import Plan",
-            tooltip="Opens a window to paste in a plan",
-            notCheckable=true,
-            func=function()  TT_ProfileFrame_Show(TT_PROFILEMODES.ImportPlan) TT_LevellingPlans_DewDrop:Close() end,
-            value=""
-        },
-        {
-            name="Options",
-            tooltip="",
-            notCheckable=true,
-            value="plansoptions"
-        },
-        {
-            name="Catch Up On Plan",
-            tooltip="Catch up on your selected levelling plan.",
-            notCheckable=true,
-            disabledTooltip="Only works if you have selected a plan\nAnd have points to spend",
-            disabled = function() 
-                if TubTalent_Vars.CurrentLevellingPlan ~= 0 -- need plan selected
-                and TalentFrame.talentPoints > 0 then --need points to spend,
-                    return false
-                end
-                return true
-            end,
-            func=function()  TT_CatchUpPlan(true) TT_LevellingPlans_DewDrop:Close() end,
-            value=""
-        },
-        {
-            name="Save Plan",
-            tooltip="Enter to save",
-            notCheckable=true,
-            hasEditBox=true,
-            disabledTooltip="Start making a plan to save one\nPlans can only be made in Sim Mode",
-            disabled = function() 
-                if TT_SimMode and not TT_PresetLoaded then
-                    for i=1, 3 do 
-                        if TT_TalentPointsSpent[i] > 0 then
-                            return false
-                        end
-                    end
-                end
-                return true
-             end,
-            editBoxText=function() return "" end,
-            editBoxFunc=function(s) TT_NewPlan(s) end,
-            value=""
-        },
-    },
-    [2] = { --populate with plans
-        ["plans"]={
-
-        },
-        ["plansoptions"] = {
-            {
-                name="Auto Learn Talents",
-                tooltipTitle="",
-                tooltip="Auto learn talents as you level",
-                notCheckable=true,
-                value="plansoptionsautolearn"
-            },
-        },
-    },
-    [3] = { --arg1 is loaded from the previous dropdowns value
-        ["plansoptionsautolearn"] = {
-            {
-                name="Never",
-                tooltip="Never automatically learn talents\nLevelling plans are just for reference",
-                notCheckable=false,
-                isRadio=true,
-                checked=function() 
-                    if TubTalent_Vars.AutoLearnPlans == TT_AUTOLEARN.Never then
-                        return true
-                    end
-                end,
-                func=function() 
-                    TubTalent_Vars.AutoLearnPlans = TT_AUTOLEARN.Never
-                end,
-                value=""
-            },
-            {
-                name="Prompt",
-                tooltip="Displays a popup to learn latest talent in levelling plans on levelup",
-                notCheckable=false,
-                isRadio=true,
-                checked=function() 
-                    if TubTalent_Vars.AutoLearnPlans == TT_AUTOLEARN.Prompt then
-                        return true
-                    end
-                end,
-                func=function() 
-                    TubTalent_Vars.AutoLearnPlans = TT_AUTOLEARN.Prompt
-                end,
-                value=""
-            },
-            {
-                name="Full Auto",
-                tooltip="Auto learn new talents on levelup",
-                notCheckable=false,
-                isRadio=true,
-                checked=function() 
-                    if TubTalent_Vars.AutoLearnPlans == TT_AUTOLEARN.FullAuto then
-                        return true
-                    end
-                end,
-                func=function() 
-                    TubTalent_Vars.AutoLearnPlans = TT_AUTOLEARN.FullAuto
-                end,
-                value=""
-            },
-        },
-        ["plansmenu"] = {
-            {
-            name="Stage Plan",
-            tooltip="Stages the selected plan over your current build if possible\nEnable Sim mode if you don't want to reset your talents",
-            disabledTooltip="Must be in Sim Mode",
-            notCheckable=true,
-            disabled = function() return not TT_SimMode end,
-            func=function(arg1)  TT_StagePlan(arg1) end,
-            value=""
-            },
-            {
-            name="Export Plan",
-            tooltip="Exports the selected plan",
-            notCheckable=true,
-            func=function(arg1)  TT_ProfileFrame_Show(TT_PROFILEMODES.ExportPlan, arg1) TT_LevellingPlans_DewDrop:Close() end,
-            value=""
-            },
-            {
-            name="Delete Plan",
-            tooltip="Deletes the selected plan",
-            notCheckable=true,
-            disabledTooltip="Can't delete the selected plan",
-            disabled=function(arg1) 
-                _, v = TT_FindPlan(arg1)
-                if v ~=nil and TT_CurrentLevellingPlan ~= nil 
-                and v.id == TT_CurrentLevellingPlan.id then
-                    return true
-                else 
-                    return false
-                end end,
-            func=function(arg1)  TT_DeletePlan(arg1) end,
-            value=""
-            },
-            {
-            name="Rename Plan",
-            tooltip="Enter to save",
-            notCheckable=true,
-            hasEditBox=true,
-            editBoxText=function(arg1) 
-                _, v =  TT_FindPlan(arg1) 
-                return v.name 
-            end,
-            editBoxFunc=function(arg1,s) TT_RenamePlan(arg1,s) end,
-            value=""
-            },
-        }
-    },
-}
-
-function TT_FindPlan(planID)
-    if TT_LevellingPlans == nil then
-        return nil
-    end
-    for k, v in pairs(TT_LevellingPlans) do
-        if v.id == tonumber(planID) then
-            return k, v
-        end
-    end
-    return nil
-end
-
-StaticPopupDialogs["TUBTALENTS_LVLPLAN_CATCHUP_PROMPT"] = {
-text = "Do you want to catch up with the current levelling plan?",
-button1 = "Yes",
-button2 = "No",
-OnAccept = TT_CatchUpLearnPlan,
-timeout = 0,
-whileDead = true,
-hideOnEscape = true,
-preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
-}
-
-function TT_CheckPlan(plan)
---Check staged talents against currently learned talents
---If there's something learned, but not staged then raise an error message
--- and: Warn? Disable the current levelling plan?
--- We'll just scan learned talents, and if anything isnt in the levelling plan
--- raise an error.
---- If you have something extra learned, its an issue as you'll be lacking points
---- If you're missing something from the levelling plan, we'll get there
----- It'll fail to find something learned early though...? (Added key check)
-    --local t = {}
-    local estLevel = UnitLevel("player")
-    for i=1, 3 do
-        for m=1, MAX_NUM_TALENTS do
-            name, iconTexture, tier, column, rank, maxRank, 
-            isExceptional, meetsPrereq = TT_OldGetTalentInfo(i,m);
-            local found = 0 
-            if rank ~= nil and rank > 0 then -- just check every learned rank...
-                for k,v in plan do
-                    if tonumber(k) <= estLevel and v.tab == i and v.btnID == m and v.rank == rank then
-                        found = 1
-                    end
-                end
-                if found ~= 1 then
-                    TT_Out("ERROR WITH LEVELLING PROFILE")
-                    return false
-                end
-            end
-        end
-    end
-    return true
-end
-
-function TT_CatchUpLearnPlan()
-    local cp1, cp2 = UnitCharacterPoints("player");
-    local estLevel = max(UnitLevel("player") - cp1 + 1,10)
-    while cp1 > 0 do
-        if TT_CurrentLevellingPlan.plan[estLevel] ~= nil then
-            btn = TT_CurrentLevellingPlan.plan[estLevel].btnID
-            tab = TT_CurrentLevellingPlan.plan[estLevel].tab
-            rank = TT_CurrentLevellingPlan.plan[estLevel].rank
-            LearnTalentRank(tab, btn, rank)
-            cp1 = cp1 - 1
-            estLevel = estLevel + 1
-            TT_LearnedTalentsFlag = true
-        else
-            TT_Out("End of leveling plan?")
-            break
-        end
-    end
-end
-
-function TT_CatchUpPlan(menu)
-    local flag = menu or false
---Get unspent talent points (outside of modes)
-    local cp1, cp2 = UnitCharacterPoints("player");
-    --TT_Out(format("AutoLearn: %s", TubTalent_Vars.AutoLearnPlans))
-    if cp1 > 1 then -- many points to spend...
-        if TubTalent_Vars.AutoLearnPlans == TT_AUTOLEARN.Prompt or flag then
-            StaticPopup_Show("TUBTALENTS_LVLPLAN_CATCHUP_PROMPT")
-        elseif TubTalent_Vars.AutoLearnPlans == TT_AUTOLEARN.FullAuto then
-            TT_CatchUpLearnPlan()
-        end
-    elseif cp1 > 0 then 
-        -- offer to learn the latest talent in the levelling plan...
-        if TubTalent_Vars.AutoLearnPlans == TT_AUTOLEARN.Prompt or flag then
-            TT_LearnTalentPopup:Show()
-        elseif TubTalent_Vars.AutoLearnPlans == TT_AUTOLEARN.FullAuto then
-            TT_CatchUpLearnPlan()
-        end
-    end
---Viability is checked on creation, don't need validation here...
-end
-
-function TT_SelectPlan(arg)
-    _, v = TT_FindPlan(arg)
-    if TT_CurrentLevellingPlan ~= nil and v.id == TT_CurrentLevellingPlan.id then -- deselect current one
-        TubTalent_Vars.CurrentLevellingPlan = 0
-        TT_CurrentLevellingPlan = nil
-        TT_StagedTalentsFrame_Update()
-        return
-    end
-    if TT_CheckPlan(v.plan) then 
-        TubTalent_Vars.CurrentLevellingPlan = v.id
-        TT_CurrentLevellingPlan = v
-    end
-    if (RQ_GetVersion and SUPERWOW_STRING) and not TT_FakeNoMods then
-        --re-cache spellIDs if they're missing...
-        TT_CheckSpellIds(v.plan)
-    end
-    --TT_LevellingPlans_DewDrop:Close()
-    TT_CurrentTab=2
-    TT_StagedTalentFrame_SetTab()
-    TT_StagedTalentsFrame_Update()
-end
-
-function TT_StagePlan(arg)
-    k, v = TT_FindPlan(arg)
-    --Empty currently staged levelling plan...
-    TT_ResetButton_OnClick()
-    --TT_StagedLevellingPlan = {}
-    --Load this levelling plan...
-    for i=1, 3 do -- re-add the points for comparison back
-        TT_TalentPointsSpent[i] = v.points[i]
-    end
-    for k,x in pairs(v.plan) do
-        TT_StagedLevellingPlan[k] = x
-        if TT_StagedTalents[x.tab][x.btnID] == nil then
-            TT_StagedTalents[x.tab][x.btnID] = 1
-        else
-            TT_StagedTalents[x.tab][x.btnID] = TT_StagedTalents[x.tab][x.btnID]+1
-        end
-    end
-    TT_LevellingPlans_DewDrop:Close()
-    TT_TalentFrame_Update()
-    TT_TalentFrameButtons_OnUpdate()
-    TT_StagedTalentsFrame_Update()
-end
-
-function TT_DeletePlan(arg)
-    k, v = TT_FindPlan(arg)
-    if v.id == TubTalent_Vars.CurrentLevellingPlan then
-        TT_Out("Can't delete currently selected levelling plan.")
-    else
-        TT_LevellingPlans[k] = nil
-    end
-    TT_RegenPlansDropdown()
-    TT_LevellingPlans_DewDrop:Close()
-end
-
-function TT_NewPlan(name) 
-    local planMinLevel = TT_MINLEVEL + 1
-    local planMaxLevel = planMinLevel
-    local t = {}
-
-    for k , v in pairs(TT_StagedLevellingPlan) do
-        planMinLevel = min(planMinLevel, k)
-        planMaxLevel = max(planMaxLevel, k)
-        local n = {
-            tab = v.tab,
-            tabName = v.tabName,
-            btnID = v.btnID,
-            rank = v.rank,
-            icon = v.icon,
-            spellID = v.spellID,
-            name = v.name,
-        }
-        TT_Out("Adding to new plan..." .. planMinLevel .. " " .. planMaxLevel)
-        t[k] = n
-    end
-    TubTalent_Vars.LevellingPlanIDMax = TubTalent_Vars.LevellingPlanIDMax + 1
-    local tp = {}
-    for i=1, 3 do
-        _, _, tp[i] = GetTalentTabInfo(i)
-    end
-    local newPlan = {
-        class = UnitClass("player"),
-        name = name,
-        points = tp,
-        id = TubTalent_Vars.LevellingPlanIDMax,
-        levellingPlanMinLevel = planMinLevel, --Min level might get cut...
-        levellingPlanMaxLevel = planMaxLevel,
-        plan = t
-    }
-    table.insert(TT_LevellingPlans, newPlan)
-    TT_RegenPlansDropdown()
-    TT_LevellingPlans_DewDrop:Close()
-end
-
-function TT_RenamePlan(planID, name)
-    _, v = TT_FindPlan(planID)
-    v.name = name
-    TT_RegenPlansDropdown()
-end
-
-function TT_RegenPlansDropdown()
-    TT_PlanOpts[2]["plans"] = {} -- clear it out first
-    local count = 0 
-    if TT_TalentPresets ~= nil then
-        for k,v in pairs(TT_LevellingPlans) do
-            local a = "ID: " .. v.id .. "\n"
-            for i=1, 3 do
-                --name, _, _ = GetTalentTabInfo(i)
-                a = format("%s%s\n",a,v.points[i])
-            end
-            a = a .. "Min Level: " .. v.levellingPlanMinLevel .. "\n"
-            a = a .. "Max Level: " .. v.levellingPlanMaxLevel .. "\n"
-            a = a .. "|cff1eff0cClick to select this plan|r"
-            local t = {
-                name=v.name,
-                tooltipTitle=v.name,
-                tooltip=a,
-                id=v.id,
-                arg1=v.id,
-                notCheckable=false,
-                checked = function(id)
-                    if TubTalent_Vars.CurrentLevellingPlan ~= nil then
-                        if id == TubTalent_Vars.CurrentLevellingPlan then
-                            return true
-                        end
-                    end return false  end,
-                func=function(id)
-                    TT_SelectPlan(id)
-                    TT_RegenPlansDropdown()
-                end,
-                value="plansmenu:"..v.id
-            }
-            table.insert(TT_PlanOpts[2]["plans"],t)
-            count = count + 1
-        end
-    end
-    if count == 0 then
-        local t = {
-            name="Create or import a plan",
-            tooltip="Go ahead, enable sim mode and get started.",
-            notCheckable=true,
-            value=""
-        }
-        table.insert(TT_PlanOpts[2]["plans"],t)
-    end
-end
-
-function TT_StagedTalentsFrame_PlansButton_OnClick()
-    if TT_LevellingPlans_DewDrop:IsOpen() then
-        TT_LevellingPlans_DewDrop:Close();
-    else
-        TT_LevellingPlans_DewDrop:Open(this);
-    end
-end
-
-function TT_StagedTalentsFramePlans_DewdropRegister()
-    TT_LevellingPlans_DewDrop:Register(TT_StagedTalentsFrame_PlansButton, --Bound Frame
-        'point', function(parent) --Point
-            return "TOP", "BOTTOM"
-        end,
-        'children', function(level, value) TT_TalentPresets_DewdropGen(level, value, TT_PlanOpts) end,
-        'dontHook', true
-    )
-end
-
-function TT_StagedTalentFrame_SetTab()
-    if TT_CurrentTab == 1 then
-        PanelTemplates_SelectTab(TT_StagedTalentsFrame_StagedPlanButton);
-        PanelTemplates_DeselectTab(TT_StagedTalentsFrame_CurrentPlanButton);
-    else
-        PanelTemplates_SelectTab(TT_StagedTalentsFrame_CurrentPlanButton);
-        PanelTemplates_DeselectTab(TT_StagedTalentsFrame_StagedPlanButton);
-    end
-    PanelTemplates_UpdateTabs(TT_StagedTalentsFrame)
-    TT_StagedTalentsFrame_Update()
-end
-
-function TT_StagedTalentsFrame_SwitchTab()
-    TT_CurrentTab = this:GetID()
-    TT_StagedTalentFrame_SetTab()
-end
-
-function TT_StagedTalentsFrame_Update()
-    local numDisplay, plansToDisplay
-    if TT_CurrentTab == 2 then
-        if TubTalent_Vars.CurrentLevellingPlan ~= 0 then
-            TT_StagedTalentsFrame_NoWorking:Hide()
-            numDisplay = TT_CurrentLevellingPlan.levellingPlanMaxLevel - TT_MINLEVEL
-            plansToDisplay = TT_CurrentLevellingPlan.plan
-            if TT_CurrentLevellingPlan == nil then
-                TT_Out("FAILED")
-            end
-        elseif TubTalent_Vars.CurrentLevellingPlan == 0 then
-            numDisplay = 0 
-            TT_StagedTalentsFrame_NoWorking:Show()
-            TT_StagedTalentsFrame_NoWorking:SetText("No levelling plan selected.\nSelect one from the button above to get started.")
-            for i=1, NUM_LVLPLAN_TALENTSSHOWN do
-                local lvlPlanFrame = _G["TT_StagedTalentsFrame_LvlPlanSpec"..i]
-                lvlPlanFrame:Hide()
-            end
-        end
-    else
-        if TT_SimMode and not TT_PresetLoaded then
-            numDisplay = TT_StagedEstimatedLevel - TT_MINLEVEL
-            plansToDisplay = TT_StagedLevellingPlan
-            if numDisplay == 0 then -- how I can tell if it's empty
-                TT_StagedTalentsFrame_NoWorking:Show()
-                TT_StagedTalentsFrame_NoWorking:SetText("Click on a talent to start making a levelling plan")
-            else
-                TT_StagedTalentsFrame_NoWorking:Hide()
-            end
-        else
-            numDisplay = 0 
-            TT_StagedTalentsFrame_NoWorking:Show()
-            if not TT_SimMode then
-                TT_StagedTalentsFrame_NoWorking:SetText("Only enabled in Sim Mode.\nCannot be used with a loaded preset.")
-            elseif TT_SimMode and TT_PresetLoaded then
-                TT_StagedTalentsFrame_NoWorking:SetText("Can't create level plan with preset loaded.\nReset, or refund staged points to make a levelling plan.")
-            end
-            for i=1, NUM_LVLPLAN_TALENTSSHOWN do
-                local lvlPlanFrame = _G["TT_StagedTalentsFrame_LvlPlanSpec"..i]
-                lvlPlanFrame:Hide()
-            end
-        end
-    end
-
-	local scrollOffset = FauxScrollFrame_GetOffset(TT_StagedTalentsFrame_PlanScrollFrame);
-	local index;
-    local minIndex = TT_MINLEVEL
-    GameTooltip:Hide()
-	for i=1, NUM_LVLPLAN_TALENTSSHOWN do
-        local lvlPlanFrame = _G["TT_StagedTalentsFrame_LvlPlanSpec"..i]
-		index = (scrollOffset) + i;
-		if ( index <= numDisplay) then
-            local lvlPlanLevel = _G["TT_StagedTalentsFrame_LvlPlanSpec"..i.."Level"]
-            local lvlPlanName = _G["TT_StagedTalentsFrame_LvlPlanSpec"..i.."Name"]
-            local lvlPlanRank = _G["TT_StagedTalentsFrame_LvlPlanSpec"..i.."Rank"]
-            local lvlPlanIcon = _G["TT_StagedTalentsFrame_LvlPlanSpec"..i.."Icon"]
-			lvlPlanFrame:Show()
-            lvlPlanName:SetText(plansToDisplay[index+minIndex].name)
-            lvlPlanRank:SetText("Rank: " .. plansToDisplay[index+minIndex].rank .. " Tab: " .. plansToDisplay[index+minIndex].tabName)
-            lvlPlanLevel:SetText("Level: " .. index+minIndex)
-            lvlPlanIcon:SetTexture(plansToDisplay[index+minIndex].icon)
-		else
-            lvlPlanFrame:Hide()
-		end
-        if MouseIsOver(lvlPlanFrame) and TT_StagedTalentsFrame:IsShown() then --Fixes jank when hiding the frame on show
-            TT_LvlPlanTooltip(lvlPlanFrame:GetID())
-        end
-	end
-
-	-- Scrollbar stuff
-	FauxScrollFrame_Update(TT_StagedTalentsFrame_PlanScrollFrame, numDisplay , NUM_LVLPLAN_TALENTSSHOWN, 28);
+    DEFAULT_CHAT_FRAME:AddMessage(format("%s: %s","TT", msg))
 end
 
 -- Import Export Code --
 TT_ProfileFrameMode = 0
-TT_PROFILEMODES = {
-    None = 0,
-    ExportPreset = 1,
-    ImportPreset = 2,
-    ExportPlan = 3,
-    ExportPlan = 4,
-}
 
 function TT_SetupExportWindow()
     TT_ProfileFrame_ScrollFrame_EditBox:SetScript("OnCursorChanged",
@@ -2398,61 +1117,61 @@ function TT_ProfileFrame_Show(Mode,ID)
     if TT_ProfileFrameMode == TT_PROFILEMODES.ExportPreset then
         TT_SetupExportWindow()
         TT_ProfileFrame_ScrollFrame_EditBox:SetText(TT_ExportPreset(ID))
-        TT_ProfileFrameTitleString:SetText("Export Preset")
+        TT_ProfileFrameTitleString:SetText(TT_ExportPreset)
     elseif TT_ProfileFrameMode == TT_PROFILEMODES.ExportPlan then
         TT_SetupExportWindow()
         TT_ProfileFrame_ScrollFrame_EditBox:SetText(TT_ExportPlan(ID))
-        TT_ProfileFrameTitleString:SetText("Export Plan")
+        TT_ProfileFrameTitleString:SetText(TT_ExportPlan)
     elseif TT_ProfileFrameMode == TT_PROFILEMODES.ImportPreset then
         TT_SetupImportWindow()
         TT_ProfileFrame_ScrollFrame_EditBox:SetText("")
-        TT_ProfileFrameTitleString:SetText("Import Preset")
+        TT_ProfileFrameTitleString:SetText(TT_ImportPreset)
     elseif TT_ProfileFrameMode == TT_PROFILEMODES.ImportPlan then
         TT_SetupImportWindow()
         TT_ProfileFrame_ScrollFrame_EditBox:SetText("")
-        TT_ProfileFrameTitleString:SetText("Import Plan")
+        TT_ProfileFrameTitleString:SetText(TT_ImportPlan)
     end
     TT_ProfileFrame:Show()
 end
 
 StaticPopupDialogs["TUBTALENTS_RENAMEIMPORTEDPLAN"] = {
-text = "Import successful, there's another plan with the same name though.\nWould you like to rename?",
-button1 = "Yes",
-button2 = "No",
-hasEditBox = 1,
-OnAccept = TT_RenamePlanPrompt,
-EditBoxOnEnterPressed=TT_RenamePlanPrompt,
-OnHide = function()
-    getglobal(this:GetName().."EditBox"):SetText("");
-end,
-OnShow = function()
-    _, v = TT_FindPlan(TubTalent_Vars.LevellingPlanIDMax)
-    getglobal(this:GetName().."EditBox"):SetText(v.name)
-end,
-timeout = 0,
-whileDead = true,
-hideOnEscape = true,
-preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
+    text = TT_ImportPlanSameName,
+    button1 = "Yes",
+    button2 = "No",
+    hasEditBox = 1,
+    OnAccept = TT_RenamePlanPrompt,
+    EditBoxOnEnterPressed=TT_RenamePlanPrompt,
+    OnHide = function()
+        getglobal(this:GetName().."EditBox"):SetText("");
+    end,
+    OnShow = function()
+        _, v = TT_FindPlan(TubTalent_Vars.LevellingPlanIDMax)
+        getglobal(this:GetName().."EditBox"):SetText(v.name)
+    end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
 }
 
 StaticPopupDialogs["TUBTALENTS_RENAMEIMPORTEDPRESET"] = {
-text = "Import successful, there's another preset with the same name though.\nWould you like to rename?",
-button1 = "Yes",
-button2 = "No",
-hasEditBox = 1,
-OnAccept = TT_RenamePresetPrompt,
-EditBoxOnEnterPressed=TT_RenamePresetPrompt,
-OnHide = function()
-    getglobal(this:GetName().."EditBox"):SetText("");
-end,
-OnShow = function()
-    _, v = TT_FindTalentPreset(TubTalent_Vars.TalentPresetIDMax)
-    getglobal(this:GetName().."EditBox"):SetText(v.name)
-end,
-timeout = 0,
-whileDead = true,
-hideOnEscape = true,
-preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
+    text = TT_ImportPresetSameName,
+    button1 = "Yes",
+    button2 = "No",
+    hasEditBox = 1,
+    OnAccept = TT_RenamePresetPrompt,
+    EditBoxOnEnterPressed=TT_RenamePresetPrompt,
+    OnHide = function()
+        getglobal(this:GetName().."EditBox"):SetText("");
+    end,
+    OnShow = function()
+        _, v = TT_FindTalentPreset(TubTalent_Vars.TalentPresetIDMax)
+        getglobal(this:GetName().."EditBox"):SetText(v.name)
+    end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
 }
 function TT_RenamePlanPrompt()
     local text = getglobal(this:GetParent():GetName().."EditBox"):GetText();
@@ -2464,15 +1183,6 @@ function TT_RenamePresetPrompt()
     local text = getglobal(this:GetParent():GetName().."EditBox"):GetText();
     TT_RenamePreset(TubTalent_Vars.TalentPresetIDMax ,text)
     this:GetParent():Hide();
-end
-
-function TT_CheckSpellIds(plan)
-    for k,v in pairs(plan) do
-        if v.spellID == 0 then
-            v.spellID, _ = TT_GetTalentSpellID(v.tab, v.btnID, v.rank)
-        else break -- break loop early if there's a non zero spellID
-        end
-    end
 end
 
 function TT_CheckPresetName(a)
@@ -2493,164 +1203,4 @@ function TT_CheckPlanName(a)
         end
     end
     return false
-end
-
-function TT_ProfileFrame_SubmitButton_OnClick()
-    if TT_ProfileFrameMode == TT_PROFILEMODES.ImportPreset then 
-        l = TT_ProfileFrame_ScrollFrame_EditBox:GetText();
-        f = loadstring(l);
-        if f ~= nil then
-            a = f()
-            for k,v in pairs(a) do
-                TT_Out(k)
-            end 
-        else
-            TT_Out("Imported preset is really corrupt, try re-exporting")
-            return
-        end
-
-        -- validate it...
-        if a.class == nil or a.name == nil or a.talents == nil or a.points == nil then
-            TT_Out("Imported preset is corrupt, try re-exporting")
-            return
-        end
-        if a.class ~= UnitClass("player") then
-            TT_Out("Imported preset doesn't match your class")
-            return
-        end
-        --give it a new id and add it
-        TubTalent_Vars.TalentPresetIDMax = TubTalent_Vars.TalentPresetIDMax+1
-        a.id = TubTalent_Vars.TalentPresetIDMax
-        table.insert(TT_TalentPresets, a)
-        if TT_CheckPresetName(a) then            
-            --offer to rename it if there's another named the same
-            -- Doesn't matter if they have the same name, thought I'd offer though.
-            StaticPopup_Show("TUBTALENTS_RENAMEIMPORTEDPRESET")
-        end
-        TT_RegenPresetDropdown()
-        TT_Out("Successfully imported preset")
-    elseif TT_ProfileFrameMode == TT_PROFILEMODES.ImportPlan then
-        l = TT_ProfileFrame_ScrollFrame_EditBox:GetText();
-        f = loadstring(l);
-        if f ~= nil then
-            a = f() 
-        else
-            TT_Out("Imported plan is really corrupt, try re-exporting")
-            return
-        end
-
-        -- validate it...
-        if a.class == nil or a.name == nil or a.plan == nil or a.points == nil
-        or a.levellingPlanMinLevel== nil or a.levellingPlanMaxLevel==nil then
-            TT_Out("Imported plan is corrupt, try re-exporting")
-            return
-        end
-        if a.class ~= UnitClass("player") then
-            TT_Out("Imported plan doesn't match your class")
-            return
-        end
-        --give it a new id and add it
-        TubTalent_Vars.LevellingPlanIDMax = TubTalent_Vars.LevellingPlanIDMax + 1
-        a.id = TubTalent_Vars.LevellingPlanIDMax
-        if (RQ_GetVersion and SUPERWOW_STRING) and not TT_FakeNoMods then
-            --re-cache spellIDs if they're missing...
-            TT_CheckSpellIds(a.plan)
-        end
-        table.insert(TT_LevellingPlans, a)
-        if TT_CheckPlanName(a) then            
-            --offer to rename it if there's another named the same
-            -- Doesn't matter if they have the same name, thought I'd offer though.
-            StaticPopup_Show("TUBTALENTS_RENAMEIMPORTEDPLAN")
-        end
-        TT_RegenPlansDropdown()
-        TT_Out("Successfully imported plan")
-    end
-    TT_ProfileFrame:Hide();
-end
-
-TT_ExportPresetTalentsButtonsTemplate = 
-[[%s            [%s]=%s,
-]]
-
-TT_ExportPresetTalentsTabsTemplate = 
-[[%s        [%s] = {
-]]
-
-TT_ExportPresetPointsTemplate = 
-[[{
-        [1] = %s,
-        [2] = %s,
-        [3] = %s,
-    }]]
-
-TT_ExportPresetObjectTemplate =
-[[return {
-    class = "%s",
-    name = "%s",
-    id = 0,
-    talents = %s,
-    points = %s,
-}]]
-function TT_ExportPreset(presetID)
-    _, p = TT_FindTalentPreset(presetID)
-    local exportPresetPoints = format(TT_ExportPresetPointsTemplate,
-    p.points[1], p.points[2], p.points[3])
-    local exportPresetTalents = "{\n"
-    for k, v in p.talents do
-        exportPresetTalents = format(TT_ExportPresetTalentsTabsTemplate,
-        exportPresetTalents, k)
-        for m, b in p.talents[k] do
-            exportPresetTalents = format(TT_ExportPresetTalentsButtonsTemplate,
-            exportPresetTalents, m, b)
-        end
-        exportPresetTalents = exportPresetTalents .. "    },\n"
-    end
-    exportPresetTalents = exportPresetTalents .. "  }"
-    local exportPreset = format(TT_ExportPresetObjectTemplate,
-    p.class, p.name, exportPresetTalents, exportPresetPoints)
-    return exportPreset
-end
-
-TT_ExportPlanTemplate = 
-[[%s[%s] = {
-    tab = %s,
-    tabName = "%s",
-    btnID = %s,
-    rank = %s,
-    icon = "%s",
-    spellID = %s,
-    name = "%s",
-},
-]]
-TT_ExportPlanPointsTemplate = 
-[[{
-    [1] = %s,
-    [2] = %s,
-    [3] = %s,
-}]]
-TT_ExportPlanObjectTemplate = 
-[[return {
-    class = "%s",
-    name = "%s",
-    points = %s,
-    id = 0,
-    levellingPlanMinLevel = %s,
-    levellingPlanMaxLevel = %s,
-    plan = %s,
-}]] -- leaving id at 0, gets re-assigned on import
-function TT_ExportPlan(planID)
-    _, p = TT_FindPlan(planID)
-    local exportPlanPoints = format(TT_ExportPlanPointsTemplate,
-    p.points[1], p.points[2], p.points[3])
-    local exportPlanLevels = "{\n"
-    for k,v in p.plan do
-        local t = string.gsub(v.icon,"\\","\\\\") --need to double up slashes or lose them on export
-        exportPlanLevels = format(TT_ExportPlanTemplate, exportPlanLevels,
-        k, v.tab, v.tabName, v.btnID, v.rank, t, v.spellID, v.name)
-    end
-    exportPlanLevels = exportPlanLevels .. "}\n"
-    local exportPlan = format(TT_ExportPlanObjectTemplate,
-    p.class, p.name, exportPlanPoints, p.levellingPlanMinLevel, 
-    p.levellingPlanMaxLevel, exportPlanLevels)
-    return exportPlan
 end

@@ -1,5 +1,13 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-    <Include file="TubTalents.lua" />
+	<Include file="localisations.lua" />
+	<Include file="TubTalents.lua" />
+	<Include file="api\utilities.lua" />
+	<Include file="api\dropdowns.lua" />
+	<Include file="api\presets.lua" />
+	<Include file="api\plans.lua" />
+	<Include file="api\profiles.lua" />
+	<Include file="api\compat.lua" />
+
     <Frame name="TubTalents_Listener" hidden="false">
         <Scripts>
             <OnLoad>

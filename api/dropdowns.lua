@@ -211,3 +211,50 @@ function TT_TalentPresets_DewdropLevelGen(opts,args)
         'notCheckable', true
     )
 end
+
+function TT_RegenPlansDropdown()
+    TT_PlanOpts[2]["plans"] = {} -- clear it out first
+    local count = 0 
+    if TT_TalentPresets ~= nil then
+        for k,v in pairs(TT_LevellingPlans) do
+            local a = "ID: " .. v.id .. "\n"
+            for i=1, 3 do
+                --name, _, _ = GetTalentTabInfo(i)
+                a = format("%s%s\n",a,v.points[i])
+            end
+            a = a .. "Min Level: " .. v.levellingPlanMinLevel .. "\n"
+            a = a .. "Max Level: " .. v.levellingPlanMaxLevel .. "\n"
+            a = a .. "|cff1eff0cClick to select this plan|r"
+            local t = {
+                name=v.name,
+                tooltipTitle=v.name,
+                tooltip=a,
+                id=v.id,
+                arg1=v.id,
+                notCheckable=false,
+                checked = function(id)
+                    if TubTalent_Vars.CurrentLevellingPlan ~= nil then
+                        if id == TubTalent_Vars.CurrentLevellingPlan then
+                            return true
+                        end
+                    end return false  end,
+                func=function(id)
+                    TT_SelectPlan(id)
+                    TT_RegenPlansDropdown()
+                end,
+                value="plansmenu:"..v.id
+            }
+            table.insert(TT_PlanOpts[2]["plans"],t)
+            count = count + 1
+        end
+    end
+    if count == 0 then
+        local t = {
+            name="Create or import a plan",
+            tooltip="Go ahead, enable sim mode and get started.",
+            notCheckable=true,
+            value=""
+        }
+        table.insert(TT_PlanOpts[2]["plans"],t)
+    end
+end

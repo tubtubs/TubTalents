@@ -1,6 +1,7 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<Include file="localisations.lua" />
 	<Include file="TubTalents.lua" />
+	<Include file="api\talentframe.lua" />
 	<Include file="api\utilities.lua" />
 	<Include file="api\dropdowns.lua" />
 	<Include file="api\presets.lua" />

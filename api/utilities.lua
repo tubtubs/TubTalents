@@ -89,3 +89,59 @@ function TT_GetMaxTier()
         end
     end
 end
+
+function TT_Out(msg)
+    DEFAULT_CHAT_FRAME:AddMessage(format("%s: %s","TT", msg))
+end
+
+--Mostly overloaded for sim mode
+function TT_GetTalentTabInfo(tab)
+    local name, iconTexture, pointsSpent, fileName = TT_OldGetTalentTabInfo(tab)
+    if TT_SimMode then
+        pointsSpent=TT_TalentPointsSpent[tab];
+    else
+        pointsSpent = pointsSpent + TT_TalentPointsSpent[tab];
+    end
+    return name, iconTexture, pointsSpent, fileName
+end
+
+--Overloaded to return staged talents and sim mode
+function TT_GetTalentInfo(tab, btn)
+    local name, iconTexture, tier, column, rank, maxRank, isExceptional, meetsPrereq = TT_OldGetTalentInfo(tab, btn);
+    if TT_SimMode then
+        if TT_StagedTalents[tab][btn] == nil then
+            TT_StagedTalents[tab][btn] = 0
+        end
+        return name, iconTexture, tier, column, TT_StagedTalents[tab][btn], maxRank, isExceptional, meetsPrereq
+    else
+        if TT_StagedTalents[tab][btn]~=nil then
+            rank = rank+TT_StagedTalents[tab][btn] 
+        end
+        return name, iconTexture, tier, column, rank, maxRank, isExceptional, meetsPrereq
+    end
+end
+
+--Overrides GetTalentPrereqs() returns:
+--tier, column, isLearnable = GetTalentPrereqs( tabIndex , talentIndex[, inspect] );
+function TT_GetTalentPrereqs(tab, btn)
+    --Call the old one, and return a different isLearnable? I guess so.
+    tier, column, isLearnable = TT_OldGetTalentPrereqs(tab, btn)
+    if tier == nil then 
+        return 
+    end
+    if isLearnable==nil then
+        -- I need to translate the tier, column to tab, btn somehow?
+        local i = TALENT_BRANCH_ARRAY[tier][column].id
+        local preReq_btn = _G["TalentFrameTalent"..i]
+        name, iconTexture, _, _, rank, maxRank, isExceptional, meetsPrereq = TT_OldGetTalentInfo(tab,i);
+        local t=0
+        if TT_StagedTalents[tab][i] ~= nil then
+            t = rank + TT_StagedTalents[tab][i]
+        end
+        if t == maxRank then
+            isLearnable=1 -- its expecting 1 instead of true by default here, may as well stick to it.
+        else
+            isLearnable=nil
+        end
+    end    return tier, column, isLearnable
+end

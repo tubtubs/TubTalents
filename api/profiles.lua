@@ -39,6 +39,18 @@ function TT_ProfileFrame_Show(Mode,ID)
     TT_ProfileFrame:Show()
 end
 
+function TT_RenamePlanPrompt()
+    local text = getglobal(this:GetParent():GetName().."EditBox"):GetText();
+    TT_RenamePlan(TubTalent_Vars.LevellingPlanIDMax ,text)
+    this:GetParent():Hide();
+end
+
+function TT_RenamePresetPrompt()
+    local text = getglobal(this:GetParent():GetName().."EditBox"):GetText();
+    TT_RenamePreset(TubTalent_Vars.TalentPresetIDMax ,text)
+    this:GetParent():Hide();
+end
+
 StaticPopupDialogs["TUBTALENTS_RENAMEIMPORTEDPLAN"] = {
     text = TT_ImportPlanSameName,
     button1 = "Yes",
@@ -78,17 +90,6 @@ StaticPopupDialogs["TUBTALENTS_RENAMEIMPORTEDPRESET"] = {
     hideOnEscape = true,
     preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
 }
-function TT_RenamePlanPrompt()
-    local text = getglobal(this:GetParent():GetName().."EditBox"):GetText();
-    TT_RenamePlan(TubTalent_Vars.LevellingPlanIDMax ,text)
-    this:GetParent():Hide();
-end
-
-function TT_RenamePresetPrompt()
-    local text = getglobal(this:GetParent():GetName().."EditBox"):GetText();
-    TT_RenamePreset(TubTalent_Vars.TalentPresetIDMax ,text)
-    this:GetParent():Hide();
-end
 
 function TT_CheckPresetName(a)
     for k, v in pairs(TT_TalentPresets) do

@@ -1,3 +1,4 @@
+local _G = getfenv(0)
 --Preset dropdown menu
 TT_DialogOpts = {
     --levels...
@@ -210,7 +211,7 @@ end
 
 function TT_TalentPresetLearn(presetID)
     --_, t = TT_FindTalentPreset(presetID)
-    TT_WipeCurrentSpec()
+    --TT_WipeCurrentSpec()
     --Checks and staging...
     TT_TalentPresetStage(presetID)
     TT_LearnButton_OnClick()

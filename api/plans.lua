@@ -2,8 +2,10 @@ local _G = getfenv(0)
 -- Level Plan UI
 NUM_LVLPLAN_TALENTSSHOWN = 6
 TT_PresetLoaded = false
+TT_StagedLevellingPlan = {}
+TT_StagedLevellingPlanMinLevel = TT_MINLEVEL
 
-local TT_PlanOpts = {
+TT_PlanOpts = {
     [1] = {
         {
             name="Plans",
@@ -103,6 +105,7 @@ local TT_PlanOpts = {
                 end,
                 func=function() 
                     TubTalent_Vars.AutoLearnPlans = TT_AUTOLEARN.Prompt
+                    TT_CatchUpPlan(true)
                 end,
                 value=""
             },
@@ -118,6 +121,7 @@ local TT_PlanOpts = {
                 end,
                 func=function() 
                     TubTalent_Vars.AutoLearnPlans = TT_AUTOLEARN.FullAuto
+                    TT_CatchUpPlan(true)
                 end,
                 value=""
             },
@@ -183,26 +187,16 @@ function TT_FindPlan(planID)
     return nil
 end
 
-StaticPopupDialogs["TUBTALENTS_LVLPLAN_CATCHUP_PROMPT"] = {
-    text = "Do you want to catch up with the current levelling plan?",
-    button1 = "Yes",
-    button2 = "No",
-    OnAccept = TT_CatchUpLearnPlan,
-    timeout = 0,
-    whileDead = true,
-    hideOnEscape = true,
-    preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
-}
 
 function TT_CheckPlan(plan)
---Check staged talents against currently learned talents
---If there's something learned, but not staged then raise an error message
--- and: Warn? Disable the current levelling plan?
--- We'll just scan learned talents, and if anything isnt in the levelling plan
--- raise an error.
---- If you have something extra learned, its an issue as you'll be lacking points
---- If you're missing something from the levelling plan, we'll get there
----- It'll fail to find something learned early though...? (Added key check)
+    --Check staged talents against currently learned talents
+    --If there's something learned, but not staged then raise an error message
+    -- and: Warn? Disable the current levelling plan?
+    -- We'll just scan learned talents, and if anything isnt in the levelling plan
+    -- raise an error.
+    --- If you have something extra learned, its an issue as you'll be lacking points
+    --- If you're missing something from the levelling plan, we'll get there
+    ---- It'll fail to find something learned early though...? (Added key check)
     --local t = {}
     local estLevel = UnitLevel("player")
     for i=1, 3 do
@@ -228,43 +222,62 @@ end
 
 function TT_CatchUpLearnPlan()
     local cp1, cp2 = UnitCharacterPoints("player");
-    local estLevel = max(UnitLevel("player") - cp1 + 1,10)
+    local estLevel = max(UnitLevel("player") - cp1+1,10)
     while cp1 > 0 do
         if TT_CurrentLevellingPlan.plan[estLevel] ~= nil then
             btn = TT_CurrentLevellingPlan.plan[estLevel].btnID
             tab = TT_CurrentLevellingPlan.plan[estLevel].tab
             rank = TT_CurrentLevellingPlan.plan[estLevel].rank
+            TT_Out(format("btn: %s tab: %s rank: %s", btn, tab, rank))
             LearnTalentRank(tab, btn, rank)
             cp1 = cp1 - 1
             estLevel = estLevel + 1
             TT_LearnedTalentsFlag = true
         else
-            TT_Out("End of leveling plan?")
+            TT_Out("End of leveling plan?") --TODO: Remove this after testing
             break
         end
     end
 end
 
+StaticPopupDialogs["TUBTALENTS_LVLPLAN_CATCHUP_PROMPT"] = {
+    text = "Do you want to catch up with the current levelling plan?",
+    button1 = "Yes",
+    button2 = "No",
+    OnAccept = TT_CatchUpLearnPlan,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
+}
+
+
 function TT_CatchUpPlan(menu)
     local flag = menu or false
---Get unspent talent points (outside of modes)
-    local cp1, cp2 = UnitCharacterPoints("player");
-    --TT_Out(format("AutoLearn: %s", TubTalent_Vars.AutoLearnPlans))
-    if cp1 > 1 then -- many points to spend...
-        if TubTalent_Vars.AutoLearnPlans == TT_AUTOLEARN.Prompt or flag then
-            StaticPopup_Show("TUBTALENTS_LVLPLAN_CATCHUP_PROMPT")
-        elseif TubTalent_Vars.AutoLearnPlans == TT_AUTOLEARN.FullAuto then
-            TT_CatchUpLearnPlan()
+    if TubTalent_Vars.CurrentLevellingPlan ~= 0 then
+    --Get unspent talent points (outside of modes)
+        local cp1, cp2 = UnitCharacterPoints("player");
+        --TT_Out(format("AutoLearn: %s", TubTalent_Vars.AutoLearnPlans))
+        local estLevel = UnitLevel("player")
+        estLevel = estLevel - cp1
+        if estLevel >= TT_CurrentLevellingPlan.levellingPlanMaxLevel then
+            return
         end
-    elseif cp1 > 0 then 
-        -- offer to learn the latest talent in the levelling plan...
-        if TubTalent_Vars.AutoLearnPlans == TT_AUTOLEARN.Prompt or flag then
-            TT_LearnTalentPopup:Show()
-        elseif TubTalent_Vars.AutoLearnPlans == TT_AUTOLEARN.FullAuto then
-            TT_CatchUpLearnPlan()
+        if cp1 > 1 then -- many points to spend...
+            if TubTalent_Vars.AutoLearnPlans == TT_AUTOLEARN.Prompt or flag then
+                StaticPopup_Show("TUBTALENTS_LVLPLAN_CATCHUP_PROMPT")
+            elseif TubTalent_Vars.AutoLearnPlans == TT_AUTOLEARN.FullAuto then
+                TT_CatchUpLearnPlan()
+            end
+        elseif cp1 > 0 then 
+            -- offer to learn the latest talent in the levelling plan...
+            if TubTalent_Vars.AutoLearnPlans == TT_AUTOLEARN.Prompt or flag then
+                TT_LearnTalentPopup:Show()
+            elseif TubTalent_Vars.AutoLearnPlans == TT_AUTOLEARN.FullAuto then
+                TT_CatchUpLearnPlan()
+            end
         end
     end
---Viability is checked on creation, don't need validation here...
 end
 
 function TT_SelectPlan(arg)
@@ -285,7 +298,8 @@ function TT_SelectPlan(arg)
     end
     --TT_LevellingPlans_DewDrop:Close()
     TT_CurrentTab=2
-    TT_StagedTalentFrame_SetTab()
+    TT_CatchUpPlan()
+    TT_StagedTalentsFrame_SetTab()
     TT_StagedTalentsFrame_Update()
 end
 
@@ -368,51 +382,24 @@ function TT_RenamePlan(planID, name)
     TT_RegenPlansDropdown()
 end
 
-function TT_RegenPlansDropdown()
-    TT_PlanOpts[2]["plans"] = {} -- clear it out first
-    local count = 0 
-    if TT_TalentPresets ~= nil then
-        for k,v in pairs(TT_LevellingPlans) do
-            local a = "ID: " .. v.id .. "\n"
-            for i=1, 3 do
-                --name, _, _ = GetTalentTabInfo(i)
-                a = format("%s%s\n",a,v.points[i])
-            end
-            a = a .. "Min Level: " .. v.levellingPlanMinLevel .. "\n"
-            a = a .. "Max Level: " .. v.levellingPlanMaxLevel .. "\n"
-            a = a .. "|cff1eff0cClick to select this plan|r"
-            local t = {
-                name=v.name,
-                tooltipTitle=v.name,
-                tooltip=a,
-                id=v.id,
-                arg1=v.id,
-                notCheckable=false,
-                checked = function(id)
-                    if TubTalent_Vars.CurrentLevellingPlan ~= nil then
-                        if id == TubTalent_Vars.CurrentLevellingPlan then
-                            return true
-                        end
-                    end return false  end,
-                func=function(id)
-                    TT_SelectPlan(id)
-                    TT_RegenPlansDropdown()
-                end,
-                value="plansmenu:"..v.id
-            }
-            table.insert(TT_PlanOpts[2]["plans"],t)
-            count = count + 1
-        end
-    end
-    if count == 0 then
-        local t = {
-            name="Create or import a plan",
-            tooltip="Go ahead, enable sim mode and get started.",
-            notCheckable=true,
-            value=""
-        }
-        table.insert(TT_PlanOpts[2]["plans"],t)
-    end
+-- Staged Talents Frame functions
+
+function TT_StagedTalentsFrame_FrameSetup()
+    TT_StagedTalentsFrame:SetParent(TalentFrame)
+    TT_StagedTalentsFrame:ClearAllPoints()
+    TT_StagedTalentsFrame:SetPoint("TOPLEFT", TalentFrame, "TOPRIGHT", -25, -20); -- Position it
+    TT_StagedTalentsFrame:Show()
+    -- Update widget framestrata to high or it'll draw under the levelling plan frame
+    TT_StagedTalentsFrame_StagedPlanButton:SetFrameStrata("HIGH")
+    TT_StagedTalentsFrame_CurrentPlanButton:SetFrameStrata("HIGH")
+    TT_StagedTalentsFrame_LvlPlanSpec1:SetFrameStrata("HIGH")
+    TT_StagedTalentsFrame_LvlPlanSpec2:SetFrameStrata("HIGH")
+    TT_StagedTalentsFrame_LvlPlanSpec3:SetFrameStrata("HIGH")
+    TT_StagedTalentsFrame_LvlPlanSpec4:SetFrameStrata("HIGH")
+    TT_StagedTalentsFrame_LvlPlanSpec5:SetFrameStrata("HIGH")
+    TT_StagedTalentsFrame_LvlPlanSpec6:SetFrameStrata("HIGH")
+    TT_StagedTalentsFrame_PlanScrollFrame:SetFrameStrata("HIGH")
+    TT_StagedTalentsFrame_PlansButton:SetFrameStrata("HIGH")
 end
 
 function TT_StagedTalentsFrame_PlansButton_OnClick()
@@ -433,7 +420,7 @@ function TT_StagedTalentsFramePlans_DewdropRegister()
     )
 end
 
-function TT_StagedTalentFrame_SetTab()
+function TT_StagedTalentsFrame_SetTab()
     if TT_CurrentTab == 1 then
         PanelTemplates_SelectTab(TT_StagedTalentsFrame_StagedPlanButton);
         PanelTemplates_DeselectTab(TT_StagedTalentsFrame_CurrentPlanButton);
@@ -447,7 +434,7 @@ end
 
 function TT_StagedTalentsFrame_SwitchTab()
     TT_CurrentTab = this:GetID()
-    TT_StagedTalentFrame_SetTab()
+    TT_StagedTalentsFrame_SetTab()
 end
 
 function TT_StagedTalentsFrame_Update()
@@ -553,12 +540,15 @@ function TT_LvlPlanTooltip(cID)
     local index = id + scrollOffset + TT_MINLEVEL
     GameTooltip:SetOwner(this, "ANCHOR_BOTTOMRIGHT");
     if TT_CurrentTab == 2 then
-        plansToDisplay = TT_CurrentLevellingPlan.plan
+        if TT_CurrentLevellingPlan ~= nil then
+            plansToDisplay = TT_CurrentLevellingPlan.plan
+        end
     else
         plansToDisplay = TT_StagedLevellingPlan
     end
-    if plansToDisplay[index] ~= nil then --prevents an issue mousing over frame b4 being shown
-        local sID = plansToDisplay[index].spellID or 0 
+    local sID
+    if plansToDisplay ~= nil and plansToDisplay[index].spellID ~= nil then --prevents an issue mousing over frame b4 being shown
+        sID = plansToDisplay[index].spellID or 0 
     else
         return
     end
@@ -580,9 +570,24 @@ end
 
 -- uses standard talent tooltip, plenty appropriate
 function TT_LearnTalentPopup_TalentButtonOnEnter()
+    local cp1, cp2 = UnitCharacterPoints("player");
     local estLevel = UnitLevel("player")
-    local tab = TT_CurrentLevellingPlan.plan[estLevel].btnID
-    local btn = TT_CurrentLevellingPlan.plan[estLevel].tab
+    --estlevel = estLevel - cp1    
+    local btn = TT_CurrentLevellingPlan.plan[estLevel].btnID
+    local tab = TT_CurrentLevellingPlan.plan[estLevel].tab
     GameTooltip:SetOwner(this, "ANCHOR_BOTTOMRIGHT");
     GameTooltip:SetTalent(tab, btn)
+end
+
+function TT_LearnTalentPopup_TalentButtonLoad()
+    local estLevel = UnitLevel("player")
+    local texture = TT_CurrentLevellingPlan.plan[estLevel].icon
+    local spellID = TT_CurrentLevellingPlan.plan[estLevel].spellID
+    local rank = TT_CurrentLevellingPlan.plan[estLevel].rank
+    local name = TT_CurrentLevellingPlan.plan[estLevel].name
+    TT_LearnTalentPopup.spellID=spellID
+    TT_Out(TT_LearnTalentPopup.spellID)
+    TT_LearnTalentPopupTalentButtonIcon:SetTexture(texture)
+    TT_LearnTalentPopupTalentButtonName:SetText(name)
+    TT_LearnTalentPopupTalentButtonRank:SetText("Rank: " .. rank)
 end

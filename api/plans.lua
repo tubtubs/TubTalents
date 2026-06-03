@@ -211,7 +211,7 @@ function TT_CheckPlan(plan)
                     end
                 end
                 if found ~= 1 then
-                    TT_Out("ERROR WITH LEVELLING PROFILE")
+                    TT_Out(TT_ERRLevelPlan)
                     return false
                 end
             end
@@ -228,20 +228,20 @@ function TT_CatchUpLearnPlan()
             btn = TT_CurrentLevellingPlan.plan[estLevel].btnID
             tab = TT_CurrentLevellingPlan.plan[estLevel].tab
             rank = TT_CurrentLevellingPlan.plan[estLevel].rank
-            TT_Out(format("btn: %s tab: %s rank: %s", btn, tab, rank))
+            --TT_Out(format("Learning btn: %s tab: %s rank: %s", btn, tab, rank))
             LearnTalentRank(tab, btn, rank)
             cp1 = cp1 - 1
             estLevel = estLevel + 1
             TT_LearnedTalentsFlag = true
         else
-            TT_Out("End of leveling plan?") --TODO: Remove this after testing
+            --TT_Out("End of leveling plan?") --TODO: Remove this after testing
             break
         end
     end
 end
 
 StaticPopupDialogs["TUBTALENTS_LVLPLAN_CATCHUP_PROMPT"] = {
-    text = "Do you want to catch up with the current levelling plan?",
+    text = TT_CATCHUPPROMPT,
     button1 = "Yes",
     button2 = "No",
     OnAccept = TT_CatchUpLearnPlan,
@@ -329,7 +329,7 @@ end
 function TT_DeletePlan(arg)
     k, v = TT_FindPlan(arg)
     if v.id == TubTalent_Vars.CurrentLevellingPlan then
-        TT_Out("Can't delete currently selected levelling plan.")
+        TT_Out(TT_ERRDeleteSelctedPlan)
     else
         TT_LevellingPlans[k] = nil
     end
@@ -354,7 +354,7 @@ function TT_NewPlan(name)
             spellID = v.spellID,
             name = v.name,
         }
-        TT_Out("Adding to new plan..." .. planMinLevel .. " " .. planMaxLevel)
+        --TT_Out("Adding to new plan..." .. planMinLevel .. " " .. planMaxLevel)
         t[k] = n
     end
     TubTalent_Vars.LevellingPlanIDMax = TubTalent_Vars.LevellingPlanIDMax + 1
@@ -450,7 +450,7 @@ function TT_StagedTalentsFrame_Update()
         elseif TubTalent_Vars.CurrentLevellingPlan == 0 then
             numDisplay = 0 
             TT_StagedTalentsFrame_NoWorking:Show()
-            TT_StagedTalentsFrame_NoWorking:SetText("No levelling plan selected.\nSelect one from the button above to get started.")
+            TT_StagedTalentsFrame_NoWorking:SetText(TT_STAGEDTALENTS_NOPLANSELECTED)
             for i=1, NUM_LVLPLAN_TALENTSSHOWN do
                 local lvlPlanFrame = _G["TT_StagedTalentsFrame_LvlPlanSpec"..i]
                 lvlPlanFrame:Hide()
@@ -462,7 +462,7 @@ function TT_StagedTalentsFrame_Update()
             plansToDisplay = TT_StagedLevellingPlan
             if numDisplay == 0 then -- how I can tell if it's empty
                 TT_StagedTalentsFrame_NoWorking:Show()
-                TT_StagedTalentsFrame_NoWorking:SetText("Click on a talent to start making a levelling plan")
+                TT_StagedTalentsFrame_NoWorking:SetText(TT_STAGEDTALENTS_STARTPLAN)
             else
                 TT_StagedTalentsFrame_NoWorking:Hide()
             end
@@ -470,9 +470,9 @@ function TT_StagedTalentsFrame_Update()
             numDisplay = 0 
             TT_StagedTalentsFrame_NoWorking:Show()
             if not TT_SimMode then
-                TT_StagedTalentsFrame_NoWorking:SetText("Only enabled in Sim Mode.\nCannot be used with a loaded preset.")
+                TT_StagedTalentsFrame_NoWorking:SetText(TT_STAGEDTALENTSERR)
             elseif TT_SimMode and TT_PresetLoaded then
-                TT_StagedTalentsFrame_NoWorking:SetText("Can't create level plan with preset loaded.\nReset, or refund staged points to make a levelling plan.")
+                TT_StagedTalentsFrame_NoWorking:SetText(TT_STAGEDTALENTSNOPRESETS)
             end
             for i=1, NUM_LVLPLAN_TALENTSSHOWN do
                 local lvlPlanFrame = _G["TT_StagedTalentsFrame_LvlPlanSpec"..i]
@@ -523,7 +523,7 @@ function TT_LvlPlan_OnClick()
         end
         local spellId = plansToDisplay[index].spellID
         local txt = DEFAULT_CHAT_FRAME.editBox:GetText()
-        local link = format("\124ccfffffff\124Henchant:%s\124h[%s Rank %s]\124h\124r",
+        local link = format(TT_CHATLINKFORMAT,
         plansToDisplay[index].spellID, plansToDisplay[index].name, plansToDisplay[index].rank)
         txt = format("%s %s",txt, link)
         DEFAULT_CHAT_FRAME.editBox:SetText(txt)
@@ -547,7 +547,7 @@ function TT_LvlPlanTooltip(cID)
         plansToDisplay = TT_StagedLevellingPlan
     end
     local sID
-    if plansToDisplay ~= nil and plansToDisplay[index].spellID ~= nil then --prevents an issue mousing over frame b4 being shown
+    if plansToDisplay ~= nil and plansToDisplay[index] ~= nil then --prevents an issue mousing over frame b4 being shown
         sID = plansToDisplay[index].spellID or 0 
     else
         return
@@ -590,4 +590,43 @@ function TT_LearnTalentPopup_TalentButtonLoad()
     TT_LearnTalentPopupTalentButtonIcon:SetTexture(texture)
     TT_LearnTalentPopupTalentButtonName:SetText(name)
     TT_LearnTalentPopupTalentButtonRank:SetText("Rank: " .. rank)
+end
+
+function TT_RegenPlansDropdown()
+    TT_PlanOpts[2]["plans"] = {} -- clear it out first
+    local count = 0 
+    if TT_TalentPresets ~= nil then
+        for k,v in pairs(TT_LevellingPlans) do
+            local pDisplay = ""
+            for i=1, 3 do
+                name, _, _ = GetTalentTabInfo(i)
+                pDisplay = format("%s%s in %s\n",pDisplay,v.points[i],name)
+            end
+            local t = {
+                name=v.name,
+                tooltipTitle=v.name,
+                tooltip=format(TT_PLANDROPTOOLTIP,
+                v.id, pDisplay, v.levellingPlanMinLevel, v.levellingPlanMaxLevel),
+                id=v.id,
+                arg1=v.id,
+                notCheckable=false,
+                checked = function(id)
+                    if TubTalent_Vars.CurrentLevellingPlan ~= nil then
+                        if id == TubTalent_Vars.CurrentLevellingPlan then
+                            return true
+                        end
+                    end return false  end,
+                func=function(id)
+                    TT_SelectPlan(id)
+                    TT_RegenPlansDropdown()
+                end,
+                value="plansmenu:"..v.id
+            }
+            table.insert(TT_PlanOpts[2]["plans"],t)
+            count = count + 1
+        end
+    end
+    if count == 0 then
+        table.insert(TT_PlanOpts[2]["plans"],TT_PLANDEFAULTDROP)
+    end
 end

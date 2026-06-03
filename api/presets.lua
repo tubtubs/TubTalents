@@ -172,7 +172,7 @@ function TT_TalentPresetStage(presetID)
                 local stagedRank = t.talents[i][k]
                 --TT_Out(format("rank: %s learnedRank: %s", rank, learnedRank))
                 if stagedRank < learnedRank and not TT_SimMode then --if ranks match its fine
-                    TT_Out("Learned ranks conflict, can't stage preset. Reset, or enable Sim mode.")
+                    TT_Out(TT_ERRStagedPresetsLearnedConflict)
                     TT_TalentPresets_Dewdrop:Close()
                     return
                 end
@@ -186,7 +186,7 @@ function TT_TalentPresetStage(presetID)
     end
     --if you don't have enough talent points to stage return error and stop
     if totals > TalentFrame.talentPoints then
-        TT_Out("Not enough points, can't stage preset. Reset, or enable Sim mode.")
+        TT_Out(TT_ERRStagedPresetsPoints)
         TT_TalentPresets_Dewdrop:Close()
         return
     end
@@ -241,13 +241,7 @@ function TT_RegenPresetDropdown()
         end
     end
     if count == 0 then
-        local t = {
-            name="Create or import a preset",
-            tooltip="Go ahead, stage or spend some points and then save it.",
-            notCheckable=true,
-            value=""
-        }
-        table.insert(TT_DialogOpts[2]["presets"],t)
+        table.insert(TT_DialogOpts[2]["presets"],TT_PRESETDEFAULTDROP)
     end
 end
 
@@ -278,7 +272,7 @@ function TT_NewPreset(name)
         points = tp,
     }
     table.insert(TT_TalentPresets, newPreset)
-    TT_Out("Adding new profile")
+    --TT_Out("Adding new profile")
     TT_RegenPresetDropdown()
 end
 

@@ -5,7 +5,7 @@ function TubTalents_InitFrameAdditions()
     myButton:SetHeight(15)
     myButton:SetWidth(60)
     myButton:SetPoint("CENTER", TalentFrame, "TOPLEFT", 55, -421)
-    myButton:SetText("Learn")
+    myButton:SetText(TT_LEARN)
     myButton:SetScript("OnClick",TT_LearnButton_OnClick)
     myButton:SetScript("OnEnter",TT_TalentLearnButton_OnEnter)
     myButton:SetScript("OnLeave",function() GameTooltip:Hide() end)
@@ -14,14 +14,14 @@ function TubTalents_InitFrameAdditions()
     myButton:SetHeight(15)
     myButton:SetWidth(60)
     myButton:SetPoint("CENTER", TalentFrame, "TOPLEFT", 115, -421)
-    myButton:SetText("Reset")
+    myButton:SetText(TT_RESET)
     myButton:SetScript("OnClick",TT_ResetButton_OnClick)
 
     local myButton = CreateFrame("Button", "TalentFrameLevelPlanButton", TalentFrame, "UIPanelButtonTemplate")
     myButton:SetHeight(20)
     myButton:SetWidth(120)
     myButton:SetPoint("CENTER", TalentFrame, "TOPLEFT", 270, -24)
-    myButton:SetText("Levelling Plans >>")
+    myButton:SetText(TT_LEVELINGPLANBTN)
     myButton:SetScript("OnClick",function() if TT_StagedTalentsFrame:IsShown() then
         TT_StagedTalentsFrame:Hide() TubTalent_Vars.ShowLevellingPlanFrame = false 
         else TT_StagedTalentsFrame:Show() TubTalent_Vars.ShowLevellingPlanFrame = true
@@ -31,7 +31,7 @@ function TubTalents_InitFrameAdditions()
     myButton:SetHeight(15)
     myButton:SetWidth(115)
     myButton:SetPoint("CENTER", TalentFrame, "TOPLEFT", 285, -42)
-    myButton:SetText("Talent Presets >")
+    myButton:SetText(TT_PRESETSBTN)
     myButton:SetScript("OnClick",function() 
         if TT_TalentPresets_Dewdrop:IsOpen() then
             TT_TalentPresets_Dewdrop:Close();
@@ -43,10 +43,10 @@ function TubTalents_InitFrameAdditions()
     --Checkboxes
     local myCheckButton = CreateFrame("CheckButton", "TalentFrameSimMode", TalentFrame, "UICheckButtonTemplate");
     myCheckButton:SetPoint("CENTER", TalentFrame, "TOPLEFT", 75, -42); -- Position it
-    myCheckButton.tooltip = "Click to toggle this setting.";
+    myCheckButton.tooltip = TT_SIMMODETIP;
     myCheckButton:SetHeight(24)
     myCheckButton:SetWidth(24)
-    _G["TalentFrameSimModeText"]:SetText("Sim Mode")
+    _G["TalentFrameSimModeText"]:SetText(TT_SIMMODE)
     myCheckButton:SetChecked(false);
     myCheckButton:SetScript("OnClick",TalentFrameSimMode_OnClick);
 
@@ -77,7 +77,7 @@ function TubTalents_InitFrameAdditions()
     end)
     myEditBox:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(this, "ANCHOR_BOTTOMRIGHT");
-        GameTooltip:SetText("Enter to save");
+        GameTooltip:SetText(TT_ENTERTOSAVE);
         GameTooltip:Show();
     end)
     myEditBox:SetScript("OnLeave", function(self)
@@ -87,12 +87,12 @@ function TubTalents_InitFrameAdditions()
     --Text labels
     prompt = TalentFrame:CreateFontString("TalentFrameSimModePointsBoxPrompt", "OVERLAY", "GameFontNormalSmall")
     prompt:SetPoint("CENTER", myEditBox, "LEFT", -40, 0); -- Position it
-    prompt:SetText("Max points:")
+    prompt:SetText(TT_MAXPOINTS)
     prompt:Hide()
 
     prompt = TalentFrame:CreateFontString("TalentFrameEstimatedLevel", "OVERLAY", "GameFontNormalSmall")
     prompt:SetPoint("CENTER", TalentFrame, "TOPLEFT", 140, -24)
-    prompt:SetText("Estimated Level: "..TT_MINLEVEL)
+    prompt:SetText(format(TT_ESTIMATEDLEVEL, TT_MINLEVEL))
     prompt:SetFontObject("GameFontNormal")
 
     --Title frame
@@ -389,7 +389,7 @@ function TT_TalentFrame_UpdateEstimatedLevel()
         total = total + tabPoints
     end
     TT_StagedEstimatedLevel = TT_MINLEVEL + total
-    TalentFrameEstimatedLevel:SetText(format("Estimated Level: %s", TT_StagedEstimatedLevel))
+    TalentFrameEstimatedLevel:SetText(format(TT_ESTIMATEDLEVEL, TT_StagedEstimatedLevel))
 end
 
 --Learns all staged talents
@@ -412,7 +412,7 @@ function TT_LearnButton_OnClick()
             for k,v in pairs(temp_tiers[m]) do
                 local name, _, _, _, rank, _,
                 _, _ = GetTalentInfo(i,k);
-                TT_Out(format("Learning name: %s Rank: %s",name, rank))
+                TT_Out(format(TT_LEARNING,name, rank))
                 --Need to check whats learned first so it doesn't rank too high...
                 -- No I don't?
                 --local _, _, _, _, oldRank, _, _, _ = TT_OldGetTalentInfo(i, k);
@@ -686,7 +686,7 @@ function TT_TalentFrameTalent_OnShiftClick()
     if rank == 0 then rank = 1 end
     local txt = DEFAULT_CHAT_FRAME.editBox:GetText()
     local spellId = TT_GetTalentSpellID(tab , btn)
-    local link = format("\124ccfffffff\124Henchant:%s\124h[%s Rank %s]\124h\124r",spellId, name, rank)
+    local link = format(TT_CHATLINKFORMAT,spellId, name, rank)
     txt = format("%s %s",txt, link)
     DEFAULT_CHAT_FRAME.editBox:SetText(txt)
 end
@@ -731,7 +731,7 @@ function TT_TalentTooltip()
     --Setup Tooltip
     TT_TalentTooltip_OnLeave() -- hide first to clear, just in case
     TT_TalentTooltipFrame:SetOwner(this, "ANCHOR_RIGHT");
-    TT_TalentTooltipFrame:SetHyperlink("enchant:"..spellId1.. ":0:0:0");
+    TT_TalentTooltipFrame:SetHyperlink("enchant:"..spellId1);
     --staging rank
     local addlines = {format(TT_TalentTipRank,rank,maxRank)}
     --staging tooltip for tier requirement

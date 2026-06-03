@@ -48,7 +48,7 @@ SLASH_TUBTALENTS1 = "/tubtalents"
 
 function TubTalents_TextCommands(arg)
     if arg == nil or arg == "" then
-        DEFAULT_CHAT_FRAME:AddMessage("|cFF00FF00TubTalents commands:|r\n/tubtalents minimap \n/tubtalents toggle")
+        DEFAULT_CHAT_FRAME:AddMessage(TT_CHATHELP)
     elseif arg=="minimap" then
         if TubTalents_Icon.hide then
             TubTalents_ShowMinimap()
@@ -56,7 +56,7 @@ function TubTalents_TextCommands(arg)
             TubTalents_HideMinimap()
         end
     elseif arg=="toggle" then
-        TalentFrame_LoadUI();
+        --TalentFrame_LoadUI(); Loaded on init
         TalentFrame_Toggle();
     end
 
@@ -182,7 +182,7 @@ function TubTalents_MinimapIconRegister()
 	if not TubTalents_Icon.hide then
 		local iconData = libData:NewDataObject("TubTalents icon data", {
 			OnClick = function()
-                TalentFrame_LoadUI();
+                --TalentFrame_LoadUI(); Loaded on init
                 TalentFrame_Toggle();
 			end,
 			OnTooltipShow = function(tooltip)

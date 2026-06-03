@@ -121,17 +121,17 @@ function TT_ProfileFrame_SubmitButton_OnClick()
                 TT_Out(k)
             end 
         else
-            TT_Out("Imported preset is really corrupt, try re-exporting")
+            TT_Out(TT_ERRBADCorrupPreset)
             return
         end
 
         -- validate it...
         if a.class == nil or a.name == nil or a.talents == nil or a.points == nil then
-            TT_Out("Imported preset is corrupt, try re-exporting")
+            TT_Out(TT_ERRCorruptPreset)
             return
         end
         if a.class ~= UnitClass("player") then
-            TT_Out("Imported preset doesn't match your class")
+            TT_Out(TT_ERRPresetClass)
             return
         end
         --give it a new id and add it
@@ -144,25 +144,25 @@ function TT_ProfileFrame_SubmitButton_OnClick()
             StaticPopup_Show("TUBTALENTS_RENAMEIMPORTEDPRESET")
         end
         TT_RegenPresetDropdown()
-        TT_Out("Successfully imported preset")
+        TT_Out(TT_ACKPresetImport)
     elseif TT_ProfileFrameMode == TT_PROFILEMODES.ImportPlan then
         l = TT_ProfileFrame_ScrollFrame_EditBox:GetText();
         f = loadstring(l);
         if f ~= nil then
             a = f() 
         else
-            TT_Out("Imported plan is really corrupt, try re-exporting")
+            TT_Out(TT_ERRBADCorruptPlan)
             return
         end
 
         -- validate it...
         if a.class == nil or a.name == nil or a.plan == nil or a.points == nil
         or a.levellingPlanMinLevel== nil or a.levellingPlanMaxLevel==nil then
-            TT_Out("Imported plan is corrupt, try re-exporting")
+            TT_Out(TT_ERRCorruptPlan)
             return
         end
         if a.class ~= UnitClass("player") then
-            TT_Out("Imported plan doesn't match your class")
+            TT_Out(TT_ERRPlanClass)
             return
         end
         --give it a new id and add it
@@ -179,7 +179,7 @@ function TT_ProfileFrame_SubmitButton_OnClick()
             StaticPopup_Show("TUBTALENTS_RENAMEIMPORTEDPLAN")
         end
         TT_RegenPlansDropdown()
-        TT_Out("Successfully imported plan")
+        TT_Out(TT_ACKPlanImport)
     end
     TT_ProfileFrame:Hide();
 end

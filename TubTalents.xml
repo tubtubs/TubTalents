@@ -14,7 +14,7 @@
             <OnLoad>
                 this:RegisterEvent("PLAYER_LOGIN");
                 this:RegisterEvent("ADDON_LOADED");
-				this:RegisterEvent("PLAYER_LEVEL_UP");
+				this:RegisterEvent("CHAT_MSG_ADDON");
 				this:RegisterEvent("CHARACTER_POINTS_CHANGED");
             </OnLoad>
             <OnEvent>

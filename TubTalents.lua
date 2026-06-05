@@ -160,6 +160,10 @@ function TubTalents_Init()
             TubTalents_FunctionOverloads()
             TubTalents_TalentFramePreferences_DewdropRegister()
         end
+    elseif event == "CHAT_MSG_ADDON" and arg4 ~= UnitName("PLAYER") then
+        if arg1==TubTalents_AMPREFIX then
+            TubTalents_AMHANDLER(arg2,arg3,arg4) 
+        end
     end
 end
 

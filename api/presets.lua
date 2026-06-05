@@ -73,6 +73,13 @@ TubTalents_PresetOpts = {
             value=""
             },
             {
+            name="Share Preset",
+            tooltip="Share the selected preset with party",
+            notCheckable=true,
+            func=function(arg1)  TubTalents_TalentPresetShare(arg1) end,
+            value=""
+            },
+            {
             name="Rename Preset",
             tooltip="Enter to save",
             notCheckable=true,
@@ -245,20 +252,30 @@ function TubTalents_RegenPresetDropdown()
     end
 end
 
-function TubTalents_NewPreset(name)
+function TubTalents_NewPreset(name, preset)
     --Scan talents
     --Prepare package
     --Add it to the Presets table...
     local t = {}
     local tp = {}
-    for i=1, TubTalents_MAX_TALENTS do
-        t[i] = {} -- initialize tab...
-        _, _, tp[i] = GetTalentTabInfo(i)
-        for m=1, MAX_NUM_TALENTS do
-            local _, _, _, _, rank, 
-            _, _, _ = TubTalents_GetTalentInfo(i, m);
-            if rank ~=nil and rank ~= 0 then
-                t[i][m] = rank
+    if preset == nil then
+        for i=1, TubTalents_MAX_TALENTS do
+            t[i] = {} -- initialize tab...
+            _, _, tp[i] = GetTalentTabInfo(i)
+            for m=1, MAX_NUM_TALENTS do
+                local _, _, _, _, rank, 
+                _, _, _ = TubTalents_GetTalentInfo(i, m);
+                if rank ~=nil and rank ~= 0 then
+                    t[i][m] = rank
+                end
+            end
+        end
+    else
+        for i=1, TubTalents_MAX_TALENTS do
+            tp[i] = preset.points[i]
+            t[i] = {}
+            for k, v in preset.talents[i] do
+                t[i][k] = v
             end
         end
     end

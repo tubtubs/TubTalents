@@ -1,6 +1,5 @@
 --May be helpful for localising to other languages
 -- Mostly strings, but some constants too
---Missing chat commands, and dropdown options. They're kinda hard to move.
 -- Check TubTalents_PlanOpts, and TubTalents_PresetOpts for dropdowns
 TubTalents_ADDONAME = "TubTalents"
 TubTalents_ADDONVERSION = "2"
@@ -121,6 +120,7 @@ TubTalents_PRESETDEFAULTDROP = {
 TubTalents_OKAY = OKAY or "Okay" -- uses the global string, not sure how it localises tho tbh
 TubTalents_SUBMIT = SUBMIT or "Submit" -- global string too
 TubTalents_CHECK = "Checking %s..."
+TubTalents_AMPREFIX = "TTA"
 
 --Talent Frame
 TubTalents_ESTIMATEDLEVEL = "Estimated Level: %s"

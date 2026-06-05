@@ -51,7 +51,7 @@
 		</Backdrop>
 		<Layers>
 			<Layer level="ARTWORK">
-				<FontString name="$parentText" inherits="GameFontHighlight" text="Learn the next talent in your levelling plan?">
+				<FontString name="$parentText" inherits="GameFontHighlight" text="TT_CATCHUPNEXTPROMPT">
 					<Size>
 						<AbsDimension x="290" y="0"/>
 					</Size>
@@ -84,7 +84,7 @@
 								<AbsDimension x="36" y="36"/>
 							</Size>
 						</Texture>
-						<FontString name="$parentName" inherits="GameFontHighlight" text="Name">
+						<FontString name="$parentName" inherits="GameFontHighlight" text="TT_CATCHUPNAME">
 							<Size>
 								<AbsDimension x="290" y="0"/>
 							</Size>
@@ -96,7 +96,7 @@
 								</Anchor>
 							</Anchors>
 						</FontString>
-						<FontString name="$parentRank" inherits="GameFontHighlight" text="Rank">
+						<FontString name="$parentRank" inherits="GameFontHighlight" text="TT_CATCHUPRANK">
 							<Size>
 								<AbsDimension x="290" y="0"/>
 							</Size>
@@ -189,7 +189,7 @@
                         </Anchor>
                     </Anchors>
                 </Texture>
-                <FontString name="$parentLevel" text="Level: 10" justifyH="LEFT" inherits="GameFontHighlightSmallOutline">
+                <FontString name="$parentLevel" text="TT_TEST" justifyH="LEFT" inherits="GameFontHighlightSmallOutline">
                     <Size>
                         <AbsDimension x="240" y="16"/>
                     </Size>
@@ -201,7 +201,7 @@
                         </Anchor>
                     </Anchors>
                 </FontString>
-                <FontString name="$parentName" text="Name: Improved Lay on Hands" justifyH="LEFT" inherits="GameFontHighlightSmallOutline">
+                <FontString name="$parentName" text="TT_TEST" justifyH="LEFT" inherits="GameFontHighlightSmallOutline">
                     <Size>
                         <AbsDimension x="240" y="16"/>
                     </Size>
@@ -213,7 +213,7 @@
                         </Anchor>
                     </Anchors>
                 </FontString>
-                <FontString name="$parentRank" text="Rank: 5" justifyH="LEFT" inherits="GameFontHighlightSmallOutline">
+                <FontString name="$parentRank" text="TT_TEST" justifyH="LEFT" inherits="GameFontHighlightSmallOutline">
                     <Size>
                         <AbsDimension x="240" y="16"/>
                     </Size>
@@ -299,7 +299,7 @@
 					</Anchors>
 					<TexCoords left="0.2" right="0.8" top="0" bottom="0.6" />
 				</Texture>
-				<FontString name="$parentTitleString" font="GameFontNormal" text="Levelling Plan">
+				<FontString name="$parentTitleString" font="GameFontNormal" text="TT_LEVELINGPLANTITLE">
 					<!--Window Title -->
 					<Size>
 						<AbsDimension x="140" y="0" />
@@ -322,7 +322,7 @@
 						</Offset>
 					</Shadow>
 				</FontString>
-                <FontString name="$parent_NoWorking" font="GameFontNormal" text="Only enabled in Sim Mode." hidden="true">
+                <FontString name="$parent_NoWorking" font="GameFontNormal" text="TT_TEST" hidden="true">
 					<Size>
 						<AbsDimension x="250" y="0" />
 					</Size>
@@ -370,7 +370,7 @@
 					</EdgeSize>
 				</Backdrop>
 			</Frame>
-            <Button name="$parent_StagedPlanButton" inherits="TabButtonTemplate" frameStrata="FULLSCREEN" text="Staged Plan" id="1">
+            <Button name="$parent_StagedPlanButton" inherits="TabButtonTemplate" frameStrata="FULLSCREEN" text="TT_LEVELINGPLANTAB1" id="1">
 				<Size>
 					<AbsDimension x="86" y="24"/>
 				</Size>
@@ -400,7 +400,7 @@
                     </OnLoad>
 				</Scripts>
 			</Button>
-            <Button name="$parent_CurrentPlanButton" inherits="TabButtonTemplate" text="Current Plan" id="2">
+            <Button name="$parent_CurrentPlanButton" inherits="TabButtonTemplate" text="TT_LEVELINGPLANTAB2" id="2">
 				<Size>
 					<AbsDimension x="86" y="24"/>
 				</Size>
@@ -429,7 +429,7 @@
                     </OnLoad>
 				</Scripts>
 			</Button>
-            <Button name="$parent_PlansButton" inherits="UIPanelButtonTemplate" text="Plans >">
+            <Button name="$parent_PlansButton" inherits="UIPanelButtonTemplate" text="TT_LEVELINGPLANSDROP">
                 <Size>
                     <AbsDimension x="76" y="22"/>
                 </Size>
@@ -567,7 +567,7 @@
 					</Anchors>
 					<TexCoords left="0.2" right="0.8" top="0" bottom="0.6" />
 				</Texture>
-				<FontString name="$parentTitleString" font="GameFontNormal" text="TITLE">
+				<FontString name="$parentTitleString" font="GameFontNormal" text="TT_TEST">
 					<!--Window Title -->
 					<Size>
 						<AbsDimension x="140" y="0" />
@@ -670,7 +670,7 @@
 					</EditBox>
 				</ScrollChild>
 			</ScrollFrame>
-			<Button name="$parent_SubmitButton" text="Okay" inherits="UIPanelButtonTemplate">
+			<Button name="$parent_SubmitButton" text="TT_OKAY" inherits="UIPanelButtonTemplate">
 				<Size>
 					<AbsDimension x="155" y="20" />
 				</Size>

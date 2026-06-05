@@ -4,11 +4,15 @@ function TT_TalentFramePreferences_DewdropRegister()
         'point', function(parent) --Point
             return "TOP", "BOTTOM"
         end,
-        'children', function(level, value) TT_TalentPresets_DewdropGen(level, value, TT_DialogOpts) end,
+        'children', function(level, value) TT_TalentPresets_DewdropGen(level, value, TT_PresetOpts) end,
         'dontHook', true
     )
 end
 
+-- WIP wrapper around ace DewDrop library
+-- Can pass a value up to the next level with a value
+-- value = "value:arg1:arg2:arg3:arg4:arg5"
+-- inner element args overwrite the value args
 function TT_TalentPresets_DewdropGen(level, value, opts)
     if value ~= nil then
         if string.find(value,":") then --accepts values after colons as arguments. Used to pass arguments a level up
@@ -28,6 +32,9 @@ function TT_TalentPresets_DewdropGen(level, value, opts)
     end
 end
 
+-- Best attempt at making a good solution for many types, and using function returns
+-- for checked status. May use functions for tooltips more in the future.
+-- But some adjusting may be required for some un-forseen scenarios
 function TT_TalentPresets_DewdropLevelGen(opts,args)
     -- Process passed arguments...
     local args1, args2, args3, args4 = nil

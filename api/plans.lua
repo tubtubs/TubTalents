@@ -297,7 +297,7 @@ function TT_SelectPlan(arg)
         TT_CheckSpellIds(v.plan)
     end
     --TT_LevellingPlans_DewDrop:Close()
-    TT_CurrentTab=2
+    TT_StagedTalentFrame_CurrentTab=2
     TT_CatchUpPlan()
     TT_StagedTalentsFrame_SetTab()
     TT_StagedTalentsFrame_Update()
@@ -421,7 +421,7 @@ function TT_StagedTalentsFramePlans_DewdropRegister()
 end
 
 function TT_StagedTalentsFrame_SetTab()
-    if TT_CurrentTab == 1 then
+    if TT_StagedTalentFrame_CurrentTab == 1 then
         PanelTemplates_SelectTab(TT_StagedTalentsFrame_StagedPlanButton);
         PanelTemplates_DeselectTab(TT_StagedTalentsFrame_CurrentPlanButton);
     else
@@ -433,13 +433,13 @@ function TT_StagedTalentsFrame_SetTab()
 end
 
 function TT_StagedTalentsFrame_SwitchTab()
-    TT_CurrentTab = this:GetID()
+    TT_StagedTalentFrame_CurrentTab = this:GetID()
     TT_StagedTalentsFrame_SetTab()
 end
 
 function TT_StagedTalentsFrame_Update()
     local numDisplay, plansToDisplay
-    if TT_CurrentTab == 2 then
+    if TT_StagedTalentFrame_CurrentTab == 2 then
         if TubTalent_Vars.CurrentLevellingPlan ~= 0 then
             TT_StagedTalentsFrame_NoWorking:Hide()
             numDisplay = TT_CurrentLevellingPlan.levellingPlanMaxLevel - TT_MINLEVEL
@@ -516,7 +516,7 @@ function TT_LvlPlan_OnClick()
         local id = this:GetID()
         local scrollOffset = FauxScrollFrame_GetOffset(TT_StagedTalentsFrame_PlanScrollFrame);
         local index = id + scrollOffset + TT_MINLEVEL
-        if TT_CurrentTab == 2 then
+        if TT_StagedTalentFrame_CurrentTab == 2 then
             plansToDisplay = TT_CurrentLevellingPlan.plan
         else
             plansToDisplay = TT_StagedLevellingPlan
@@ -539,7 +539,7 @@ function TT_LvlPlanTooltip(cID)
     end
     local index = id + scrollOffset + TT_MINLEVEL
     GameTooltip:SetOwner(this, "ANCHOR_BOTTOMRIGHT");
-    if TT_CurrentTab == 2 then
+    if TT_StagedTalentFrame_CurrentTab == 2 then
         if TT_CurrentLevellingPlan ~= nil then
             plansToDisplay = TT_CurrentLevellingPlan.plan
         end

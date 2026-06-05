@@ -1,3 +1,7 @@
+--May be helpful for localising to other languages
+-- Mostly strings, but some constants too
+--Missing chat commands, and dropdown options. They're kinda hard to move.
+-- Check TT_PlanOpts, and TT_PresetOpts for dropdowns
 TT_ADDONAME = "TubTalents"
 TT_ADDONVERSION = "2"
 TT_AUTHOR = "Tubtubs"
@@ -17,6 +21,8 @@ TT_PROFILEMODES = {
     ExportPlan = 4,
 }
 
+TT_TEST = "ERROR" --if a widget has this text it's probably getting filled in later
+TT_MINIMAPICON = "Interface\\Icons\\ability_marksmanship"
 TT_MINLEVEL = 9
 
 --ERRORS
@@ -75,6 +81,18 @@ TT_STAGEDTALENTS_STARTPLAN = "Click on a talent to start making a levelling plan
 TT_STAGEDTALENTSERR = "Only enabled in Sim Mode.\nCannot be used with a loaded preset."
 TT_STAGEDTALENTSNOPRESETS = "Can't create level plan with preset loaded.\nReset, or refund staged points to make a levelling plan."
 TT_CHATLINKFORMAT = "\124ccfffffff\124Henchant:%s\124h[%s Rank %s]\124h\124r"
+TT_LEVELINGPLANTITLE = "Levelling Plans"
+TT_LEVELINGPLANTAB1 = "Staged Plan"
+TT_LEVELINGPLANTAB2 = "Current Plan"
+TT_LEVELINGPLANSDROP = "Plans >"
+TT_CATCHUPNEXTPROMPT = "Learn the next talent in your levelling plan?"
+TT_CATCHUPNAME = "Name"
+TT_CATCHUPRANK = "Rank"
+
+TT_STAGEDTALENTTABS = {
+    StagedPlan = 1,
+    CurrentPlan = 2
+}
 
 --Presets
 TT_PRESETDEFAULTDROP = {
@@ -83,6 +101,10 @@ TT_PRESETDEFAULTDROP = {
     notCheckable=true,
     value=""
 }
+
+-- Sharing
+TT_OKAY = OKAY or "Okay" -- uses the global string, not sure how it localises tho tbh
+TT_SUBMIT = SUBMIT or "Submit" -- global string too
 
 --Talent Frame
 TT_ESTIMATEDLEVEL = "Estimated Level: %s"

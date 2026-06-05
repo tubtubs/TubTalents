@@ -1,6 +1,6 @@
 local _G = getfenv(0)
 --Preset dropdown menu
-TT_DialogOpts = {
+TT_PresetOpts = {
     --levels...
     [1] = {
         {
@@ -220,7 +220,7 @@ function TT_TalentPresetLearn(presetID)
 end
 
 function TT_RegenPresetDropdown()
-    TT_DialogOpts[2]["presets"] = {} -- clear it out first
+    TT_PresetOpts[2]["presets"] = {} -- clear it out first
     local count = 0 
     if TT_TalentPresets ~= nil then
         for k,v in pairs(TT_TalentPresets) do
@@ -236,12 +236,12 @@ function TT_RegenPresetDropdown()
                 notCheckable=true,
                 value="presetmenu:"..v.id
             }
-            table.insert(TT_DialogOpts[2]["presets"],t)
+            table.insert(TT_PresetOpts[2]["presets"],t)
             count = count + 1
         end
     end
     if count == 0 then
-        table.insert(TT_DialogOpts[2]["presets"],TT_PRESETDEFAULTDROP)
+        table.insert(TT_PresetOpts[2]["presets"],TT_PRESETDEFAULTDROP)
     end
 end
 

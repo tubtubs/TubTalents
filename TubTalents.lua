@@ -2,17 +2,18 @@
 -- TODO: Add caching to tooltips? 
 
 -- TODO: Cleanup
--- Localisation.lua -> Pull a lot of strings and constants out
--- More lua files to split up functionality if possible
+-- Localisation.lua -> Pull a lot of strings and constants out [CHECK]
+-- More lua files to split up functionality if possible [CHECK]
 -- Remove test prints/functions
+---- I'm okay with leaving some commented out
 -- Check variable names
+---- Replace TT_ with TubTalents_, gaudy maybe but I need it.
 
 
 -- TODO: Polish
 -- Refine Chat commands
--- Rename prompt for import presets doesn't accept enter Fixed?
----- Renaming doesn't actually work lol
--- Doesn't catch up on levelup Fixed?
+
+-- TODO: Bugs
 
 --Functions to overwrite TalentFrame functionality
 local _G = getfenv(0)
@@ -21,10 +22,10 @@ local libData = LibStub("LibDataBroker-1.1");
 TT_TalentPresets_Dewdrop = AceLibrary("Dewdrop-2.0");
 TT_LevellingPlans_DewDrop = AceLibrary("Dewdrop-2.0");
 --Testing
-TT_DebugMode = false
-TT_FakeNoMods = false
+TT_DebugMode = false -- actually un-used, only used when debugging during dev
+TT_FakeNoMods = false --quicker than disabling mods, but client mod functionality will still work ofc
 
-TT_CurrentTab = 1 --TODO: Better variable name
+TT_StagedTalentFrame_CurrentTab = TT_STAGEDTALENTTABS.StagedPlan
 TT_LearnedTalentsFlag = true
 TT_SimMode = false
 
@@ -126,7 +127,7 @@ function TubTalents_Init()
                 TT_Out(TT_ERRNoPlanLoaded)
                 TubTalent_Vars.CurrentLevellingPlan = 0 
                 TT_CurrentLevellingPlan = nil
-                TT_CurrentTab = 1 --TODO: Make fake enum for tab indexes
+                TT_StagedTalentFrame_CurrentTab = TT_STAGEDTALENTTABS.StagedPlan
             else
                 if TT_CheckPlan(TT_CurrentLevellingPlan.plan) then
                     TT_CatchUpPlan()
@@ -135,7 +136,7 @@ function TubTalents_Init()
                     TT_CurrentLevellingPlan = nil
                 end
             end
-            TT_CurrentTab = 2
+            TT_StagedTalentFrame_CurrentTab = TT_STAGEDTALENTTABS.CurrentPlan
         end
         TT_StagedTalentsFrame_SetTab()
         TubTalents_MinimapIconRegister()
@@ -158,7 +159,7 @@ function TubTalents_Init()
     end
 end
 
--- Minimap Setup
+-- Minimap Icon Setup
 function TubTalents_HideMinimap()
 	TubTalents_Icon.hide = true
 	libIcon:Hide("TubTalents icon")
@@ -174,7 +175,7 @@ function TubTalents_ShowMinimap()
 end
 
 function TubTalents_MinimapIconRegister()
-	if TubTalents_Icon == nil then
+	if TubTalents_Icon == nil then --Setup saved variable for hiding, and moving
 		TubTalents_Icon = {
 			hide = false
 		}
@@ -188,7 +189,7 @@ function TubTalents_MinimapIconRegister()
 			OnTooltipShow = function(tooltip)
 				tooltip:SetText("TubTalents");
 			end,
-			icon = "Interface\\Icons\\Ability_Rogue_Disguise" --TODO: Find a different icon
+			icon = TT_MINIMAPICON
 		});
 
 		libIcon:Register("TubTalents icon", iconData, TubTalents_Icon);

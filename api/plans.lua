@@ -160,6 +160,13 @@ TubTalents_PlanOpts = {
             value=""
             },
             {
+            name="Share Plan",
+            tooltip="Shares the selected plan",
+            notCheckable=true,
+            func=function(arg1)  TubTalents_TalentPlanShare(arg1) end,
+            value=""
+            },
+            {
             name="Rename Plan",
             tooltip="Enter to save",
             notCheckable=true,
@@ -337,31 +344,52 @@ function TubTalents_DeletePlan(arg)
     TubTalents_LevellingPlans_DewDrop:Close()
 end
 
-function TubTalents_NewPlan(name) 
+function TubTalents_NewPlan(name,preset) 
     local planMinLevel = TubTalents_MINLEVEL + 1
     local planMaxLevel = planMinLevel
     local t = {}
-
-    for k , v in pairs(TubTalents_StagedLevellingPlan) do
-        planMinLevel = min(planMinLevel, k)
-        planMaxLevel = max(planMaxLevel, k)
-        local n = {
-            tab = v.tab,
-            tabName = v.tabName,
-            btnID = v.btnID,
-            rank = v.rank,
-            icon = v.icon,
-            spellID = v.spellID,
-            name = v.name,
-        }
-        --TubTalents_Out("Adding to new plan..." .. planMinLevel .. " " .. planMaxLevel)
-        t[k] = n
+    local tp = {}
+    if preset == nil then
+        for k , v in pairs(TubTalents_StagedLevellingPlan) do
+            planMinLevel = min(planMinLevel, k)
+            planMaxLevel = max(planMaxLevel, k)
+            local n = {
+                tab = v.tab,
+                tabName = v.tabName,
+                btnID = v.btnID,
+                rank = v.rank,
+                icon = v.icon,
+                spellID = v.spellID,
+                name = v.name,
+            }
+            --TubTalents_Out("Adding to new plan..." .. planMinLevel .. " " .. planMaxLevel)
+            t[k] = n
+        end
+        for i=1, TubTalents_MAX_TALENTS do
+            _, _, tp[i] = GetTalentTabInfo(i)
+        end
+    else
+        planMinLevel = preset.levellingPlanMinLevel
+        planMaxLevel = preset.levellingPlanMaxLevel
+        name = preset.name
+        for i=1, TubTalents_MAX_TALENTS do
+            tp[i] = preset.points[i]
+            for k, v in pairs(preset.plan) do
+                TubTalents_Out("LOL "..k)
+                local n = {
+                    tab = v.tab,
+                    tabName = v.tabName,
+                    btnID = v.btnID,
+                    rank = v.rank,
+                    icon = v.icon,
+                    spellID = v.spellID,
+                    name = v.name,
+                }
+                t[k] = n
+            end
+        end
     end
     TubTalent_Vars.LevellingPlanIDMax = TubTalent_Vars.LevellingPlanIDMax + 1
-    local tp = {}
-    for i=1, TubTalents_MAX_TALENTS do
-        _, _, tp[i] = GetTalentTabInfo(i)
-    end
     local newPlan = {
         class = UnitClass("player"),
         name = name,

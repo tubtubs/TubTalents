@@ -275,9 +275,6 @@ end
 -- Always broadcast, but attempt to send to a specific user?
 -- If your name is mentioned, just start staging it?
 -- When complete, ask if you'd like to save it. If not, discard it.
-TubTalents_AMPRESET1 = 
-[[
-]]
 TubTalents_AMPMODES = {
     Preset=1,
     Plan=2,
@@ -288,7 +285,22 @@ TubTalents_AMPTYPES = {
         Name=2,
         Points=3,
         Talent=4,
-        EOL = 5,
+        EOL=5,
+    },
+    [TubTalents_AMPMODES.Plan] = {
+        Class=1,
+        Name=2,
+        Points=3,
+        levellingPlanMinLevel=4,
+        levellingPlanMaxLevel=5,
+        planTab=6,
+        planTabName=7,
+        planBtn=8,
+        planRank=9,
+        planIcon=10,
+        planSpellID=11,
+        planName=12,
+        EOL=13,
     }
 }
 -- MESSAGE FORMAT: 
@@ -298,6 +310,72 @@ TubTalents_AMPFormat2= "%s:%s" -- mostly EOL
 TubTalents_AMPFormat3= "%s:%s:%s"
 TubTalents_AMPFormat4 = "%s:%s:%s:%s" --only safe for numeric data
 TubTalents_AMPFormat5 = "%s:%s:%s:%s:%s" --only safe for numeric data
+function TubTalents_TalentPlanShare(arg1)
+    _, p = TubTalents_FindPlan(arg1)
+    local CHANNEL = "PARTY"
+    local PREFIX = TubTalents_AMPREFIX
+    local MESSAGE = ""
+    local MODE = TubTalents_AMPMODES.Plan
+    -- data fields first
+    --class
+    MESSAGE = format(TubTalents_AMPFormat3,
+    MODE, TubTalents_AMPTYPES[MODE].Class, p.class)
+    SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
+    --name
+    MESSAGE = format(TubTalents_AMPFormat3,
+    MODE, TubTalents_AMPTYPES[MODE].Name, p.name)
+    SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
+    --points
+    for i=1, TubTalents_MAX_TALENTS do
+        MESSAGE = format(TubTalents_AMPFormat4,
+        MODE, TubTalents_AMPTYPES[MODE].Points, i, p.points[i])
+        SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
+    end
+    --minlevel
+    MESSAGE = format(TubTalents_AMPFormat3,
+    MODE, TubTalents_AMPTYPES[MODE].levellingPlanMinLevel, p.levellingPlanMinLevel)
+    SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
+    --maxlevel
+    MESSAGE = format(TubTalents_AMPFormat3,
+    MODE, TubTalents_AMPTYPES[MODE].levellingPlanMaxLevel, p.levellingPlanMaxLevel)
+    SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
+    --plan
+    for k,v in p.plan do
+        --mode:type:level:tab
+        MESSAGE = format(TubTalents_AMPFormat4,
+        MODE, TubTalents_AMPTYPES[MODE].planTab, k, v.tab)
+        SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
+        --mode:type:level:tabName
+        MESSAGE = format(TubTalents_AMPFormat4,
+        MODE, TubTalents_AMPTYPES[MODE].planTabName, k, v.tabName)
+        SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
+        --mode:type:level:btnID
+        MESSAGE = format(TubTalents_AMPFormat4,
+        MODE, TubTalents_AMPTYPES[MODE].planBtn, k, v.btnID)
+        SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
+        --mode:type:level:rank
+        MESSAGE = format(TubTalents_AMPFormat4,
+        MODE, TubTalents_AMPTYPES[MODE].planRank, k, v.rank)
+        SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
+        --mode:type:level:icon
+        MESSAGE = format(TubTalents_AMPFormat4,
+        MODE, TubTalents_AMPTYPES[MODE].planIcon, k, v.icon)
+        SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
+        --mode:type:level:spellID
+        MESSAGE = format(TubTalents_AMPFormat4,
+        MODE, TubTalents_AMPTYPES[MODE].planSpellID, k, v.spellID)
+        SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
+        --mode:type:level:name
+        MESSAGE = format(TubTalents_AMPFormat4,
+        MODE, TubTalents_AMPTYPES[MODE].planName, k, v.name)
+        SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
+    end
+    --EOL
+    MESSAGE = format(TubTalents_AMPFormat2,
+    MODE, TubTalents_AMPTYPES[MODE].EOL)
+    SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
+end
+
 function TubTalents_TalentPresetShare(arg1)
     _, p = TubTalents_FindTalentPreset(arg1)
     local CHANNEL = "PARTY"
@@ -308,7 +386,7 @@ function TubTalents_TalentPresetShare(arg1)
     -- Send packet with class, and name first...
     -- 1:1:class
     MESSAGE = format(TubTalents_AMPFormat3,
-    MODE, TubTalents_AMPTYPES[MODE].Class, UnitClass("player"))
+    MODE, TubTalents_AMPTYPES[MODE].Class, p.class)
     SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
     -- Send name
     -- 1:2:name
@@ -352,7 +430,16 @@ TubTalents_AMP_preset = {
 }
 
 TubTalents_AMP_plan = {
-
+    class="",
+    name="",
+    levellingPlanMinLevel=0,
+    levellingPlanMaxLevel=0,
+    points = {
+        [1] = 0,
+        [2] = 0,
+        [3] = 0,
+    },
+    plan = {}
 }
 
 TubTalents_AMPError = false
@@ -365,12 +452,62 @@ StaticPopupDialogs["TUBTALENTS_AMIMPORTPRESET"] = {
     button2 = "No",
     OnAccept = function()
         TubTalents_NewPreset(TubTalents_AMP_preset.name, TubTalents_AMP_preset)
+        TubTalent_AMResetTemp()
+    end,
+    OnCancel = function()
+        TubTalent_AMResetTemp()
     end,
     timeout = 0,
     whileDead = true,
     hideOnEscape = true,
     preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
 }
+
+StaticPopupDialogs["TUBTALENTS_AMIMPORTPLAN"] = {
+    text = "",
+    button1 = "Yes",
+    button2 = "No",
+    OnAccept = function()
+        TubTalents_NewPlan(TubTalents_AMP_plan.name, TubTalents_AMP_plan)
+        TubTalent_AMResetTemp()
+    end,
+    OnCancel = function()
+        TubTalent_AMResetTemp()
+    end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
+}
+
+function TubTalent_AMResetTemp()
+    TubTalents_AMP_plan = {
+        class="",
+        name="",
+        levellingPlanMinLevel=0,
+        levellingPlanMaxLevel=0,
+        points = {
+            [1] = 0,
+            [2] = 0,
+            [3] = 0,
+        },
+        plan = {}
+    }
+    TubTalents_AMP_preset = {
+        class="",
+        name="",
+        talents = {
+            [1] = {},
+            [2] = {},
+            [3] = {},
+        },
+        points = {
+            [1] = 0,
+            [2] = 0,
+            [3] = 0,
+        }
+    }
+end
 
 function TubTalents_AMHANDLER(arg2,arg3,arg4) 
     --TubTalents_Out(format("arg2: %s", arg2))
@@ -399,17 +536,32 @@ function TubTalents_AMHANDLER(arg2,arg3,arg4)
                         StaticPopup_Show("TUBTALENTS_AMIMPORTPRESET")
                     else
                         TubTalents_Out("Shared preset isn't for your class")
+                        TubTalent_AMResetTemp()
                     end
                 else
                     TubTalents_Out("Addon Message Error4")
+                    TubTalent_AMResetTemp()
                 end
             end
         elseif MODE == TubTalents_AMPMODES.Plan then
             if TYPE == TubTalents_AMPTYPES[MODE].EOL then
-
+                if not TubTalents_AMPError then
+                    if TubTalents_AMP_plan.class == UnitClass("player") then
+                        --Offer to save it...
+                        local MESSAGE = format("%s has shared the plan %s with you. Would you like to import?",
+                            arg4, TubTalents_AMP_plan.name)
+                        StaticPopupDialogs["TUBTALENTS_AMIMPORTPLAN"].text = MESSAGE
+                        StaticPopup_Show("TUBTALENTS_AMIMPORTPLAN")
+                    else
+                        TubTalents_Out("Shared plan isn't for your class")
+                        TubTalent_AMResetTemp()
+                    end
+                else
+                    TubTalents_Out("Addon Message Error4")
+                    TubTalent_AMResetTemp()
+                end
             end
         end
-
         TubTalents_AMPLastPlayer = ""
         TubTalents_AMPError = false
     else -- data packet...
@@ -417,32 +569,73 @@ function TubTalents_AMHANDLER(arg2,arg3,arg4)
         -- Which mode...?
         local MODE = tonumber(parsed_args[1])
         if MODE == TubTalents_AMPMODES.Preset then
-            local TYPE = tonumber(parsed_args[2])
+            local TYPE = tonumber(parsed_args[2]) -- Which type?
             if len == 3 and TYPE == TubTalents_AMPTYPES[MODE].Class then
-                TubTalents_Out(format("Class: %s", parsed_args[3]))
+                TubTalent_AMResetTemp()
+                --TubTalents_Out(format("Class: %s", parsed_args[3]))
                 TubTalents_AMP_preset.class = parsed_args[3]
             elseif len == 3 and TYPE == TubTalents_AMPTYPES[MODE].Name then
-                TubTalents_Out(format("Name: %s", parsed_args[3]))
+                --TubTalents_Out(format("Name: %s", parsed_args[3]))
                 TubTalents_AMP_preset.name = parsed_args[3]
             elseif len == 4 and TYPE == TubTalents_AMPTYPES[MODE].Points then
-                TubTalents_Out(format("Tab: %s Points:%s", parsed_args[3], parsed_args[4]))
+                --TubTalents_Out(format("Tab: %s Points:%s", parsed_args[3], parsed_args[4]))
                 TubTalents_AMP_preset.points[tonumber(parsed_args[3])] = tonumber(parsed_args[4])
             elseif len == 5 and TYPE == TubTalents_AMPTYPES[MODE].Talent then
-                TubTalents_Out(format("Tab: %s Btn:%s Rank: %s", parsed_args[3], parsed_args[4], parsed_args[5]))
+                --TubTalents_Out(format("Tab: %s Btn:%s Rank: %s", parsed_args[3], parsed_args[4], parsed_args[5]))
                 TubTalents_AMP_preset.talents[tonumber(parsed_args[3])][tonumber(parsed_args[4])] = tonumber(parsed_args[5])
+            else
+                --TubTalents_Out("Addon Message Error2")
+                TubTalents_AMPError = true
+            end
+        elseif MODE == TubTalents_AMPMODES.Plan then
+            local TYPE = tonumber(parsed_args[2]) -- Which type?
+            if len == 3 and TYPE == TubTalents_AMPTYPES[MODE].Class then
+                TubTalent_AMResetTemp()
+                --TubTalents_Out(format("Class: %s", parsed_args[3]))
+                TubTalents_AMP_plan.class = parsed_args[3]
+            elseif len == 3 and TYPE == TubTalents_AMPTYPES[MODE].Name then
+                --TubTalents_Out(format("Name: %s", parsed_args[3]))
+                TubTalents_AMP_plan.name = parsed_args[3]
+            elseif len == 4 and TYPE == TubTalents_AMPTYPES[MODE].Points then
+                --TubTalents_Out(format("Tab: %s Points:%s", parsed_args[3], parsed_args[4]))
+                TubTalents_AMP_plan.points[tonumber(parsed_args[3])] = tonumber(parsed_args[4])
+            elseif len == 3 and TYPE == TubTalents_AMPTYPES[MODE].levellingPlanMinLevel then
+                --TubTalents_Out(format("levellingPlanMinLevel: %s", parsed_args[3]))
+                TubTalents_AMP_plan.levellingPlanMinLevel = tonumber(parsed_args[3])
+            elseif len == 3 and TYPE == TubTalents_AMPTYPES[MODE].levellingPlanMaxLevel then
+                --TubTalents_Out(format("levellingPlanMaxLevel: %s", parsed_args[3]))
+                TubTalents_AMP_plan.levellingPlanMaxLevel = tonumber(parsed_args[3])
+            elseif len == 4 and TYPE == TubTalents_AMPTYPES[MODE].planTab then
+                --TubTalents_Out(format("Level: %s Tab:%s", parsed_args[3], parsed_args[4]))
+                TubTalents_AMP_plan.plan[tonumber(parsed_args[3])] = {}
+                TubTalents_AMP_plan.plan[tonumber(parsed_args[3])].tab = tonumber(parsed_args[4])
+            elseif len == 4 and TYPE == TubTalents_AMPTYPES[MODE].planTabName then
+                --TubTalents_Out(format("Level: %s TabName:%s", parsed_args[3], parsed_args[4]))
+                TubTalents_AMP_plan.plan[tonumber(parsed_args[3])].tabName = parsed_args[4]
+            elseif len == 4 and TYPE == TubTalents_AMPTYPES[MODE].planBtn then
+                --TubTalents_Out(format("Level: %s Btn:%s", parsed_args[3], parsed_args[4]))
+                TubTalents_AMP_plan.plan[tonumber(parsed_args[3])].btnID = tonumber(parsed_args[4])
+            elseif len == 4 and TYPE == TubTalents_AMPTYPES[MODE].planRank then
+                --TubTalents_Out(format("Level: %s Rank:%s", parsed_args[3], parsed_args[4]))
+                TubTalents_AMP_plan.plan[tonumber(parsed_args[3])].rank = tonumber(parsed_args[4])
+            elseif len == 4 and TYPE == TubTalents_AMPTYPES[MODE].planIcon then
+                --TubTalents_Out(format("Level: %s Icon:%s", parsed_args[3], parsed_args[4]))
+                TubTalents_AMP_plan.plan[tonumber(parsed_args[3])].icon = parsed_args[4]
+            elseif len == 4 and TYPE == TubTalents_AMPTYPES[MODE].planSpellID then
+                --TubTalents_Out(format("Level: %s SpellID:%s", parsed_args[3], parsed_args[4]))
+                TubTalents_AMP_plan.plan[tonumber(parsed_args[3])].spellID = tonumber(parsed_args[4])
+            elseif len == 4 and TYPE == TubTalents_AMPTYPES[MODE].planName then
+                --TubTalents_Out(format("Level: %s Name:%s", parsed_args[3], parsed_args[4]))
+                TubTalents_AMP_plan.plan[tonumber(parsed_args[3])].name = parsed_args[4]
             else
                 TubTalents_Out("Addon Message Error2")
                 TubTalents_AMPError = true
             end
-        elseif MODE == TubTalents_AMPMODES.Plan then
         else
             TubTalents_Out("Addon Message Error3")
             TubTalents_AMPError = true
         end
     end
-
-    --TubTalents_Out(format("arg3: %s", arg3))
-    --TubTalents_Out(format("arg4: %s", arg4))
 end
 
 

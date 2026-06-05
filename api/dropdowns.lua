@@ -1,10 +1,10 @@
 --Dropdown Setup/Utilities
-function TT_TalentFramePreferences_DewdropRegister()
-    TT_TalentPresets_Dewdrop:Register(TalentFramePresetsButton, --Bound Frame
+function TubTalents_TalentFramePreferences_DewdropRegister()
+    TubTalents_TalentPresets_Dewdrop:Register(TalentFramePresetsButton, --Bound Frame
         'point', function(parent) --Point
             return "TOP", "BOTTOM"
         end,
-        'children', function(level, value) TT_TalentPresets_DewdropGen(level, value, TT_PresetOpts) end,
+        'children', function(level, value) TubTalents_TalentPresets_DewdropGen(level, value, TubTalents_PresetOpts) end,
         'dontHook', true
     )
 end
@@ -13,7 +13,7 @@ end
 -- Can pass a value up to the next level with a value
 -- value = "value:arg1:arg2:arg3:arg4:arg5"
 -- inner element args overwrite the value args
-function TT_TalentPresets_DewdropGen(level, value, opts)
+function TubTalents_TalentPresets_DewdropGen(level, value, opts)
     if value ~= nil then
         if string.find(value,":") then --accepts values after colons as arguments. Used to pass arguments a level up
             local parsed_args = {}
@@ -23,19 +23,19 @@ function TT_TalentPresets_DewdropGen(level, value, opts)
             end 
             -- sub out the arguments for the real value
             value = string.gsub(value, ":.*", "")
-            TT_TalentPresets_DewdropLevelGen(opts[level][value],parsed_args)
+            TubTalents_TalentPresets_DewdropLevelGen(opts[level][value],parsed_args)
         else
-            TT_TalentPresets_DewdropLevelGen(opts[level][value])
+            TubTalents_TalentPresets_DewdropLevelGen(opts[level][value])
         end
     else
-        TT_TalentPresets_DewdropLevelGen(opts[level])
+        TubTalents_TalentPresets_DewdropLevelGen(opts[level])
     end
 end
 
 -- Best attempt at making a good solution for many types, and using function returns
 -- for checked status. May use functions for tooltips more in the future.
 -- But some adjusting may be required for some un-forseen scenarios
-function TT_TalentPresets_DewdropLevelGen(opts,args)
+function TubTalents_TalentPresets_DewdropLevelGen(opts,args)
     -- Process passed arguments...
     local args1, args2, args3, args4 = nil
     if args ~= nil then
@@ -47,7 +47,7 @@ function TT_TalentPresets_DewdropLevelGen(opts,args)
     for i,j in ipairs(opts) do
         if j.value ~= "" then -- next level
             if j.disabled and j.disabled(args1) then
-                TT_TalentPresets_Dewdrop:AddLine(
+                TubTalents_TalentPresets_Dewdrop:AddLine(
                     'text', j.name,
                     'tooltipTitle', j.tooltipTitle or nil,
                     'tooltipText', j.disabledTooltip or nil,  
@@ -60,7 +60,7 @@ function TT_TalentPresets_DewdropLevelGen(opts,args)
                     'notCheckable', true
                 )
             elseif j.notCheckable then
-                TT_TalentPresets_Dewdrop:AddLine(
+                TubTalents_TalentPresets_Dewdrop:AddLine(
                     'text', j.name,
                     'tooltipTitle', j.tooltipTitle or nil,
                     'tooltipText', j.tooltip or nil,  
@@ -72,7 +72,7 @@ function TT_TalentPresets_DewdropLevelGen(opts,args)
                     'notCheckable', true
                 )
             else
-                TT_TalentPresets_Dewdrop:AddLine(
+                TubTalents_TalentPresets_Dewdrop:AddLine(
                     'text', j.name,
                     'tooltipTitle', j.tooltipTitle or nil,
                     'tooltipText', j.tooltip or nil,  
@@ -93,7 +93,7 @@ function TT_TalentPresets_DewdropLevelGen(opts,args)
             end
         elseif j.disabled and j.disabled(args1) then
             if j.checked ~= nil then
-                TT_TalentPresets_Dewdrop:AddLine(
+                TubTalents_TalentPresets_Dewdrop:AddLine(
                     'text', j.name,
                     'tooltipTitle', j.tooltipTitle or nil,
                     'tooltipText', j.disabledTooltip or nil,  
@@ -113,7 +113,7 @@ function TT_TalentPresets_DewdropLevelGen(opts,args)
                     'notCheckable', j.notCheckable
                 )     
             else
-                TT_TalentPresets_Dewdrop:AddLine(
+                TubTalents_TalentPresets_Dewdrop:AddLine(
                     'text', j.name,
                     'tooltipTitle', j.tooltipTitle or nil,
                     'tooltipText', j.disabledTooltip or nil,  
@@ -128,7 +128,7 @@ function TT_TalentPresets_DewdropLevelGen(opts,args)
                 )    
             end
         elseif j.hasSlider then
-            TT_TalentPresets_Dewdrop:AddLine(
+            TubTalents_TalentPresets_Dewdrop:AddLine(
                 'text', j.name,
                 'tooltipTitle', j.tooltipTitle or nil,
                 'tooltipText', j.tooltip or nil,  
@@ -146,7 +146,7 @@ function TT_TalentPresets_DewdropLevelGen(opts,args)
                 'sliderFunc', j.sliderFunc
             )
         elseif j.hasEditBox then
-            TT_TalentPresets_Dewdrop:AddLine(
+            TubTalents_TalentPresets_Dewdrop:AddLine(
                 'text', j.name,
                 'tooltipTitle', j.tooltipTitle or nil,
                 'tooltipText', j.tooltip or nil,  
@@ -162,7 +162,7 @@ function TT_TalentPresets_DewdropLevelGen(opts,args)
                 'editBoxFunc', j.editBoxFunc
             )
         elseif j.notCheckable and j.func == nil then -- titles
-            TT_TalentPresets_Dewdrop:AddLine(
+            TubTalents_TalentPresets_Dewdrop:AddLine(
                 'text', j.name,
                 'tooltipTitle', j.tooltipTitle or nil,
                 'tooltipText', j.tooltip or nil,  
@@ -174,7 +174,7 @@ function TT_TalentPresets_DewdropLevelGen(opts,args)
                 'notCheckable', j.notCheckable
             )
         elseif j.notCheckable and j.func ~= nil then -- pure functions
-            TT_TalentPresets_Dewdrop:AddLine(
+            TubTalents_TalentPresets_Dewdrop:AddLine(
                 'text', j.name,
                 'tooltipTitle', j.tooltipTitle or nil,
                 'tooltipText', j.tooltip or nil,   
@@ -191,7 +191,7 @@ function TT_TalentPresets_DewdropLevelGen(opts,args)
                 'notCheckable', j.notCheckable
             )                    
         elseif j.isRadio then
-            TT_TalentPresets_Dewdrop:AddLine(
+            TubTalents_TalentPresets_Dewdrop:AddLine(
                 'text', j.name,
                 'tooltipTitle', j.tooltipTitle or nil,
                 'tooltipText', j.tooltip or nil,  
@@ -209,12 +209,12 @@ function TT_TalentPresets_DewdropLevelGen(opts,args)
     end
 
     --Close button
-    TT_TalentPresets_Dewdrop:AddLine(
+    TubTalents_TalentPresets_Dewdrop:AddLine(
         'text', "Close Menu",
         'textR', 0,
         'textG', 1,
         'textB', 1,
-        'func', function() TT_TalentPresets_Dewdrop:Close() end,
+        'func', function() TubTalents_TalentPresets_Dewdrop:Close() end,
         'notCheckable', true
     )
 end

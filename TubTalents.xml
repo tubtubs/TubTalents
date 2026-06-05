@@ -6,7 +6,7 @@
 	<Include file="api\dropdowns.lua" />
 	<Include file="api\presets.lua" />
 	<Include file="api\plans.lua" />
-	<Include file="api\profiles.lua" />
+	<Include file="api\sharing.lua" />
 	<Include file="api\compat.lua" />
 
     <Frame name="TubTalents_Listener" hidden="false">
@@ -22,12 +22,12 @@
             </OnEvent>
         </Scripts>
     </Frame>
-    <GameTooltip name="TT_TalentTooltipFrame" hidden="true" inherits="GameTooltipTemplate">
+    <GameTooltip name="TubTalents_TalentTooltipFrame" hidden="true" inherits="GameTooltipTemplate">
 	</GameTooltip>
-	<GameTooltip name="TT_NextTalentTooltipFrame" hidden="true" inherits="GameTooltipTemplate">
+	<GameTooltip name="TubTalents_NextTalentTooltipFrame" hidden="true" inherits="GameTooltipTemplate">
 	</GameTooltip>
 
-	<Frame name="TT_LearnTalentPopup" hidden="true" parent="UIParent" spellID="24443" frameStrata="DIALOG">
+	<Frame name="TubTalents_LearnTalentPopup" hidden="true" parent="UIParent" spellID="24443" frameStrata="DIALOG">
 		<Size>
 			<AbsDimension x="320" y="144"/>
 		</Size>
@@ -51,7 +51,7 @@
 		</Backdrop>
 		<Layers>
 			<Layer level="ARTWORK">
-				<FontString name="$parentText" inherits="GameFontHighlight" text="TT_CATCHUPNEXTPROMPT">
+				<FontString name="$parentText" inherits="GameFontHighlight" text="TubTalents_CATCHUPNEXTPROMPT">
 					<Size>
 						<AbsDimension x="290" y="0"/>
 					</Size>
@@ -84,7 +84,7 @@
 								<AbsDimension x="36" y="36"/>
 							</Size>
 						</Texture>
-						<FontString name="$parentName" inherits="GameFontHighlight" text="TT_CATCHUPNAME">
+						<FontString name="$parentName" inherits="GameFontHighlight" text="TubTalents_CATCHUPNAME">
 							<Size>
 								<AbsDimension x="290" y="0"/>
 							</Size>
@@ -96,7 +96,7 @@
 								</Anchor>
 							</Anchors>
 						</FontString>
-						<FontString name="$parentRank" inherits="GameFontHighlight" text="TT_CATCHUPRANK">
+						<FontString name="$parentRank" inherits="GameFontHighlight" text="TubTalents_CATCHUPRANK">
 							<Size>
 								<AbsDimension x="290" y="0"/>
 							</Size>
@@ -112,10 +112,10 @@
 				</Layers>
 				<Scripts>
 					<OnShow>
-						TT_LearnTalentPopup_TalentButtonLoad(this)
+						TubTalents_LearnTalentPopup_TalentButtonLoad(this)
 					</OnShow>
 					<OnEnter>
-					TT_LearnTalentPopup_TalentButtonOnEnter()
+					TubTalents_LearnTalentPopup_TalentButtonOnEnter()
 					</OnEnter>
 					<OnLeave>
 						GameTooltip:Hide()
@@ -144,7 +144,7 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						TT_CatchUpLearnPlan()
+						TubTalents_CatchUpLearnPlan()
 						HideUIPanel(this:GetParent());
 					</OnClick>
 				</Scripts>
@@ -169,7 +169,7 @@
 		</Frames>
 	</Frame>
 
-    <Frame name="TT_LvlPlanDisplayTemplate" virtual="true"> 
+    <Frame name="TubTalents_LvlPlanDisplayTemplate" virtual="true"> 
 		<!-- Icon  Level, Name, Rank
 		-->
         <Size>
@@ -189,7 +189,7 @@
                         </Anchor>
                     </Anchors>
                 </Texture>
-                <FontString name="$parentLevel" text="TT_TEST" justifyH="LEFT" inherits="GameFontHighlightSmallOutline">
+                <FontString name="$parentLevel" text="TubTalents_TEST" justifyH="LEFT" inherits="GameFontHighlightSmallOutline">
                     <Size>
                         <AbsDimension x="240" y="16"/>
                     </Size>
@@ -201,7 +201,7 @@
                         </Anchor>
                     </Anchors>
                 </FontString>
-                <FontString name="$parentName" text="TT_TEST" justifyH="LEFT" inherits="GameFontHighlightSmallOutline">
+                <FontString name="$parentName" text="TubTalents_TEST" justifyH="LEFT" inherits="GameFontHighlightSmallOutline">
                     <Size>
                         <AbsDimension x="240" y="16"/>
                     </Size>
@@ -213,7 +213,7 @@
                         </Anchor>
                     </Anchors>
                 </FontString>
-                <FontString name="$parentRank" text="TT_TEST" justifyH="LEFT" inherits="GameFontHighlightSmallOutline">
+                <FontString name="$parentRank" text="TubTalents_TEST" justifyH="LEFT" inherits="GameFontHighlightSmallOutline">
                     <Size>
                         <AbsDimension x="240" y="16"/>
                     </Size>
@@ -240,10 +240,10 @@
         </Backdrop>
 		<Scripts>
 			<OnEnter>
-			TT_LvlPlanTooltip()
+			TubTalents_LvlPlanTooltip()
 			</OnEnter>
 			<OnMouseDown>
-				TT_LvlPlan_OnClick()
+				TubTalents_LvlPlan_OnClick()
 			</OnMouseDown>
 			<OnLeave>
 			GameTooltip:Hide();
@@ -251,18 +251,18 @@
 		</Scripts>
     </Frame>
 
-	<Font name="TT_TooltipText" font="Fonts\FRIZQT__.TTF" justifyH="LEFT" virtual="true">
+	<Font name="TubTalents_TooltipText" font="Fonts\FRIZQT__.TTF" justifyH="LEFT" virtual="true">
 		<FontHeight>
 			<AbsValue val="12"/>
 		</FontHeight>
 	</Font>
-	<Font name="TT_TooltipTextSmall" font="Fonts\FRIZQT__.TTF" justifyH="LEFT" virtual="true">
+	<Font name="TubTalents_TooltipTextSmall" font="Fonts\FRIZQT__.TTF" justifyH="LEFT" virtual="true">
 		<FontHeight>
 			<AbsValue val="11"/>
 		</FontHeight>
 	</Font>
 
-    <Frame name="TT_StagedTalentsFrame" frameStrata="HIGH" hidden="true">
+    <Frame name="TubTalents_StagedTalentsFrame" frameStrata="HIGH" hidden="true">
 		<Anchors>
 			<Anchor point="CENTER" relativeTo="UIParent">
 				<Offset>
@@ -299,7 +299,7 @@
 					</Anchors>
 					<TexCoords left="0.2" right="0.8" top="0" bottom="0.6" />
 				</Texture>
-				<FontString name="$parentTitleString" font="GameFontNormal" text="TT_LEVELINGPLANTITLE">
+				<FontString name="$parentTitleString" font="GameFontNormal" text="TubTalents_LEVELINGPLANTITLE">
 					<!--Window Title -->
 					<Size>
 						<AbsDimension x="140" y="0" />
@@ -322,7 +322,7 @@
 						</Offset>
 					</Shadow>
 				</FontString>
-                <FontString name="$parent_NoWorking" font="GameFontNormal" text="TT_TEST" hidden="true">
+                <FontString name="$parent_NoWorking" font="GameFontNormal" text="TubTalents_TEST" hidden="true">
 					<Size>
 						<AbsDimension x="250" y="0" />
 					</Size>
@@ -370,7 +370,7 @@
 					</EdgeSize>
 				</Backdrop>
 			</Frame>
-            <Button name="$parent_StagedPlanButton" inherits="TabButtonTemplate" frameStrata="FULLSCREEN" text="TT_LEVELINGPLANTAB1" id="1">
+            <Button name="$parent_StagedPlanButton" inherits="TabButtonTemplate" frameStrata="FULLSCREEN" text="TubTalents_LEVELINGPLANTAB1" id="1">
 				<Size>
 					<AbsDimension x="86" y="24"/>
 				</Size>
@@ -383,13 +383,8 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-                    TT_StagedTalentsFrame_SwitchTab()
+                    TubTalents_StagedTalentsFrame_SwitchTab()
 					</OnClick>
-					<OnEnter>
-					GameTooltip:SetOwner(this, "ANCHOR_BOTTOMRIGHT");
-					GameTooltip:SetText("Test");
-					GameTooltip:Show();
-					</OnEnter>
 					<OnLeave>
 					GameTooltip:Hide();
 					</OnLeave>
@@ -400,7 +395,7 @@
                     </OnLoad>
 				</Scripts>
 			</Button>
-            <Button name="$parent_CurrentPlanButton" inherits="TabButtonTemplate" text="TT_LEVELINGPLANTAB2" id="2">
+            <Button name="$parent_CurrentPlanButton" inherits="TabButtonTemplate" text="TubTalents_LEVELINGPLANTAB2" id="2">
 				<Size>
 					<AbsDimension x="86" y="24"/>
 				</Size>
@@ -413,13 +408,8 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-                    TT_StagedTalentsFrame_SwitchTab()
+                    TubTalents_StagedTalentsFrame_SwitchTab()
 					</OnClick>
-					<OnEnter>
-					GameTooltip:SetOwner(this, "ANCHOR_BOTTOMRIGHT");
-					GameTooltip:SetText("Test");
-					GameTooltip:Show();
-					</OnEnter>
 					<OnLeave>
 					GameTooltip:Hide();
 					</OnLeave>
@@ -429,7 +419,7 @@
                     </OnLoad>
 				</Scripts>
 			</Button>
-            <Button name="$parent_PlansButton" inherits="UIPanelButtonTemplate" text="TT_LEVELINGPLANSDROP">
+            <Button name="$parent_PlansButton" inherits="UIPanelButtonTemplate" text="TubTalents_LEVELINGPLANSDROP">
                 <Size>
                     <AbsDimension x="76" y="22"/>
                 </Size>
@@ -442,7 +432,7 @@
 				</Anchors>
                 <Scripts>
                     <OnClick>
-                    TT_StagedTalentsFrame_PlansButton_OnClick()
+                    TubTalents_StagedTalentsFrame_PlansButton_OnClick()
                     </OnClick>
                 </Scripts>
             </Button>
@@ -461,12 +451,12 @@
 				<Scripts>
 					<OnVerticalScroll>
 						<!-- TODO: Create new update method-->
-							FauxScrollFrame_OnVerticalScroll(28, TT_StagedTalentsFrame_Update);
+							FauxScrollFrame_OnVerticalScroll(28, TubTalents_StagedTalentsFrame_Update);
 					</OnVerticalScroll>
 				</Scripts>
 			</ScrollFrame>
 
-            <Frame name="$parent_LvlPlanSpec1" inherits="TT_LvlPlanDisplayTemplate" id="1">
+            <Frame name="$parent_LvlPlanSpec1" inherits="TubTalents_LvlPlanDisplayTemplate" id="1">
                 <Anchors>
 					<Anchor point="TOPLEFT" relativeTo="$parentLayer2">
 						<Offset>
@@ -475,7 +465,7 @@
 					</Anchor>
 				</Anchors>
             </Frame>
-            <Frame name="$parent_LvlPlanSpec2" inherits="TT_LvlPlanDisplayTemplate" id="2">
+            <Frame name="$parent_LvlPlanSpec2" inherits="TubTalents_LvlPlanDisplayTemplate" id="2">
                 <Anchors>
 					<Anchor point="TOP" relativeTo="$parent_LvlPlanSpec1">
 						<Offset>
@@ -484,7 +474,7 @@
 					</Anchor>
 				</Anchors>
             </Frame>
-            <Frame name="$parent_LvlPlanSpec3" inherits="TT_LvlPlanDisplayTemplate" id="3">
+            <Frame name="$parent_LvlPlanSpec3" inherits="TubTalents_LvlPlanDisplayTemplate" id="3">
                 <Anchors>
 					<Anchor point="TOP" relativeTo="$parent_LvlPlanSpec2">
 						<Offset>
@@ -493,7 +483,7 @@
 					</Anchor>
 				</Anchors>
             </Frame>
-            <Frame name="$parent_LvlPlanSpec4" inherits="TT_LvlPlanDisplayTemplate" id="4">
+            <Frame name="$parent_LvlPlanSpec4" inherits="TubTalents_LvlPlanDisplayTemplate" id="4">
                 <Anchors>
 					<Anchor point="TOP" relativeTo="$parent_LvlPlanSpec3">
 						<Offset>
@@ -502,7 +492,7 @@
 					</Anchor>
 				</Anchors>
             </Frame>
-            <Frame name="$parent_LvlPlanSpec5" inherits="TT_LvlPlanDisplayTemplate" id="5">
+            <Frame name="$parent_LvlPlanSpec5" inherits="TubTalents_LvlPlanDisplayTemplate" id="5">
                 <Anchors>
 					<Anchor point="TOP" relativeTo="$parent_LvlPlanSpec4">
 						<Offset>
@@ -511,7 +501,7 @@
 					</Anchor>
 				</Anchors>
             </Frame>
-			<Frame name="$parent_LvlPlanSpec6" inherits="TT_LvlPlanDisplayTemplate" id="6">
+			<Frame name="$parent_LvlPlanSpec6" inherits="TubTalents_LvlPlanDisplayTemplate" id="6">
                 <Anchors>
 					<Anchor point="TOP" relativeTo="$parent_LvlPlanSpec5">
 						<Offset>
@@ -530,7 +520,7 @@
 		</Scripts>
     </Frame>
 
-	<Frame name="TT_ProfileFrame" parent="UIParent" frameStrata="DIALOG" hidden="true">
+	<Frame name="TubTalents_ProfileFrame" parent="UIParent" frameStrata="DIALOG" hidden="true">
 		<Anchors>
 			<Anchor point="CENTER" relativeTo="UIParent">
 				<Offset>
@@ -567,7 +557,7 @@
 					</Anchors>
 					<TexCoords left="0.2" right="0.8" top="0" bottom="0.6" />
 				</Texture>
-				<FontString name="$parentTitleString" font="GameFontNormal" text="TT_TEST">
+				<FontString name="$parentTitleString" font="GameFontNormal" text="TubTalents_TEST">
 					<!--Window Title -->
 					<Size>
 						<AbsDimension x="140" y="0" />
@@ -661,16 +651,16 @@
 								end
 							</OnTextChanged>
 							<OnEnterPressed>
-							TT_ProfileFrame_SubmitButton_OnClick(); <!-- ReplaceMe -->
+							TubTalents_ProfileFrame_SubmitButton_OnClick(); <!-- ReplaceMe -->
 							</OnEnterPressed>
 							<OnEscapePressed>
-							TT_ProfileFrame_ScrollFrame_EditBox:ClearFocus()
+							TubTalents_ProfileFrame_ScrollFrame_EditBox:ClearFocus()
 							</OnEscapePressed>
 						</Scripts>
 					</EditBox>
 				</ScrollChild>
 			</ScrollFrame>
-			<Button name="$parent_SubmitButton" text="TT_OKAY" inherits="UIPanelButtonTemplate">
+			<Button name="$parent_SubmitButton" text="TubTalents_OKAY" inherits="UIPanelButtonTemplate">
 				<Size>
 					<AbsDimension x="155" y="20" />
 				</Size>
@@ -683,7 +673,7 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-					TT_ProfileFrame_SubmitButton_OnClick();  <!-- ReplaceMe -->
+					TubTalents_ProfileFrame_SubmitButton_OnClick();  <!-- ReplaceMe -->
                    </OnClick>
 				</Scripts>
 			</Button>
@@ -699,7 +689,7 @@
 		</Frames>
 		<Scripts>
 			<OnLoad>             
-			tinsert(UISpecialFrames, "TT_ProfileFrame");
+			tinsert(UISpecialFrames, "TubTalents_ProfileFrame");
 			</OnLoad>
 			<OnShow>
 			PlaySound("igCharacterInfoOpen");

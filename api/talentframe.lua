@@ -5,48 +5,48 @@ function TubTalents_InitFrameAdditions()
     myButton:SetHeight(15)
     myButton:SetWidth(60)
     myButton:SetPoint("CENTER", TalentFrame, "TOPLEFT", 55, -421)
-    myButton:SetText(TT_LEARN)
-    myButton:SetScript("OnClick",TT_LearnButton_OnClick)
-    myButton:SetScript("OnEnter",TT_TalentLearnButton_OnEnter)
+    myButton:SetText(TubTalents_LEARN)
+    myButton:SetScript("OnClick",TubTalents_LearnButton_OnClick)
+    myButton:SetScript("OnEnter",TubTalents_TalentLearnButton_OnEnter)
     myButton:SetScript("OnLeave",function() GameTooltip:Hide() end)
 
     local myButton = CreateFrame("Button", "TalentFrameResetButton", TalentFrame, "UIPanelButtonTemplate")
     myButton:SetHeight(15)
     myButton:SetWidth(60)
     myButton:SetPoint("CENTER", TalentFrame, "TOPLEFT", 115, -421)
-    myButton:SetText(TT_RESET)
-    myButton:SetScript("OnClick",TT_ResetButton_OnClick)
+    myButton:SetText(TubTalents_RESET)
+    myButton:SetScript("OnClick",TubTalents_ResetButton_OnClick)
 
     local myButton = CreateFrame("Button", "TalentFrameLevelPlanButton", TalentFrame, "UIPanelButtonTemplate")
     myButton:SetHeight(20)
     myButton:SetWidth(120)
     myButton:SetPoint("CENTER", TalentFrame, "TOPLEFT", 270, -24)
-    myButton:SetText(TT_LEVELINGPLANBTN)
-    myButton:SetScript("OnClick",function() if TT_StagedTalentsFrame:IsShown() then
-        TT_StagedTalentsFrame:Hide() TubTalent_Vars.ShowLevellingPlanFrame = false 
-        else TT_StagedTalentsFrame:Show() TubTalent_Vars.ShowLevellingPlanFrame = true
-        end TT_LevellingPlans_DewDrop:Close() end)
+    myButton:SetText(TubTalents_LEVELINGPLANBTN)
+    myButton:SetScript("OnClick",function() if TubTalents_StagedTalentsFrame:IsShown() then
+        TubTalents_StagedTalentsFrame:Hide() TubTalent_Vars.ShowLevellingPlanFrame = false 
+        else TubTalents_StagedTalentsFrame:Show() TubTalent_Vars.ShowLevellingPlanFrame = true
+        end TubTalents_LevellingPlans_DewDrop:Close() end)
 
     local myButton = CreateFrame("Button", "TalentFramePresetsButton", TalentFrame, "UIPanelButtonTemplate")
     myButton:SetHeight(15)
     myButton:SetWidth(115)
     myButton:SetPoint("CENTER", TalentFrame, "TOPLEFT", 285, -42)
-    myButton:SetText(TT_PRESETSBTN)
+    myButton:SetText(TubTalents_PRESETSBTN)
     myButton:SetScript("OnClick",function() 
-        if TT_TalentPresets_Dewdrop:IsOpen() then
-            TT_TalentPresets_Dewdrop:Close();
+        if TubTalents_TalentPresets_Dewdrop:IsOpen() then
+            TubTalents_TalentPresets_Dewdrop:Close();
         else
-            TT_TalentPresets_Dewdrop:Open(this);
+            TubTalents_TalentPresets_Dewdrop:Open(this);
         end
     end)
 
     --Checkboxes
     local myCheckButton = CreateFrame("CheckButton", "TalentFrameSimMode", TalentFrame, "UICheckButtonTemplate");
     myCheckButton:SetPoint("CENTER", TalentFrame, "TOPLEFT", 75, -42); -- Position it
-    myCheckButton.tooltip = TT_SIMMODETIP;
+    myCheckButton.tooltip = TubTalents_SIMMODETIP;
     myCheckButton:SetHeight(24)
     myCheckButton:SetWidth(24)
-    _G["TalentFrameSimModeText"]:SetText(TT_SIMMODE)
+    _G["TalentFrameSimModeText"]:SetText(TubTalents_SIMMODE)
     myCheckButton:SetChecked(false);
     myCheckButton:SetScript("OnClick",TalentFrameSimMode_OnClick);
 
@@ -69,7 +69,7 @@ function TubTalents_InitFrameAdditions()
         else 
             myEditBox:SetNumber(TubTalent_Vars.MaxTalentPoints)
         end
-        TT_TalentFrame_UpdateTalentPoints()
+        TubTalents_TalentFrame_UpdateTalentPoints()
         this:ClearFocus()
     end)
     myEditBox:SetScript("OnEscapePressed", function(self)
@@ -77,7 +77,7 @@ function TubTalents_InitFrameAdditions()
     end)
     myEditBox:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(this, "ANCHOR_BOTTOMRIGHT");
-        GameTooltip:SetText(TT_ENTERTOSAVE);
+        GameTooltip:SetText(TubTalents_ENTERTOSAVE);
         GameTooltip:Show();
     end)
     myEditBox:SetScript("OnLeave", function(self)
@@ -87,12 +87,12 @@ function TubTalents_InitFrameAdditions()
     --Text labels
     prompt = TalentFrame:CreateFontString("TalentFrameSimModePointsBoxPrompt", "OVERLAY", "GameFontNormalSmall")
     prompt:SetPoint("CENTER", myEditBox, "LEFT", -40, 0); -- Position it
-    prompt:SetText(TT_MAXPOINTS)
+    prompt:SetText(TubTalents_MAXPOINTS)
     prompt:Hide()
 
     prompt = TalentFrame:CreateFontString("TalentFrameEstimatedLevel", "OVERLAY", "GameFontNormalSmall")
     prompt:SetPoint("CENTER", TalentFrame, "TOPLEFT", 140, -24)
-    prompt:SetText(format(TT_ESTIMATEDLEVEL, TT_MINLEVEL))
+    prompt:SetText(format(TubTalents_ESTIMATEDLEVEL, TubTalents_MINLEVEL))
     prompt:SetFontObject("GameFontNormal")
 
     --Title frame
@@ -110,7 +110,7 @@ function TubTalents_InitFrameAdditions()
     --f:Show()
     f.text = f:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
     f.text:SetAllPoints(f)
-    f.text:SetText(TT_ADDONFULLNAME)
+    f.text:SetText(TubTalents_ADDONFULLNAME)
     f.text:SetJustifyH("CENTER")
     f.text:SetFontObject("GameFontNormal")
     f:SetFrameStrata("HIGH")
@@ -118,39 +118,39 @@ function TubTalents_InitFrameAdditions()
 end
 
 function TubTalents_FunctionOverloads()
-    TalentFrameTalent_OnClick = TT_TalentFrameTalent_OnClick
-    TalentFrame_Update = TT_TalentFrame_Update
+    TalentFrameTalent_OnClick = TubTalents_TalentFrameTalent_OnClick
+    TalentFrame_Update = TubTalents_TalentFrame_Update
 
-    TT_OldGetTalentInfo = GetTalentInfo
-    GetTalentInfo = TT_GetTalentInfo
+    TubTalents_OldGetTalentInfo = GetTalentInfo
+    GetTalentInfo = TubTalents_GetTalentInfo
 
-    TT_OldGetTalentPrereqs = GetTalentPrereqs
-    GetTalentPrereqs = TT_GetTalentPrereqs
+    TubTalents_OldGetTalentPrereqs = GetTalentPrereqs
+    GetTalentPrereqs = TubTalents_GetTalentPrereqs
 
-    --TT_OldTalentFrame_UpdateTalentPoints = TalentFrame_UpdateTalentPoints
-    TalentFrame_UpdateTalentPoints = TT_TalentFrame_UpdateTalentPoints
+    --TubTalents_OldTalentFrame_UpdateTalentPoints = TalentFrame_UpdateTalentPoints
+    TalentFrame_UpdateTalentPoints = TubTalents_TalentFrame_UpdateTalentPoints
     
-    TT_OldGetTalentTabInfo = GetTalentTabInfo
-    GetTalentTabInfo = TT_GetTalentTabInfo
-    TT_OldTalentFrame_OnShow = TalentFrame_OnShow
-    TalentFrame_OnShow = TT_TalentFrame_OnShow
+    TubTalents_OldGetTalentTabInfo = GetTalentTabInfo
+    GetTalentTabInfo = TubTalents_GetTalentTabInfo
+    TubTalents_OldTalentFrame_OnShow = TalentFrame_OnShow
+    TalentFrame_OnShow = TubTalents_TalentFrame_OnShow
 end
 
 
 -- Talent Frame Functions --
-function TT_TalentFrame_OnShow()
+function TubTalents_TalentFrame_OnShow()
     if TubTalent_Vars.ShowLevellingPlanFrame then
-        TT_StagedTalentsFrame:Show()
+        TubTalents_StagedTalentsFrame:Show()
     else
-        TT_StagedTalentsFrame:Hide()
+        TubTalents_StagedTalentsFrame:Hide()
     end 
-    TT_OldTalentFrame_OnShow()
-    TT_RegenPlansDropdown()
-    TT_RegenPresetDropdown()
+    TubTalents_OldTalentFrame_OnShow()
+    TubTalents_RegenPlansDropdown()
+    TubTalents_RegenPresetDropdown()
 end
 
 --Update functions (Mostly original code, overloaded)
-function TT_TalentFrame_Update()
+function TubTalents_TalentFrame_Update()
 	-- Setup Tabs
 	local tab, name, iconTexture, pointsSpent, button;
 	local numTabs = GetNumTalentTabs();
@@ -160,7 +160,7 @@ function TT_TalentFrame_Update()
 			name, iconTexture, pointsSpent = GetTalentTabInfo(i);
 			if ( i == PanelTemplates_GetSelectedTab(TalentFrame) ) then
 				-- If tab is the selected tab set the points spent info
-                --pointsSpent = pointsSpent + TT_TalentPointsSpent[i];
+                --pointsSpent = pointsSpent + TubTalents_TalentPointsSpent[i];
 				TalentFrameSpentPoints:SetText(format(MASTERY_POINTS_SPENT, name).." "..HIGHLIGHT_FONT_COLOR_CODE..pointsSpent..FONT_COLOR_CODE_CLOSE);
 				TalentFrame.pointsSpent = pointsSpent;
 			end
@@ -232,16 +232,16 @@ function TT_TalentFrame_Update()
 				if ( rank < maxRank ) then
 					-- Rank is green if not maxed out
                     _G["TalentFrameTalent"..i]:SetScript("OnClick", nil)
-                    _G["TalentFrameTalent"..i]:SetScript("OnMouseDown", TT_TalentFrameTalent_OnClick)
-                    _G["TalentFrameTalent"..i]:SetScript("OnEnter",TT_TalentTooltip)
-                    _G["TalentFrameTalent"..i]:SetScript("OnLeave",TT_TalentTooltip_OnLeave)
+                    _G["TalentFrameTalent"..i]:SetScript("OnMouseDown", TubTalents_TalentFrameTalent_OnClick)
+                    _G["TalentFrameTalent"..i]:SetScript("OnEnter",TubTalents_TalentTooltip)
+                    _G["TalentFrameTalent"..i]:SetScript("OnLeave",TubTalents_TalentTooltip_OnLeave)
 					_G["TalentFrameTalent"..i.."Slot"]:SetVertexColor(0.1, 1.0, 0.1);
 					_G["TalentFrameTalent"..i.."Rank"]:SetTextColor(GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b);
 				else
                     _G["TalentFrameTalent"..i]:SetScript("OnClick", nil)
-                    _G["TalentFrameTalent"..i]:SetScript("OnMouseDown", TT_TalentFrameTalent_OnClick)                    
-                    _G["TalentFrameTalent"..i]:SetScript("OnEnter",TT_TalentTooltip)
-                    _G["TalentFrameTalent"..i]:SetScript("OnLeave",TT_TalentTooltip_OnLeave)
+                    _G["TalentFrameTalent"..i]:SetScript("OnMouseDown", TubTalents_TalentFrameTalent_OnClick)                    
+                    _G["TalentFrameTalent"..i]:SetScript("OnEnter",TubTalents_TalentTooltip)
+                    _G["TalentFrameTalent"..i]:SetScript("OnLeave",TubTalents_TalentTooltip_OnLeave)
 					_G["TalentFrameTalent"..i.."Slot"]:SetVertexColor(1.0, 0.82, 0);
 					_G["TalentFrameTalent"..i.."Rank"]:SetTextColor(NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
 				end
@@ -249,9 +249,9 @@ function TT_TalentFrame_Update()
 				_G["TalentFrameTalent"..i.."Rank"]:Show();
 			else
                 _G["TalentFrameTalent"..i]:SetScript("OnClick", nil)
-                _G["TalentFrameTalent"..i]:SetScript("OnMouseDown", TT_TalentFrameTalent_OnClick)                
-                _G["TalentFrameTalent"..i]:SetScript("OnEnter",TT_TalentTooltip)
-                _G["TalentFrameTalent"..i]:SetScript("OnLeave",TT_TalentTooltip_OnLeave)
+                _G["TalentFrameTalent"..i]:SetScript("OnMouseDown", TubTalents_TalentFrameTalent_OnClick)                
+                _G["TalentFrameTalent"..i]:SetScript("OnEnter",TubTalents_TalentTooltip)
+                _G["TalentFrameTalent"..i]:SetScript("OnLeave",TubTalents_TalentTooltip_OnLeave)
 				SetItemButtonDesaturated(button, 1, 0.65, 0.65, 0.65);
 				_G["TalentFrameTalent"..i.."Slot"]:SetVertexColor(0.5, 0.5, 0.5);
 				if ( rank == 0 ) then
@@ -361,15 +361,15 @@ function TT_TalentFrame_Update()
 end
 
 --Mostly overloaded for sim mode, and counting points for staged talents
-function TT_TalentFrame_UpdateTalentPoints()
+function TubTalents_TalentFrame_UpdateTalentPoints()
     local total = 0
-    for i=1, TT_MAX_TALENTS do
-        total = total + TT_TalentPointsSpent[i]
+    for i=1, TubTalents_MAX_TALENTS do
+        total = total + TubTalents_TalentPointsSpent[i]
     end
     if total == 0 then
-        TT_PresetLoaded = false
+        TubTalents_PresetLoaded = false
     end
-    if TT_SimMode then
+    if TubTalents_SimMode then
         TalentFrame.talentPoints = TubTalent_Vars.MaxTalentPoints - total
         TalentFrameTalentPointsText:SetText(TalentFrame.talentPoints);
     else
@@ -378,31 +378,31 @@ function TT_TalentFrame_UpdateTalentPoints()
         TalentFrameTalentPointsText:SetText(cp1);
         TalentFrame.talentPoints = cp1;
     end
-    TT_StagedTalentsFrame_Update()
-    TT_TalentFrame_UpdateEstimatedLevel()
+    TubTalents_StagedTalentsFrame_Update()
+    TubTalents_TalentFrame_UpdateEstimatedLevel()
 end
 
-function TT_TalentFrame_UpdateEstimatedLevel()
+function TubTalents_TalentFrame_UpdateEstimatedLevel()
     local total = 0
-    for i=1, TT_MAX_TALENTS do
+    for i=1, TubTalents_MAX_TALENTS do
         local _, _, tabPoints = GetTalentTabInfo(i)
         total = total + tabPoints
     end
-    TT_StagedEstimatedLevel = TT_MINLEVEL + total
-    TalentFrameEstimatedLevel:SetText(format(TT_ESTIMATEDLEVEL, TT_StagedEstimatedLevel))
+    TubTalents_StagedEstimatedLevel = TubTalents_MINLEVEL + total
+    TalentFrameEstimatedLevel:SetText(format(TubTalents_ESTIMATEDLEVEL, TubTalents_StagedEstimatedLevel))
 end
 
 --Learns all staged talents
 --Learns talents per tab, and then per 
-function TT_LearnButton_OnClick()
-    for i=1, TT_MAX_TALENTS do --iterate through tabs...
+function TubTalents_LearnButton_OnClick()
+    for i=1, TubTalents_MAX_TALENTS do --iterate through tabs...
         local keys = {}
         local temp_tiers = {
         }
         for m=1, MAX_NUM_TALENT_TIERS do
             temp_tiers[m] = {}
         end
-        for k,v in pairs (TT_StagedTalents[i]) do
+        for k,v in pairs (TubTalents_StagedTalents[i]) do
             local name, _, tier, _, rank, _,
             _, _ = GetTalentInfo(i,k);
             temp_tiers[tier][k] = v
@@ -412,10 +412,10 @@ function TT_LearnButton_OnClick()
             for k,v in pairs(temp_tiers[m]) do
                 local name, _, _, _, rank, _,
                 _, _ = GetTalentInfo(i,k);
-                TT_Out(format(TT_LEARNING,name, rank))
+                TubTalents_Out(format(TubTalents_LEARNING,name, rank))
                 --Need to check whats learned first so it doesn't rank too high...
                 -- No I don't?
-                --local _, _, _, _, oldRank, _, _, _ = TT_OldGetTalentInfo(i, k);
+                --local _, _, _, _, oldRank, _, _, _ = TubTalents_OldGetTalentInfo(i, k);
                 --rank = rank - oldRank
                 if rank > 0 then
                     LearnTalentRank(i, k, rank)
@@ -423,56 +423,56 @@ function TT_LearnButton_OnClick()
             end
         end
     end
-    TT_ResetButton_OnClick()
+    TubTalents_ResetButton_OnClick()
 end
 
 --Learn button tooltip
-function TT_TalentLearnButton_OnEnter()
+function TubTalents_TalentLearnButton_OnEnter()
     GameTooltip:SetOwner(this, "ANCHOR_RIGHT");
     GameTooltip:ClearLines()
-    if TT_SimMode then
-        GameTooltip:AddLine(TT_ERRSimMode, 1, 1, 1)
+    if TubTalents_SimMode then
+        GameTooltip:AddLine(TubTalents_ERRSimMode, 1, 1, 1)
     end
     GameTooltip:Show()
 end
 
 --Resets all staged talents
-function TT_ResetButton_OnClick()
-    TT_TalentPointsSpent = {
+function TubTalents_ResetButton_OnClick()
+    TubTalents_TalentPointsSpent = {
         [1] = 0,
         [2] = 0,
         [3] = 0,
     } 
-    TT_StagedTalents = {
+    TubTalents_StagedTalents = {
         [1] = {},
         [2] = {},
         [3] = {}
     }
-    TT_StagedLevellingPlan = {}
-    TT_StagedEstimatedLevel = TT_MINLEVEL
-    TT_PresetLoaded = false
-    TT_TalentFrame_Update()
-    TT_TalentFrameButtons_OnUpdate()
+    TubTalents_StagedLevellingPlan = {}
+    TubTalents_StagedEstimatedLevel = TubTalents_MINLEVEL
+    TubTalents_PresetLoaded = false
+    TubTalents_TalentFrame_Update()
+    TubTalents_TalentFrameButtons_OnUpdate()
 end
 
 --If any simulated points have been spent offer learning
 --otherwise, disable button functionality and gray out
-function TT_TalentFrameButtons_OnUpdate()
+function TubTalents_TalentFrameButtons_OnUpdate()
     local found = 0 
-    for i=1, TT_MAX_TALENTS do
-        if TT_TalentPointsSpent[i] > 0 then
+    for i=1, TubTalents_MAX_TALENTS do
+        if TubTalents_TalentPointsSpent[i] > 0 then
             found = 1
             break
         end
     end
     if found == 1 then
-        if not TT_SimMode then
-            TalentFrameLearnButton:SetScript("OnClick",TT_LearnButton_OnClick)
+        if not TubTalents_SimMode then
+            TalentFrameLearnButton:SetScript("OnClick",TubTalents_LearnButton_OnClick)
             TalentFrameLearnButton:GetNormalTexture():SetDesaturated(false)
             TalentFrameLearnButton:SetHighlightTexture("Interface\\Buttons\\UI-Panel-Button-Highlight")
             TalentFrameLearnButtonText:SetTextColor(1, .8, 0)
         end
-        TalentFrameResetButton:SetScript("OnClick",TT_ResetButton_OnClick)
+        TalentFrameResetButton:SetScript("OnClick",TubTalents_ResetButton_OnClick)
         TalentFrameResetButton:GetNormalTexture():SetDesaturated(false)
         TalentFrameResetButton:SetHighlightTexture("Interface\\Buttons\\UI-Panel-Button-Highlight")
         TalentFrameResetButtonText:SetTextColor(1, .8, 0)
@@ -486,18 +486,18 @@ function TT_TalentFrameButtons_OnUpdate()
         TalentFrameResetButton:SetHighlightTexture("")
         TalentFrameResetButtonText:SetTextColor(0.5, 0.5, 0.5)
     end
-    TT_TalentPresets_Dewdrop:Close()
+    TubTalents_TalentPresets_Dewdrop:Close()
 end
 
 --Sets up sim mode
 --Resets simulated specs
 --Hides learned specs, gives full points
 function TalentFrameSimMode_OnClick()
-    TT_SimMode = not TT_SimMode
-    TT_ResetButton_OnClick()
-    TT_StagedLevellingPlan = {}
-    if TT_SimMode then
-        --TT_WipeCurrentSpec()
+    TubTalents_SimMode = not TubTalents_SimMode
+    TubTalents_ResetButton_OnClick()
+    TubTalents_StagedLevellingPlan = {}
+    if TubTalents_SimMode then
+        --TubTalents_WipeCurrentSpec()
         _G["TalentFrameSimModePointsBox"]:Show()
         _G["TalentFrameSimModePointsBoxPrompt"]:Show()
         TalentFrame.talentPoints = TubTalent_Vars.MaxTalentPoints
@@ -505,16 +505,16 @@ function TalentFrameSimMode_OnClick()
     else
         _G["TalentFrameSimModePointsBox"]:Hide()
         _G["TalentFrameSimModePointsBoxPrompt"]:Hide()
-        TT_TalentFrame_UpdateTalentPoints()
+        TubTalents_TalentFrame_UpdateTalentPoints()
     end
-    TT_TalentFrame_Update()
-    TT_TalentFrameButtons_OnUpdate()
-    TT_StagedTalentsFrame_Update()
+    TubTalents_TalentFrame_Update()
+    TubTalents_TalentFrameButtons_OnUpdate()
+    TubTalents_StagedTalentsFrame_Update()
 end
 
 -- Talent Button baggage
 --Checks if the calling button can be left clicked to spend points given the talent status
-function TT_TalentFrameTalentIsLeftClickable()
+function TubTalents_TalentFrameTalentIsLeftClickable()
     local tab = PanelTemplates_GetSelectedTab(TalentFrame)
     local btn = this:GetID()
     local _, _, tier, column, rank, maxRank, 
@@ -545,12 +545,12 @@ end
 --Checks if the calling button can be right clicked to remove points given the talent status
 --Needs to be top level, or the tier must have at least 5 talent points after removal
 --pre-req check as well
-function TT_TalentFrameTalentIsRightClickable()
+function TubTalents_TalentFrameTalentIsRightClickable()
     local rightClickable = false
     local tab = PanelTemplates_GetSelectedTab(TalentFrame)
     local btn = this:GetID()
     --local p_check, t_check, rank_check, req_check
-    if TT_StagedTalents[tab][btn] == nil then 
+    if TubTalents_StagedTalents[tab][btn] == nil then 
        return rightClickable
     end
     local _, _, tier, _, rank, _, 
@@ -559,7 +559,7 @@ function TT_TalentFrameTalentIsRightClickable()
     -- Needs to have points in it
     if rank ~= 0 then
         -- tier check maxtier, or 5 points in tier
-        local maxTier = TT_GetMaxTier()
+        local maxTier = TubTalents_GetMaxTier()
         local tierCheck = false
         -- if its the max tier, can likely remove points
         if maxTier == tier then
@@ -573,7 +573,7 @@ function TT_TalentFrameTalentIsRightClickable()
         if tierCheck then 
             -- Can't be a pre-req of something underneath of it with points in it.
             -- Is it a pre-req?
-            local isPreReq, _, _, preReqRank = TT_IsTalentAPreReq(tab,btn)
+            local isPreReq, _, _, preReqRank = TubTalents_IsTalentAPreReq(tab,btn)
             if isPreReq then
                 if preReqRank == 0 then -- Does the dependant child have points?
                     rightClickable = true
@@ -587,43 +587,43 @@ function TT_TalentFrameTalentIsRightClickable()
 end
 
 --Left click function, stages specs and pretends to spend points
-function TT_TalentFrameTalent_OnLeftClick()
+function TubTalents_TalentFrameTalent_OnLeftClick()
     tab = PanelTemplates_GetSelectedTab(TalentFrame)
     btn = this:GetID()
     --Keep track of points
     TalentFrame.talentPoints = TalentFrame.talentPoints - 1
     --Keep track of which talent was clicked...
-    TT_TalentPointsSpent[tab] = TT_TalentPointsSpent[tab] + 1
-    if TT_SimMode then
-        name, iconTexture, tier, column, rank, maxRank, isExceptional, meetsPrereq = TT_GetTalentInfo(tab,btn);
-            if TT_StagedTalents[tab][btn] ~= nil then
-            if TT_StagedTalents[tab][btn] + 1 <= maxRank then
-                TT_StagedTalents[tab][btn] = TT_StagedTalents[tab][btn] + 1
+    TubTalents_TalentPointsSpent[tab] = TubTalents_TalentPointsSpent[tab] + 1
+    if TubTalents_SimMode then
+        name, iconTexture, tier, column, rank, maxRank, isExceptional, meetsPrereq = TubTalents_GetTalentInfo(tab,btn);
+            if TubTalents_StagedTalents[tab][btn] ~= nil then
+            if TubTalents_StagedTalents[tab][btn] + 1 <= maxRank then
+                TubTalents_StagedTalents[tab][btn] = TubTalents_StagedTalents[tab][btn] + 1
             end
         elseif rank + 1 <= maxRank then
-            TT_StagedTalents[tab][btn] = 1
+            TubTalents_StagedTalents[tab][btn] = 1
         end
     else
-        name, iconTexture, tier, column, rank, maxRank, isExceptional, meetsPrereq = TT_OldGetTalentInfo(tab,btn);
-        if TT_StagedTalents[tab][btn] ~= nil then
-            if TT_StagedTalents[tab][btn] + rank + 1 <= maxRank then
-                TT_StagedTalents[tab][btn] = TT_StagedTalents[tab][btn] + 1
+        name, iconTexture, tier, column, rank, maxRank, isExceptional, meetsPrereq = TubTalents_OldGetTalentInfo(tab,btn);
+        if TubTalents_StagedTalents[tab][btn] ~= nil then
+            if TubTalents_StagedTalents[tab][btn] + rank + 1 <= maxRank then
+                TubTalents_StagedTalents[tab][btn] = TubTalents_StagedTalents[tab][btn] + 1
             end
         elseif rank + 1 <= maxRank then
-            TT_StagedTalents[tab][btn] = 1
+            TubTalents_StagedTalents[tab][btn] = 1
         end
     end
     rank = rank  + 1
 
     --Add to levelling plan...
-    TT_TalentFrame_UpdateEstimatedLevel()
-    if (RQ_GetVersion and SUPERWOW_STRING) and not TT_FakeNoMods then
-        spellID, _ = TT_GetTalentSpellID(tab, btn)
+    TubTalents_TalentFrame_UpdateEstimatedLevel()
+    if (RQ_GetVersion and SUPERWOW_STRING) and not TubTalents_FakeNoMods then
+        spellID, _ = TubTalents_GetTalentSpellID(tab, btn)
     else
         spellID = 0 -- Disabled...
     end
-    if TT_SimMode then -- Only allow creating a levelling plan in sim mode
-        TT_StagedLevellingPlan[TT_StagedEstimatedLevel] = {
+    if TubTalents_SimMode then -- Only allow creating a levelling plan in sim mode
+        TubTalents_StagedLevellingPlan[TubTalents_StagedEstimatedLevel] = {
             tab = tab,
             tabName = GetTalentTabInfo(tab),
             btnID = btn,
@@ -634,106 +634,106 @@ function TT_TalentFrameTalent_OnLeftClick()
         }
     end
 
-    TT_TalentFrame_Update()
-    TT_TalentTooltip()
-    TT_TalentFrameButtons_OnUpdate()
+    TubTalents_TalentFrame_Update()
+    TubTalents_TalentTooltip()
+    TubTalents_TalentFrameButtons_OnUpdate()
 end
 
 --right click function, removes staged specs and pretends to refund points
-function TT_TalentFrameTalent_OnRightClick()
+function TubTalents_TalentFrameTalent_OnRightClick()
     tab = PanelTemplates_GetSelectedTab(TalentFrame)
     btn = this:GetID()
     local _, _, _, _, rank, 
     _, _, _ = GetTalentInfo(tab, btn);
     -- probably redudant with prior safety check
-    if TT_StagedTalents[tab][btn] ~= nil then 
-        if TT_StagedTalents[tab][btn] - 1 >= 0 then
-            TT_StagedTalents[tab][btn] = TT_StagedTalents[tab][btn] - 1
+    if TubTalents_StagedTalents[tab][btn] ~= nil then 
+        if TubTalents_StagedTalents[tab][btn] - 1 >= 0 then
+            TubTalents_StagedTalents[tab][btn] = TubTalents_StagedTalents[tab][btn] - 1
             TalentFrame.talentPoints = TalentFrame.talentPoints + 1
-            TT_TalentPointsSpent[tab] = TT_TalentPointsSpent[tab] - 1
+            TubTalents_TalentPointsSpent[tab] = TubTalents_TalentPointsSpent[tab] - 1
         end
     end
     -- remove from levelling plan...
     -- find a match on: tab, btn, rank, and remove it.
     local found = 0
-    for k, v in pairs(TT_StagedLevellingPlan) do
+    for k, v in pairs(TubTalents_StagedLevellingPlan) do
         --Need to look for that button id... It will be in here.
         if v.btnID == btn and v.tab == tab and v.rank == rank then
             found = k 
             break
         end
     end
-    TT_StagedLevellingPlan[found] = nil -- removed it...
+    TubTalents_StagedLevellingPlan[found] = nil -- removed it...
     local i = found
     -- Now need to re-do all the following levels...
-    while TT_StagedLevellingPlan[i + 1] ~= nil do
-        TT_StagedLevellingPlan[i] = TT_StagedLevellingPlan[i + 1]
+    while TubTalents_StagedLevellingPlan[i + 1] ~= nil do
+        TubTalents_StagedLevellingPlan[i] = TubTalents_StagedLevellingPlan[i + 1]
         i = i+1
     end
-    TT_TalentFrame_UpdateEstimatedLevel()
-    TT_TalentFrame_Update()
-    TT_TalentTooltip()
-    TT_TalentFrameButtons_OnUpdate()
+    TubTalents_TalentFrame_UpdateEstimatedLevel()
+    TubTalents_TalentFrame_Update()
+    TubTalents_TalentTooltip()
+    TubTalents_TalentFrameButtons_OnUpdate()
 end
 
 --shift click, links the current rank of the spell in chat
 --if it isn't learned yet links rank 1
-function TT_TalentFrameTalent_OnShiftClick()
+function TubTalents_TalentFrameTalent_OnShiftClick()
     tab = PanelTemplates_GetSelectedTab(TalentFrame)
     btn = this:GetID()
     local name, _, _, _, rank, _, 
     _, _ = GetTalentInfo(PanelTemplates_GetSelectedTab(TalentFrame), btn)
     if rank == 0 then rank = 1 end
     local txt = DEFAULT_CHAT_FRAME.editBox:GetText()
-    local spellId = TT_GetTalentSpellID(tab , btn)
-    local link = format(TT_CHATLINKFORMAT,spellId, name, rank)
+    local spellId = TubTalents_GetTalentSpellID(tab , btn)
+    local link = format(TubTalents_CHATLINKFORMAT,spellId, name, rank)
     txt = format("%s %s",txt, link)
     DEFAULT_CHAT_FRAME.editBox:SetText(txt)
 end
 
 -- Handler for clicking talents
-function TT_TalentFrameTalent_OnClick()
+function TubTalents_TalentFrameTalent_OnClick()
     if IsShiftKeyDown() then
-        TT_TalentFrameTalent_OnShiftClick()
+        TubTalents_TalentFrameTalent_OnShiftClick()
         return
     end
-    if arg1 == "LeftButton" and TT_TalentFrameTalentIsLeftClickable() then
-        TT_TalentFrameTalent_OnLeftClick()
-        TT_StagedTalentsFrame_Update()
-    elseif arg1 == "RightButton" and TT_TalentFrameTalentIsRightClickable() then
-        TT_TalentFrameTalent_OnRightClick()
-        TT_StagedTalentsFrame_Update()
-    --elseif arg1 == "RightButton" and not TT_TalentFrameTalentIsRightClickable() then
-        --TT_Out("Can't remove points from this talent")
+    if arg1 == "LeftButton" and TubTalents_TalentFrameTalentIsLeftClickable() then
+        TubTalents_TalentFrameTalent_OnLeftClick()
+        TubTalents_StagedTalentsFrame_Update()
+    elseif arg1 == "RightButton" and TubTalents_TalentFrameTalentIsRightClickable() then
+        TubTalents_TalentFrameTalent_OnRightClick()
+        TubTalents_StagedTalentsFrame_Update()
+    --elseif arg1 == "RightButton" and not TubTalents_TalentFrameTalentIsRightClickable() then
+        --TubTalents_Out("Can't remove points from this talent")
     end
-    TT_TalentPresets_Dewdrop:Close()
+    TubTalents_TalentPresets_Dewdrop:Close()
 end
 
 --Overloaded Talent button tooltip
-function TT_TalentTooltip_OnLeave()
-    for i=1, TT_TalentTooltipFrame:NumLines() do --Wipe right text, since it doesnt by default
-        _G["TT_TalentTooltipFrameTextRight"..i]:SetText(nil)
+function TubTalents_TalentTooltip_OnLeave()
+    for i=1, TubTalents_TalentTooltipFrame:NumLines() do --Wipe right text, since it doesnt by default
+        _G["TubTalents_TalentTooltipFrameTextRight"..i]:SetText(nil)
     end
-    TT_TalentTooltipFrame:Hide();
-    TT_NextTalentTooltipFrame:Hide();
+    TubTalents_TalentTooltipFrame:Hide();
+    TubTalents_NextTalentTooltipFrame:Hide();
 end
 
 -- SpellID lookup is clumsy and stupid, lets bust out the talent DBC lookup.
 -- DBC: Talent.dbc Need: tierID, columnIndex which is returned by GetTalentInfo. But TalentTabID?
 -- DBC: TalentTab.dbc Need: TalentTabID, using Name? 
-function TT_TalentTooltip()
+function TubTalents_TalentTooltip()
     btnID = this:GetID()
     tab = TalentFrame.selectedTab
-    local spellId1, spellId2 = TT_GetTalentSpellID(tab,btnID)
+    local spellId1, spellId2 = TubTalents_GetTalentSpellID(tab,btnID)
     local tabName, _, _, _ = GetTalentTabInfo(tab); -- Might need to override to keep track over simulated points spent
     local name, _, tier, _, rank, maxRank, _, _ = GetTalentInfo(tab,btnID);
     
     --Setup Tooltip
-    TT_TalentTooltip_OnLeave() -- hide first to clear, just in case
-    TT_TalentTooltipFrame:SetOwner(this, "ANCHOR_RIGHT");
-    TT_TalentTooltipFrame:SetHyperlink("enchant:"..spellId1);
+    TubTalents_TalentTooltip_OnLeave() -- hide first to clear, just in case
+    TubTalents_TalentTooltipFrame:SetOwner(this, "ANCHOR_RIGHT");
+    TubTalents_TalentTooltipFrame:SetHyperlink("enchant:"..spellId1);
     --staging rank
-    local addlines = {format(TT_TalentTipRank,rank,maxRank)}
+    local addlines = {format(TubTalents_TalentTipRank,rank,maxRank)}
     --staging tooltip for tier requirement
     local pointsReq = (tier-1)*5
     if ( ( pointsReq <= TalentFrame.pointsSpent ) ) then
@@ -742,85 +742,85 @@ function TT_TalentTooltip()
         tierUnlocked = nil;
     end
     if tierUnlocked == nil then
-        table.insert(addlines, format(TT_TalentTipTier, pointsReq, tabName))
+        table.insert(addlines, format(TubTalents_TalentTipTier, pointsReq, tabName))
     end
-    local preReqTier, preReqColumn, preReqIsLearnable = TT_GetTalentPrereqs(tab,btnID)
+    local preReqTier, preReqColumn, preReqIsLearnable = TubTalents_GetTalentPrereqs(tab,btnID)
     --staging tooltip for pre-req
     if preReqTier~=nil and preReqIsLearnable ~= 1 then
         local i = TALENT_BRANCH_ARRAY[preReqTier][preReqColumn].id
         local preReqName, _, _, _, _, preReqMaxRank, _, _ = GetTalentInfo(tab,i)
-        table.insert(addlines, format(TT_TalentTipPreReq,preReqMaxRank,preReqName))
+        table.insert(addlines, format(TubTalents_TalentTipPreReq,preReqMaxRank,preReqName))
     end
-    _G["TT_TalentTooltipFrameTextLeft1"]:SetFontObject(TT_TooltipText)
+    _G["TubTalents_TalentTooltipFrameTextLeft1"]:SetFontObject(TubTalents_TooltipText)
     for i=1, getn(addlines) do
-        TT_TalentTooltipFrame:AddLine("Error") -- just needs to be something so it doesn't get removed
+        TubTalents_TalentTooltipFrame:AddLine("Error") -- just needs to be something so it doesn't get removed
 
         -- Shift all lines but title down addedLines times
-        for i=TT_TalentTooltipFrame:NumLines(), 2,-1 do
-            _G["TT_TalentTooltipFrameTextLeft"..i]:SetFontObject(TT_TooltipTextSmall)
-            _G["TT_TalentTooltipFrameTextLeft"..i]:SetTextColor(_G["TT_TalentTooltipFrameTextLeft"..i-1]:GetTextColor())
-            _G["TT_TalentTooltipFrameTextLeft"..i]:SetText(_G["TT_TalentTooltipFrameTextLeft"..i-1]:GetText())
-            _G["TT_TalentTooltipFrameTextLeft"..i]:SetWidth(_G["TT_TalentTooltipFrameTextLeft"..i-1]:GetWidth())
+        for i=TubTalents_TalentTooltipFrame:NumLines(), 2,-1 do
+            _G["TubTalents_TalentTooltipFrameTextLeft"..i]:SetFontObject(TubTalents_TooltipTextSmall)
+            _G["TubTalents_TalentTooltipFrameTextLeft"..i]:SetTextColor(_G["TubTalents_TalentTooltipFrameTextLeft"..i-1]:GetTextColor())
+            _G["TubTalents_TalentTooltipFrameTextLeft"..i]:SetText(_G["TubTalents_TalentTooltipFrameTextLeft"..i-1]:GetText())
+            _G["TubTalents_TalentTooltipFrameTextLeft"..i]:SetWidth(_G["TubTalents_TalentTooltipFrameTextLeft"..i-1]:GetWidth())
             --Carefully check right texts
-            if _G["TT_TalentTooltipFrameTextRight"..i-1]:GetText() ~= nil then
-                _G["TT_TalentTooltipFrameTextRight"..i]:SetFontObject(TT_TooltipTextSmall)
-                _G["TT_TalentTooltipFrameTextRight"..i]:SetTextColor(_G["TT_TalentTooltipFrameTextRight"..i-1]:GetTextColor())
-                _G["TT_TalentTooltipFrameTextRight"..i]:SetText(_G["TT_TalentTooltipFrameTextRight"..i-1]:GetText())
-                _G["TT_TalentTooltipFrameTextRight"..i]:SetWidth(_G["TT_TalentTooltipFrameTextRight"..i-1]:GetWidth())
-                _G["TT_TalentTooltipFrameTextRight"..i]:Show()
-                _G["TT_TalentTooltipFrameTextRight"..i-1]:Hide()
-                _G["TT_TalentTooltipFrameTextRight"..i]:SetWidth(_G["TT_TalentTooltipFrameTextRight"..i]:GetStringWidth())
+            if _G["TubTalents_TalentTooltipFrameTextRight"..i-1]:GetText() ~= nil then
+                _G["TubTalents_TalentTooltipFrameTextRight"..i]:SetFontObject(TubTalents_TooltipTextSmall)
+                _G["TubTalents_TalentTooltipFrameTextRight"..i]:SetTextColor(_G["TubTalents_TalentTooltipFrameTextRight"..i-1]:GetTextColor())
+                _G["TubTalents_TalentTooltipFrameTextRight"..i]:SetText(_G["TubTalents_TalentTooltipFrameTextRight"..i-1]:GetText())
+                _G["TubTalents_TalentTooltipFrameTextRight"..i]:SetWidth(_G["TubTalents_TalentTooltipFrameTextRight"..i-1]:GetWidth())
+                _G["TubTalents_TalentTooltipFrameTextRight"..i]:Show()
+                _G["TubTalents_TalentTooltipFrameTextRight"..i-1]:Hide()
+                _G["TubTalents_TalentTooltipFrameTextRight"..i]:SetWidth(_G["TubTalents_TalentTooltipFrameTextRight"..i]:GetStringWidth())
             else
-                _G["TT_TalentTooltipFrameTextRight"..i]:SetText(nil)
-                _G["TT_TalentTooltipFrameTextRight"..i]:SetWidth(0)
-                _G["TT_TalentTooltipFrameTextRight"..i]:Hide()
+                _G["TubTalents_TalentTooltipFrameTextRight"..i]:SetText(nil)
+                _G["TubTalents_TalentTooltipFrameTextRight"..i]:SetWidth(0)
+                _G["TubTalents_TalentTooltipFrameTextRight"..i]:Hide()
             end
         end
     end
     -- Add staged newlines to the tooltip, after the talent name
     for i=2, getn(addlines)+1 do
-        _G["TT_TalentTooltipFrameTextLeft"..i]:SetText(addlines[i-1])
-        _G["TT_TalentTooltipFrameTextLeft"..i]:SetWidth(
-            _G["TT_TalentTooltipFrameTextLeft"..i]:GetStringWidth()
+        _G["TubTalents_TalentTooltipFrameTextLeft"..i]:SetText(addlines[i-1])
+        _G["TubTalents_TalentTooltipFrameTextLeft"..i]:SetWidth(
+            _G["TubTalents_TalentTooltipFrameTextLeft"..i]:GetStringWidth()
         )
     end
 
     --Setup next rank tooltip (if relevant)
     if rank ~=0 and rank ~= maxRank then
         t=""
-        TT_NextTalentTooltipFrame:SetOwner(TT_TalentTooltipFrame, "ANCHOR_BOTTOM");
-        TT_NextTalentTooltipFrame:SetHyperlink("enchant:"..spellId2);
+        TubTalents_NextTalentTooltipFrame:SetOwner(TubTalents_TalentTooltipFrame, "ANCHOR_BOTTOM");
+        TubTalents_NextTalentTooltipFrame:SetHyperlink("enchant:"..spellId2);
         for i=2, 8 do
-            _G["TT_NextTalentTooltipFrameTextLeft"..i]:SetFontObject(TT_TooltipTextSmall)
+            _G["TubTalents_NextTalentTooltipFrameTextLeft"..i]:SetFontObject(TubTalents_TooltipTextSmall)
         end
-        TT_NextTalentTooltipFrameTextLeft1:SetFontObject(TT_TooltipTextSmall)
-        TT_NextTalentTooltipFrameTextLeft1:SetText(TT_TalentTipNextRank)
+        TubTalents_NextTalentTooltipFrameTextLeft1:SetFontObject(TubTalents_TooltipTextSmall)
+        TubTalents_NextTalentTooltipFrameTextLeft1:SetText(TubTalents_TalentTipNextRank)
     end
     -- Add click to stage/remove tooltips
-    if TT_TalentFrameTalentIsLeftClickable() then
+    if TubTalents_TalentFrameTalentIsLeftClickable() then
         if rank ~=0 and rank ~= maxRank then
-            TT_NextTalentTooltipFrame:AddLine(TT_TalentTipLeftClick)
-            n = TT_NextTalentTooltipFrame:NumLines()
-            _G["TT_NextTalentTooltipFrameTextLeft"..n]:SetFontObject(TT_TooltipTextSmall)
+            TubTalents_NextTalentTooltipFrame:AddLine(TubTalents_TalentTipLeftClick)
+            n = TubTalents_NextTalentTooltipFrame:NumLines()
+            _G["TubTalents_NextTalentTooltipFrameTextLeft"..n]:SetFontObject(TubTalents_TooltipTextSmall)
         else
-            TT_TalentTooltipFrame:AddLine(TT_TalentTipLeftClick)
-            n = TT_TalentTooltipFrame:NumLines()
-            _G["TT_TalentTooltipFrameTextLeft"..n]:SetFontObject(TT_TooltipTextSmall)
+            TubTalents_TalentTooltipFrame:AddLine(TubTalents_TalentTipLeftClick)
+            n = TubTalents_TalentTooltipFrame:NumLines()
+            _G["TubTalents_TalentTooltipFrameTextLeft"..n]:SetFontObject(TubTalents_TooltipTextSmall)
         end
     end
-    if TT_TalentFrameTalentIsRightClickable() then
+    if TubTalents_TalentFrameTalentIsRightClickable() then
         if rank ~=0 and rank ~= maxRank then
-            TT_NextTalentTooltipFrame:AddLine(TT_TalentTipRightClick)
-            n = TT_NextTalentTooltipFrame:NumLines()
-            _G["TT_TalentTooltipFrameTextLeft"..n]:SetFontObject(TT_TooltipTextSmall)
+            TubTalents_NextTalentTooltipFrame:AddLine(TubTalents_TalentTipRightClick)
+            n = TubTalents_NextTalentTooltipFrame:NumLines()
+            _G["TubTalents_TalentTooltipFrameTextLeft"..n]:SetFontObject(TubTalents_TooltipTextSmall)
         else
-            TT_TalentTooltipFrame:AddLine(TT_TalentTipRightClick)
-            n = TT_TalentTooltipFrame:NumLines()
-            _G["TT_TalentTooltipFrameTextLeft"..n]:SetFontObject(TT_TooltipTextSmall)
+            TubTalents_TalentTooltipFrame:AddLine(TubTalents_TalentTipRightClick)
+            n = TubTalents_TalentTooltipFrame:NumLines()
+            _G["TubTalents_TalentTooltipFrameTextLeft"..n]:SetFontObject(TubTalents_TooltipTextSmall)
         end
     end
-    TT_TalentTooltipFrame:Show()
-    TT_NextTalentTooltipFrame:Show()
-    TT_NextTalentTooltipFrame:ClearAllPoints()
-    TT_NextTalentTooltipFrame:SetPoint("TOPLEFT", TT_TalentTooltipFrame, "BOTTOMLEFT", 0, 0)
+    TubTalents_TalentTooltipFrame:Show()
+    TubTalents_NextTalentTooltipFrame:Show()
+    TubTalents_NextTalentTooltipFrame:ClearAllPoints()
+    TubTalents_NextTalentTooltipFrame:SetPoint("TOPLEFT", TubTalents_TalentTooltipFrame, "BOTTOMLEFT", 0, 0)
 end

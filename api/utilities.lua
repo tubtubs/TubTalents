@@ -1,7 +1,7 @@
 local _G = getfenv(0)
 --Utility function that returns a spellID for a talent given their tab/button id, and the next rank if available
 -- TODO: Optimize, consider caching tab IDs for the played class for that session after first lookup
-function TT_GetTalentSpellID(tab,btn,reqRank)
+function TubTalents_GetTalentSpellID(tab,btn,reqRank)
     local tabName, texture, points, fileName = GetTalentTabInfo(tab);
     local name, iconTexture, tier, column, stagedRank, maxRank, isExceptional, meetsPrereq = GetTalentInfo(tab,btn);
     local rank = reqRank or stagedRank
@@ -21,7 +21,7 @@ function TT_GetTalentSpellID(tab,btn,reqRank)
     end
     -- Get first SpellID
     local rows, err = RQ_GetRowCount("Talent")
-    if err ~= nil then TT_Out(err) end
+    if err ~= nil then TubTalents_Out(err) end
     for i=1, rows do 
         local row, err = RQ_GetRowByIndex("Talent", i)
         -- tID, tabid, tierid, columnindex, spellrank1, spellrank2, spellrank3, spellrank4, spellrank5
@@ -50,7 +50,7 @@ end
 
 --Utility function that returns if a talent at a tab/button ID is a Pre-req
 --Mostly used for right clicking buttons to remove points
-function TT_IsTalentAPreReq(tab, btn)
+function TubTalents_IsTalentAPreReq(tab, btn)
     local numTalents = GetNumTalents(tab);
     local isPreReq, preReqColumn, preReqRow, preReqRank
     local found = 0 
@@ -75,7 +75,7 @@ function TT_IsTalentAPreReq(tab, btn)
 end
 
 --Utility function that finds the max tier in the current tab
-function TT_GetMaxTier()
+function TubTalents_GetMaxTier()
     for i=MAX_NUM_TALENT_TIERS, 1,-1 do
         for m=1, NUM_TALENT_COLUMNS do
             local b = TALENT_BRANCH_ARRAY[i][m].id
@@ -90,32 +90,32 @@ function TT_GetMaxTier()
     end
 end
 
-function TT_Out(msg)
+function TubTalents_Out(msg)
     DEFAULT_CHAT_FRAME:AddMessage(format("%s: %s","TT", msg))
 end
 
 --Mostly overloaded for sim mode
-function TT_GetTalentTabInfo(tab)
-    local name, iconTexture, pointsSpent, fileName = TT_OldGetTalentTabInfo(tab)
-    if TT_SimMode then
-        pointsSpent=TT_TalentPointsSpent[tab];
+function TubTalents_GetTalentTabInfo(tab)
+    local name, iconTexture, pointsSpent, fileName = TubTalents_OldGetTalentTabInfo(tab)
+    if TubTalents_SimMode then
+        pointsSpent=TubTalents_TalentPointsSpent[tab];
     else
-        pointsSpent = pointsSpent + TT_TalentPointsSpent[tab];
+        pointsSpent = pointsSpent + TubTalents_TalentPointsSpent[tab];
     end
     return name, iconTexture, pointsSpent, fileName
 end
 
 --Overloaded to return staged talents and sim mode
-function TT_GetTalentInfo(tab, btn)
-    local name, iconTexture, tier, column, rank, maxRank, isExceptional, meetsPrereq = TT_OldGetTalentInfo(tab, btn);
-    if TT_SimMode then
-        if TT_StagedTalents[tab][btn] == nil then
-            TT_StagedTalents[tab][btn] = 0
+function TubTalents_GetTalentInfo(tab, btn)
+    local name, iconTexture, tier, column, rank, maxRank, isExceptional, meetsPrereq = TubTalents_OldGetTalentInfo(tab, btn);
+    if TubTalents_SimMode then
+        if TubTalents_StagedTalents[tab][btn] == nil then
+            TubTalents_StagedTalents[tab][btn] = 0
         end
-        return name, iconTexture, tier, column, TT_StagedTalents[tab][btn], maxRank, isExceptional, meetsPrereq
+        return name, iconTexture, tier, column, TubTalents_StagedTalents[tab][btn], maxRank, isExceptional, meetsPrereq
     else
-        if TT_StagedTalents[tab][btn]~=nil then
-            rank = rank+TT_StagedTalents[tab][btn] 
+        if TubTalents_StagedTalents[tab][btn]~=nil then
+            rank = rank+TubTalents_StagedTalents[tab][btn] 
         end
         return name, iconTexture, tier, column, rank, maxRank, isExceptional, meetsPrereq
     end
@@ -123,9 +123,9 @@ end
 
 --Overrides GetTalentPrereqs() returns:
 --tier, column, isLearnable = GetTalentPrereqs( tabIndex , talentIndex[, inspect] );
-function TT_GetTalentPrereqs(tab, btn)
+function TubTalents_GetTalentPrereqs(tab, btn)
     --Call the old one, and return a different isLearnable? I guess so.
-    tier, column, isLearnable = TT_OldGetTalentPrereqs(tab, btn)
+    tier, column, isLearnable = TubTalents_OldGetTalentPrereqs(tab, btn)
     if tier == nil then 
         return 
     end
@@ -133,10 +133,10 @@ function TT_GetTalentPrereqs(tab, btn)
         -- I need to translate the tier, column to tab, btn somehow?
         local i = TALENT_BRANCH_ARRAY[tier][column].id
         local preReq_btn = _G["TalentFrameTalent"..i]
-        name, iconTexture, _, _, rank, maxRank, isExceptional, meetsPrereq = TT_OldGetTalentInfo(tab,i);
+        name, iconTexture, _, _, rank, maxRank, isExceptional, meetsPrereq = TubTalents_OldGetTalentInfo(tab,i);
         local t=0
-        if TT_StagedTalents[tab][i] ~= nil then
-            t = rank + TT_StagedTalents[tab][i]
+        if TubTalents_StagedTalents[tab][i] ~= nil then
+            t = rank + TubTalents_StagedTalents[tab][i]
         end
         if t == maxRank then
             isLearnable=1 -- its expecting 1 instead of true by default here, may as well stick to it.

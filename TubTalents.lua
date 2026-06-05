@@ -7,34 +7,36 @@
 -- Remove test prints/functions
 ---- I'm okay with leaving some commented out
 -- Check variable names
----- Replace TT_ with TubTalents_, gaudy maybe but I need it.
+---- Replace TubTalents_ with TubTalents_, gaudy maybe but I need it.
 
 
 -- TODO: Polish
 -- Refine Chat commands
 
 -- TODO: Bugs
+-- Stage current build is broken
+
 
 --Functions to overwrite TalentFrame functionality
 local _G = getfenv(0)
 local libIcon = LibStub("LibDBIcon-1.0");
 local libData = LibStub("LibDataBroker-1.1");
-TT_TalentPresets_Dewdrop = AceLibrary("Dewdrop-2.0");
-TT_LevellingPlans_DewDrop = AceLibrary("Dewdrop-2.0");
+TubTalents_TalentPresets_Dewdrop = AceLibrary("Dewdrop-2.0");
+TubTalents_LevellingPlans_DewDrop = AceLibrary("Dewdrop-2.0");
 --Testing
-TT_DebugMode = false -- actually un-used, only used when debugging during dev
-TT_FakeNoMods = false --quicker than disabling mods, but client mod functionality will still work ofc
+TubTalents_DebugMode = false -- actually un-used, only used when debugging during dev
+TubTalents_FakeNoMods = false --quicker than disabling mods, but client mod functionality will still work ofc
 
-TT_StagedTalentFrame_CurrentTab = TT_STAGEDTALENTTABS.StagedPlan
-TT_LearnedTalentsFlag = true
-TT_SimMode = false
+TubTalents_StagedTalentFrame_CurrentTab = TubTalents_STAGEDTALENTTABS.StagedPlan
+TubTalents_LearnedTalentsFlag = true
+TubTalents_SimMode = false
 
-TT_TalentPointsSpent = {
+TubTalents_TalentPointsSpent = {
     [1] = 0,
     [2] = 0,
     [3] = 0,
 } 
-TT_StagedTalents = { --key: Tab
+TubTalents_StagedTalents = { --key: Tab
     [1] = {}, -- key: btnID val: rank
     [2] = {},
     [3] = {},
@@ -42,52 +44,54 @@ TT_StagedTalents = { --key: Tab
     [5] = {}
 }
 
-TT_StagedEstimatedLevel = TT_MINLEVEL
+TubTalents_StagedEstimatedLevel = TubTalents_MINLEVEL
 
 SlashCmdList['TUBTALENTS'] = TubTalents_TextCommands
-SLASH_TUBTALENTS1 = "/tubtalents"
+SLASH_TUBTALENTS1 = "/"..TubTalents_ADDONAME
 
 function TubTalents_TextCommands(arg)
     if arg == nil or arg == "" then
-        DEFAULT_CHAT_FRAME:AddMessage(TT_CHATHELP)
-    elseif arg=="minimap" then
+        DEFAULT_CHAT_FRAME:AddMessage(TubTalents_CHATHELP)
+    elseif arg==TubTalents_CHATCATCHUP then
+        TubTalents_CatchUpPlan(true)
+    elseif arg==TubTalents_CHATMINIMAP then
         if TubTalents_Icon.hide then
             TubTalents_ShowMinimap()
         else
             TubTalents_HideMinimap()
         end
-    elseif arg=="toggle" then
-        --TalentFrame_LoadUI(); Loaded on init
+    elseif arg==TubTalents_CHATTOGGLE then
         TalentFrame_Toggle();
     end
-
 end
 
 function TubTalents_Init()
     if event == "PLAYER_LEVEL_UP" then
-        if TubTalent_Vars.AutoLearnPlans ~= TT_AUTOLEARN.Never then
-            TT_CatchUpPlan()
-        end
+        --if it's in points changed too its not really needed here
+        --if TubTalent_Vars.AutoLearnPlans ~= TubTalents_AUTOLEARN.Never then
+            --TubTalents_CatchUpPlan()
+        --end
     elseif event=="CHARACTER_POINTS_CHANGED" then
         -- check plan viability... But only if points have been spent, not gained.
         -- Unless spent by the addon
         if (arg1 < 0) then --indicates learned talents...
-            if TubTalent_Vars.CurrentLevellingPlan ~= 0  and not TT_LearnedTalentsFlag then -- indicates if learned by this addon...
-                if TT_CheckPlan(TT_CurrentLevellingPlan.plan) then
-                    TT_CatchUpPlan()
+            if TubTalent_Vars.CurrentLevellingPlan ~= 0  and not TubTalents_LearnedTalentsFlag then -- indicates if learned by this addon...
+                if TubTalents_CheckPlan(TubTalents_CurrentLevellingPlan.plan) then
+                    TubTalents_CatchUpPlan()
                 else
                     TubTalent_Vars.CurrentLevellingPlan = 0 
-                    TT_CurrentLevellingPlan = nil
+                    TubTalents_CurrentLevellingPlan = nil
                 end
             else
-                TT_LearnedTalentsFlag = false
+                TubTalents_LearnedTalentsFlag = false
             end
         elseif (arg1 > 0) then --DING!
-            if TT_CurrentLevellingPlan ~= 0 then
-                if TT_CheckPlan(TT_CurrentLevellingPlan.plan) then
+            if TubTalents_CurrentLevellingPlan ~= nil then
+                if TubTalents_CheckPlan(TubTalents_CurrentLevellingPlan.plan) then
+                    TubTalents_CatchUpPlan()
                 else
                     TubTalent_Vars.CurrentLevellingPlan = 0 
-                    TT_CurrentLevellingPlan = nil
+                    TubTalents_CurrentLevellingPlan = nil
                 end
             end
         end 
@@ -95,7 +99,7 @@ function TubTalents_Init()
         if TubTalent_Vars == nil then
             TubTalent_Vars = {
                 Version = 1,
-                MaxTalentPoints = TT_MAX_TALENTPOINTS,
+                MaxTalentPoints = TubTalents_MAX_TALENTPOINTS,
                 TalentPresets = {},
                 LevellingPlans = {},
                 CurrentLevellingPlan = 0,
@@ -105,7 +109,7 @@ function TubTalents_Init()
         elseif TubTalent_Vars.AutoLearnPlans == nil then
             TubTalent_Vars.AutoLearnPlans = 0
         elseif TubTalent_Vars.MaxTalentPoints == nil then
-            TubTalent_Vars.MaxTalentPoints = TT_MAX_TALENTPOINTS
+            TubTalent_Vars.MaxTalentPoints = TubTalents_MAX_TALENTPOINTS
         end
         if TubTalent_Vars.Version < 2 then --Upgrading Saved variables
             for k,v in pairs(TubTalent_Vars.TalentPresets) do
@@ -118,43 +122,43 @@ function TubTalents_Init()
             TubTalent_Vars.Version = 2
         end
         --Convenient shorthand names for the saved variable lists
-        TT_TalentPresets = TubTalent_Vars.TalentPresets
-        TT_LevellingPlans = TubTalent_Vars.LevellingPlans
+        TubTalents_TalentPresets = TubTalent_Vars.TalentPresets
+        TubTalents_LevellingPlans = TubTalent_Vars.LevellingPlans
         TalentFrame_LoadUI(); --Load the talent UI early
         if TubTalent_Vars.CurrentLevellingPlan ~= 0 then
-            _, TT_CurrentLevellingPlan = TT_FindPlan(TubTalent_Vars.CurrentLevellingPlan)
-            if TT_CurrentLevellingPlan == nil then 
-                TT_Out(TT_ERRNoPlanLoaded)
+            _, TubTalents_CurrentLevellingPlan = TubTalents_FindPlan(TubTalent_Vars.CurrentLevellingPlan)
+            if TubTalents_CurrentLevellingPlan == nil then 
+                TubTalents_Out(TubTalents_ERRNoPlanLoaded)
                 TubTalent_Vars.CurrentLevellingPlan = 0 
-                TT_CurrentLevellingPlan = nil
-                TT_StagedTalentFrame_CurrentTab = TT_STAGEDTALENTTABS.StagedPlan
+                TubTalents_CurrentLevellingPlan = nil
+                TubTalents_StagedTalentFrame_CurrentTab = TubTalents_STAGEDTALENTTABS.StagedPlan
             else
-                if TT_CheckPlan(TT_CurrentLevellingPlan.plan) then
-                    TT_CatchUpPlan()
+                if TubTalents_CheckPlan(TubTalents_CurrentLevellingPlan.plan) then
+                    TubTalents_CatchUpPlan()
                 else
                     TubTalent_Vars.CurrentLevellingPlan = 0 
-                    TT_CurrentLevellingPlan = nil
+                    TubTalents_CurrentLevellingPlan = nil
                 end
             end
-            TT_StagedTalentFrame_CurrentTab = TT_STAGEDTALENTTABS.CurrentPlan
+            TubTalents_StagedTalentFrame_CurrentTab = TubTalents_STAGEDTALENTTABS.CurrentPlan
         end
-        TT_StagedTalentsFrame_SetTab()
+        TubTalents_StagedTalentsFrame_SetTab()
         TubTalents_MinimapIconRegister()
-        TT_StagedTalentsFramePlans_DewdropRegister()
+        TubTalents_StagedTalentsFramePlans_DewdropRegister()
         --Detecting client mods, and adjusting functionality...
-        if (not (RQ_GetVersion and SUPERWOW_STRING)) or TT_FakeNoMods then
-            TT_NoClientMods()
+        if (not (RQ_GetVersion and SUPERWOW_STRING)) or TubTalents_FakeNoMods then
+            TubTalents_NoClientMods()
         end
     elseif event == "ADDON_LOADED" then
         if arg1=="Blizzard_TalentUI" then
             --If you wait for the addon to load hooking is fine, won't hook properly otherwise
             TubTalents_InitFrameAdditions()
-            TT_StagedTalentsFrame_FrameSetup()
-            PanelTemplates_UpdateTabs(TT_StagedTalentsFrame)
-            TT_TalentFrameButtons_OnUpdate()
-            TT_StagedTalentsFrame_Update()
+            TubTalents_StagedTalentsFrame_FrameSetup()
+            PanelTemplates_UpdateTabs(TubTalents_StagedTalentsFrame)
+            TubTalents_TalentFrameButtons_OnUpdate()
+            TubTalents_StagedTalentsFrame_Update()
             TubTalents_FunctionOverloads()
-            TT_TalentFramePreferences_DewdropRegister()
+            TubTalents_TalentFramePreferences_DewdropRegister()
         end
     end
 end
@@ -183,13 +187,12 @@ function TubTalents_MinimapIconRegister()
 	if not TubTalents_Icon.hide then
 		local iconData = libData:NewDataObject("TubTalents icon data", {
 			OnClick = function()
-                --TalentFrame_LoadUI(); Loaded on init
                 TalentFrame_Toggle();
 			end,
 			OnTooltipShow = function(tooltip)
 				tooltip:SetText("TubTalents");
 			end,
-			icon = TT_MINIMAPICON
+			icon = TubTalents_MINIMAPICON
 		});
 
 		libIcon:Register("TubTalents icon", iconData, TubTalents_Icon);

@@ -1,11 +1,11 @@
 local _G = getfenv(0)
 -- Level Plan UI
 NUM_LVLPLAN_TALENTSSHOWN = 6
-TT_PresetLoaded = false
-TT_StagedLevellingPlan = {}
-TT_StagedLevellingPlanMinLevel = TT_MINLEVEL
+TubTalents_PresetLoaded = false
+TubTalents_StagedLevellingPlan = {}
+TubTalents_StagedLevellingPlanMinLevel = TubTalents_MINLEVEL
 
-TT_PlanOpts = {
+TubTalents_PlanOpts = {
     [1] = {
         {
             name="Plans",
@@ -17,7 +17,7 @@ TT_PlanOpts = {
             name="Import Plan",
             tooltip="Opens a window to paste in a plan",
             notCheckable=true,
-            func=function()  TT_ProfileFrame_Show(TT_PROFILEMODES.ImportPlan) TT_LevellingPlans_DewDrop:Close() end,
+            func=function()  TubTalents_ProfileFrame_Show(TubTalents_PROFILEMODES.ImportPlan) TubTalents_LevellingPlans_DewDrop:Close() end,
             value=""
         },
         {
@@ -38,7 +38,7 @@ TT_PlanOpts = {
                 end
                 return true
             end,
-            func=function()  TT_CatchUpPlan(true) TT_LevellingPlans_DewDrop:Close() end,
+            func=function()  TubTalents_CatchUpPlan(true) TubTalents_LevellingPlans_DewDrop:Close() end,
             value=""
         },
         {
@@ -48,9 +48,9 @@ TT_PlanOpts = {
             hasEditBox=true,
             disabledTooltip="Start making a plan to save one\nPlans can only be made in Sim Mode",
             disabled = function() 
-                if TT_SimMode and not TT_PresetLoaded then
-                    for i=1, 3 do 
-                        if TT_TalentPointsSpent[i] > 0 then
+                if TubTalents_SimMode and not TubTalents_PresetLoaded then
+                    for i=1, TubTalents_MAX_TALENTS do 
+                        if TubTalents_TalentPointsSpent[i] > 0 then
                             return false
                         end
                     end
@@ -58,7 +58,7 @@ TT_PlanOpts = {
                 return true
              end,
             editBoxText=function() return "" end,
-            editBoxFunc=function(s) TT_NewPlan(s) end,
+            editBoxFunc=function(s) TubTalents_NewPlan(s) end,
             value=""
         },
     },
@@ -84,12 +84,12 @@ TT_PlanOpts = {
                 notCheckable=false,
                 isRadio=true,
                 checked=function() 
-                    if TubTalent_Vars.AutoLearnPlans == TT_AUTOLEARN.Never then
+                    if TubTalent_Vars.AutoLearnPlans == TubTalents_AUTOLEARN.Never then
                         return true
                     end
                 end,
                 func=function() 
-                    TubTalent_Vars.AutoLearnPlans = TT_AUTOLEARN.Never
+                    TubTalent_Vars.AutoLearnPlans = TubTalents_AUTOLEARN.Never
                 end,
                 value=""
             },
@@ -99,29 +99,29 @@ TT_PlanOpts = {
                 notCheckable=false,
                 isRadio=true,
                 checked=function() 
-                    if TubTalent_Vars.AutoLearnPlans == TT_AUTOLEARN.Prompt then
+                    if TubTalent_Vars.AutoLearnPlans == TubTalents_AUTOLEARN.Prompt then
                         return true
                     end
                 end,
                 func=function() 
-                    TubTalent_Vars.AutoLearnPlans = TT_AUTOLEARN.Prompt
-                    TT_CatchUpPlan(true)
+                    TubTalent_Vars.AutoLearnPlans = TubTalents_AUTOLEARN.Prompt
+                    TubTalents_CatchUpPlan()
                 end,
                 value=""
             },
             {
                 name="Full Auto",
-                tooltip="Auto learn new talents on levelup",
+                tooltip="Auto learn new talents aggressively\n!!USE WITH CAUTION!!",
                 notCheckable=false,
                 isRadio=true,
                 checked=function() 
-                    if TubTalent_Vars.AutoLearnPlans == TT_AUTOLEARN.FullAuto then
+                    if TubTalent_Vars.AutoLearnPlans == TubTalents_AUTOLEARN.FullAuto then
                         return true
                     end
                 end,
                 func=function() 
-                    TubTalent_Vars.AutoLearnPlans = TT_AUTOLEARN.FullAuto
-                    TT_CatchUpPlan(true)
+                    TubTalent_Vars.AutoLearnPlans = TubTalents_AUTOLEARN.FullAuto
+                    TubTalents_CatchUpPlan()
                 end,
                 value=""
             },
@@ -132,15 +132,15 @@ TT_PlanOpts = {
             tooltip="Stages the selected plan over your current build if possible\nEnable Sim mode if you don't want to reset your talents",
             disabledTooltip="Must be in Sim Mode",
             notCheckable=true,
-            disabled = function() return not TT_SimMode end,
-            func=function(arg1)  TT_StagePlan(arg1) end,
+            disabled = function() return not TubTalents_SimMode end,
+            func=function(arg1)  TubTalents_StagePlan(arg1) end,
             value=""
             },
             {
             name="Export Plan",
             tooltip="Exports the selected plan",
             notCheckable=true,
-            func=function(arg1)  TT_ProfileFrame_Show(TT_PROFILEMODES.ExportPlan, arg1) TT_LevellingPlans_DewDrop:Close() end,
+            func=function(arg1)  TubTalents_ProfileFrame_Show(TubTalents_PROFILEMODES.ExportPlan, arg1) TubTalents_LevellingPlans_DewDrop:Close() end,
             value=""
             },
             {
@@ -149,14 +149,14 @@ TT_PlanOpts = {
             notCheckable=true,
             disabledTooltip="Can't delete the selected plan",
             disabled=function(arg1) 
-                _, v = TT_FindPlan(arg1)
-                if v ~=nil and TT_CurrentLevellingPlan ~= nil 
-                and v.id == TT_CurrentLevellingPlan.id then
+                _, v = TubTalents_FindPlan(arg1)
+                if v ~=nil and TubTalents_CurrentLevellingPlan ~= nil 
+                and v.id == TubTalents_CurrentLevellingPlan.id then
                     return true
                 else 
                     return false
                 end end,
-            func=function(arg1)  TT_DeletePlan(arg1) end,
+            func=function(arg1)  TubTalents_DeletePlan(arg1) end,
             value=""
             },
             {
@@ -165,21 +165,21 @@ TT_PlanOpts = {
             notCheckable=true,
             hasEditBox=true,
             editBoxText=function(arg1) 
-                _, v =  TT_FindPlan(arg1) 
+                _, v =  TubTalents_FindPlan(arg1) 
                 return v.name 
             end,
-            editBoxFunc=function(arg1,s) TT_RenamePlan(arg1,s) end,
+            editBoxFunc=function(arg1,s) TubTalents_RenamePlan(arg1,s) end,
             value=""
             },
         }
     },
 }
 
-function TT_FindPlan(planID)
-    if TT_LevellingPlans == nil then
+function TubTalents_FindPlan(planID)
+    if TubTalents_LevellingPlans == nil then
         return nil
     end
-    for k, v in pairs(TT_LevellingPlans) do
+    for k, v in pairs(TubTalents_LevellingPlans) do
         if v.id == tonumber(planID) then
             return k, v
         end
@@ -188,7 +188,7 @@ function TT_FindPlan(planID)
 end
 
 
-function TT_CheckPlan(plan)
+function TubTalents_CheckPlan(plan)
     --Check staged talents against currently learned talents
     --If there's something learned, but not staged then raise an error message
     -- and: Warn? Disable the current levelling plan?
@@ -199,10 +199,10 @@ function TT_CheckPlan(plan)
     ---- It'll fail to find something learned early though...? (Added key check)
     --local t = {}
     local estLevel = UnitLevel("player")
-    for i=1, 3 do
+    for i=1, TubTalents_MAX_TALENTS do
         for m=1, MAX_NUM_TALENTS do
             name, iconTexture, tier, column, rank, maxRank, 
-            isExceptional, meetsPrereq = TT_OldGetTalentInfo(i,m);
+            isExceptional, meetsPrereq = TubTalents_OldGetTalentInfo(i,m);
             local found = 0 
             if rank ~= nil and rank > 0 then -- just check every learned rank...
                 for k,v in plan do
@@ -211,7 +211,7 @@ function TT_CheckPlan(plan)
                     end
                 end
                 if found ~= 1 then
-                    TT_Out(TT_ERRLevelPlan)
+                    TubTalents_Out(TubTalents_ERRLevelPlan)
                     return false
                 end
             end
@@ -220,31 +220,31 @@ function TT_CheckPlan(plan)
     return true
 end
 
-function TT_CatchUpLearnPlan()
+function TubTalents_CatchUpLearnPlan()
     local cp1, cp2 = UnitCharacterPoints("player");
     local estLevel = max(UnitLevel("player") - cp1+1,10)
     while cp1 > 0 do
-        if TT_CurrentLevellingPlan.plan[estLevel] ~= nil then
-            btn = TT_CurrentLevellingPlan.plan[estLevel].btnID
-            tab = TT_CurrentLevellingPlan.plan[estLevel].tab
-            rank = TT_CurrentLevellingPlan.plan[estLevel].rank
-            --TT_Out(format("Learning btn: %s tab: %s rank: %s", btn, tab, rank))
+        if TubTalents_CurrentLevellingPlan.plan[estLevel] ~= nil then
+            btn = TubTalents_CurrentLevellingPlan.plan[estLevel].btnID
+            tab = TubTalents_CurrentLevellingPlan.plan[estLevel].tab
+            rank = TubTalents_CurrentLevellingPlan.plan[estLevel].rank
+            --TubTalents_Out(format("Learning btn: %s tab: %s rank: %s", btn, tab, rank))
             LearnTalentRank(tab, btn, rank)
             cp1 = cp1 - 1
             estLevel = estLevel + 1
-            TT_LearnedTalentsFlag = true
+            TubTalents_LearnedTalentsFlag = true
         else
-            --TT_Out("End of leveling plan?") --TODO: Remove this after testing
+            --TubTalents_Out("End of leveling plan?") --TODO: Remove this after testing
             break
         end
     end
 end
 
 StaticPopupDialogs["TUBTALENTS_LVLPLAN_CATCHUP_PROMPT"] = {
-    text = TT_CATCHUPPROMPT,
+    text = TubTalents_CATCHUPPROMPT,
     button1 = "Yes",
     button2 = "No",
-    OnAccept = TT_CatchUpLearnPlan,
+    OnAccept = TubTalents_CatchUpLearnPlan,
     timeout = 0,
     whileDead = true,
     hideOnEscape = true,
@@ -252,97 +252,97 @@ StaticPopupDialogs["TUBTALENTS_LVLPLAN_CATCHUP_PROMPT"] = {
 }
 
 
-function TT_CatchUpPlan(menu)
+function TubTalents_CatchUpPlan(menu)
     local flag = menu or false
     if TubTalent_Vars.CurrentLevellingPlan ~= 0 then
     --Get unspent talent points (outside of modes)
         local cp1, cp2 = UnitCharacterPoints("player");
-        --TT_Out(format("AutoLearn: %s", TubTalent_Vars.AutoLearnPlans))
+        --TubTalents_Out(format("AutoLearn: %s", TubTalent_Vars.AutoLearnPlans))
         local estLevel = UnitLevel("player")
         estLevel = estLevel - cp1
-        if estLevel >= TT_CurrentLevellingPlan.levellingPlanMaxLevel then
+        if estLevel >= TubTalents_CurrentLevellingPlan.levellingPlanMaxLevel then
             return
         end
         if cp1 > 1 then -- many points to spend...
-            if TubTalent_Vars.AutoLearnPlans == TT_AUTOLEARN.Prompt or flag then
+            if TubTalent_Vars.AutoLearnPlans == TubTalents_AUTOLEARN.Prompt or flag then
                 StaticPopup_Show("TUBTALENTS_LVLPLAN_CATCHUP_PROMPT")
-            elseif TubTalent_Vars.AutoLearnPlans == TT_AUTOLEARN.FullAuto then
-                TT_CatchUpLearnPlan()
+            elseif TubTalent_Vars.AutoLearnPlans == TubTalents_AUTOLEARN.FullAuto then
+                TubTalents_CatchUpLearnPlan()
             end
         elseif cp1 > 0 then 
             -- offer to learn the latest talent in the levelling plan...
-            if TubTalent_Vars.AutoLearnPlans == TT_AUTOLEARN.Prompt or flag then
-                TT_LearnTalentPopup:Show()
-            elseif TubTalent_Vars.AutoLearnPlans == TT_AUTOLEARN.FullAuto then
-                TT_CatchUpLearnPlan()
+            if TubTalent_Vars.AutoLearnPlans == TubTalents_AUTOLEARN.Prompt or flag then
+                TubTalents_LearnTalentPopup:Show()
+            elseif TubTalent_Vars.AutoLearnPlans == TubTalents_AUTOLEARN.FullAuto then
+                TubTalents_CatchUpLearnPlan()
             end
         end
     end
 end
 
-function TT_SelectPlan(arg)
-    _, v = TT_FindPlan(arg)
-    if TT_CurrentLevellingPlan ~= nil and v.id == TT_CurrentLevellingPlan.id then -- deselect current one
+function TubTalents_SelectPlan(arg)
+    _, v = TubTalents_FindPlan(arg)
+    if TubTalents_CurrentLevellingPlan ~= nil and v.id == TubTalents_CurrentLevellingPlan.id then -- deselect current one
         TubTalent_Vars.CurrentLevellingPlan = 0
-        TT_CurrentLevellingPlan = nil
-        TT_StagedTalentsFrame_Update()
+        TubTalents_CurrentLevellingPlan = nil
+        TubTalents_StagedTalentsFrame_Update()
         return
     end
-    if TT_CheckPlan(v.plan) then 
+    if TubTalents_CheckPlan(v.plan) then 
         TubTalent_Vars.CurrentLevellingPlan = v.id
-        TT_CurrentLevellingPlan = v
+        TubTalents_CurrentLevellingPlan = v
     end
-    if (RQ_GetVersion and SUPERWOW_STRING) and not TT_FakeNoMods then
+    if (RQ_GetVersion and SUPERWOW_STRING) and not TubTalents_FakeNoMods then
         --re-cache spellIDs if they're missing...
-        TT_CheckSpellIds(v.plan)
+        TubTalents_CheckSpellIds(v.plan)
     end
-    --TT_LevellingPlans_DewDrop:Close()
-    TT_StagedTalentFrame_CurrentTab=2
-    TT_CatchUpPlan()
-    TT_StagedTalentsFrame_SetTab()
-    TT_StagedTalentsFrame_Update()
+    --TubTalents_LevellingPlans_DewDrop:Close()
+    TubTalents_StagedTalentFrame_CurrentTab=2
+    TubTalents_CatchUpPlan()
+    TubTalents_StagedTalentsFrame_SetTab()
+    TubTalents_StagedTalentsFrame_Update()
 end
 
-function TT_StagePlan(arg)
-    k, v = TT_FindPlan(arg)
+function TubTalents_StagePlan(arg)
+    k, v = TubTalents_FindPlan(arg)
     --Empty currently staged levelling plan...
-    TT_ResetButton_OnClick()
-    --TT_StagedLevellingPlan = {}
+    TubTalents_ResetButton_OnClick()
+    --TubTalents_StagedLevellingPlan = {}
     --Load this levelling plan...
-    for i=1, 3 do -- re-add the points for comparison back
-        TT_TalentPointsSpent[i] = v.points[i]
+    for i=1, TubTalents_MAX_TALENTS do -- re-add the points for comparison back
+        TubTalents_TalentPointsSpent[i] = v.points[i]
     end
     for k,x in pairs(v.plan) do
-        TT_StagedLevellingPlan[k] = x
-        if TT_StagedTalents[x.tab][x.btnID] == nil then
-            TT_StagedTalents[x.tab][x.btnID] = 1
+        TubTalents_StagedLevellingPlan[k] = x
+        if TubTalents_StagedTalents[x.tab][x.btnID] == nil then
+            TubTalents_StagedTalents[x.tab][x.btnID] = 1
         else
-            TT_StagedTalents[x.tab][x.btnID] = TT_StagedTalents[x.tab][x.btnID]+1
+            TubTalents_StagedTalents[x.tab][x.btnID] = TubTalents_StagedTalents[x.tab][x.btnID]+1
         end
     end
-    TT_LevellingPlans_DewDrop:Close()
-    TT_TalentFrame_Update()
-    TT_TalentFrameButtons_OnUpdate()
-    TT_StagedTalentsFrame_Update()
+    TubTalents_LevellingPlans_DewDrop:Close()
+    TubTalents_TalentFrame_Update()
+    TubTalents_TalentFrameButtons_OnUpdate()
+    TubTalents_StagedTalentsFrame_Update()
 end
 
-function TT_DeletePlan(arg)
-    k, v = TT_FindPlan(arg)
+function TubTalents_DeletePlan(arg)
+    k, v = TubTalents_FindPlan(arg)
     if v.id == TubTalent_Vars.CurrentLevellingPlan then
-        TT_Out(TT_ERRDeleteSelctedPlan)
+        TubTalents_Out(TubTalents_ERRDeleteSelctedPlan)
     else
-        TT_LevellingPlans[k] = nil
+        TubTalents_LevellingPlans[k] = nil
     end
-    TT_RegenPlansDropdown()
-    TT_LevellingPlans_DewDrop:Close()
+    TubTalents_RegenPlansDropdown()
+    TubTalents_LevellingPlans_DewDrop:Close()
 end
 
-function TT_NewPlan(name) 
-    local planMinLevel = TT_MINLEVEL + 1
+function TubTalents_NewPlan(name) 
+    local planMinLevel = TubTalents_MINLEVEL + 1
     local planMaxLevel = planMinLevel
     local t = {}
 
-    for k , v in pairs(TT_StagedLevellingPlan) do
+    for k , v in pairs(TubTalents_StagedLevellingPlan) do
         planMinLevel = min(planMinLevel, k)
         planMaxLevel = max(planMaxLevel, k)
         local n = {
@@ -354,12 +354,12 @@ function TT_NewPlan(name)
             spellID = v.spellID,
             name = v.name,
         }
-        --TT_Out("Adding to new plan..." .. planMinLevel .. " " .. planMaxLevel)
+        --TubTalents_Out("Adding to new plan..." .. planMinLevel .. " " .. planMaxLevel)
         t[k] = n
     end
     TubTalent_Vars.LevellingPlanIDMax = TubTalent_Vars.LevellingPlanIDMax + 1
     local tp = {}
-    for i=1, 3 do
+    for i=1, TubTalents_MAX_TALENTS do
         _, _, tp[i] = GetTalentTabInfo(i)
     end
     local newPlan = {
@@ -371,128 +371,128 @@ function TT_NewPlan(name)
         levellingPlanMaxLevel = planMaxLevel,
         plan = t
     }
-    table.insert(TT_LevellingPlans, newPlan)
-    TT_RegenPlansDropdown()
-    TT_LevellingPlans_DewDrop:Close()
+    table.insert(TubTalents_LevellingPlans, newPlan)
+    TubTalents_RegenPlansDropdown()
+    TubTalents_LevellingPlans_DewDrop:Close()
 end
 
-function TT_RenamePlan(planID, name)
-    _, v = TT_FindPlan(planID)
+function TubTalents_RenamePlan(planID, name)
+    _, v = TubTalents_FindPlan(planID)
     v.name = name
-    TT_RegenPlansDropdown()
+    TubTalents_RegenPlansDropdown()
 end
 
 -- Staged Talents Frame functions
 
-function TT_StagedTalentsFrame_FrameSetup()
-    TT_StagedTalentsFrame:SetParent(TalentFrame)
-    TT_StagedTalentsFrame:ClearAllPoints()
-    TT_StagedTalentsFrame:SetPoint("TOPLEFT", TalentFrame, "TOPRIGHT", -25, -20); -- Position it
-    TT_StagedTalentsFrame:Show()
+function TubTalents_StagedTalentsFrame_FrameSetup()
+    TubTalents_StagedTalentsFrame:SetParent(TalentFrame)
+    TubTalents_StagedTalentsFrame:ClearAllPoints()
+    TubTalents_StagedTalentsFrame:SetPoint("TOPLEFT", TalentFrame, "TOPRIGHT", -25, -20); -- Position it
+    TubTalents_StagedTalentsFrame:Show()
     -- Update widget framestrata to high or it'll draw under the levelling plan frame
-    TT_StagedTalentsFrame_StagedPlanButton:SetFrameStrata("HIGH")
-    TT_StagedTalentsFrame_CurrentPlanButton:SetFrameStrata("HIGH")
-    TT_StagedTalentsFrame_LvlPlanSpec1:SetFrameStrata("HIGH")
-    TT_StagedTalentsFrame_LvlPlanSpec2:SetFrameStrata("HIGH")
-    TT_StagedTalentsFrame_LvlPlanSpec3:SetFrameStrata("HIGH")
-    TT_StagedTalentsFrame_LvlPlanSpec4:SetFrameStrata("HIGH")
-    TT_StagedTalentsFrame_LvlPlanSpec5:SetFrameStrata("HIGH")
-    TT_StagedTalentsFrame_LvlPlanSpec6:SetFrameStrata("HIGH")
-    TT_StagedTalentsFrame_PlanScrollFrame:SetFrameStrata("HIGH")
-    TT_StagedTalentsFrame_PlansButton:SetFrameStrata("HIGH")
+    TubTalents_StagedTalentsFrame_StagedPlanButton:SetFrameStrata("HIGH")
+    TubTalents_StagedTalentsFrame_CurrentPlanButton:SetFrameStrata("HIGH")
+    TubTalents_StagedTalentsFrame_LvlPlanSpec1:SetFrameStrata("HIGH")
+    TubTalents_StagedTalentsFrame_LvlPlanSpec2:SetFrameStrata("HIGH")
+    TubTalents_StagedTalentsFrame_LvlPlanSpec3:SetFrameStrata("HIGH")
+    TubTalents_StagedTalentsFrame_LvlPlanSpec4:SetFrameStrata("HIGH")
+    TubTalents_StagedTalentsFrame_LvlPlanSpec5:SetFrameStrata("HIGH")
+    TubTalents_StagedTalentsFrame_LvlPlanSpec6:SetFrameStrata("HIGH")
+    TubTalents_StagedTalentsFrame_PlanScrollFrame:SetFrameStrata("HIGH")
+    TubTalents_StagedTalentsFrame_PlansButton:SetFrameStrata("HIGH")
 end
 
-function TT_StagedTalentsFrame_PlansButton_OnClick()
-    if TT_LevellingPlans_DewDrop:IsOpen() then
-        TT_LevellingPlans_DewDrop:Close();
+function TubTalents_StagedTalentsFrame_PlansButton_OnClick()
+    if TubTalents_LevellingPlans_DewDrop:IsOpen() then
+        TubTalents_LevellingPlans_DewDrop:Close();
     else
-        TT_LevellingPlans_DewDrop:Open(this);
+        TubTalents_LevellingPlans_DewDrop:Open(this);
     end
 end
 
-function TT_StagedTalentsFramePlans_DewdropRegister()
-    TT_LevellingPlans_DewDrop:Register(TT_StagedTalentsFrame_PlansButton, --Bound Frame
+function TubTalents_StagedTalentsFramePlans_DewdropRegister()
+    TubTalents_LevellingPlans_DewDrop:Register(TubTalents_StagedTalentsFrame_PlansButton, --Bound Frame
         'point', function(parent) --Point
             return "TOP", "BOTTOM"
         end,
-        'children', function(level, value) TT_TalentPresets_DewdropGen(level, value, TT_PlanOpts) end,
+        'children', function(level, value) TubTalents_TalentPresets_DewdropGen(level, value, TubTalents_PlanOpts) end,
         'dontHook', true
     )
 end
 
-function TT_StagedTalentsFrame_SetTab()
-    if TT_StagedTalentFrame_CurrentTab == 1 then
-        PanelTemplates_SelectTab(TT_StagedTalentsFrame_StagedPlanButton);
-        PanelTemplates_DeselectTab(TT_StagedTalentsFrame_CurrentPlanButton);
+function TubTalents_StagedTalentsFrame_SetTab()
+    if TubTalents_StagedTalentFrame_CurrentTab == 1 then
+        PanelTemplates_SelectTab(TubTalents_StagedTalentsFrame_StagedPlanButton);
+        PanelTemplates_DeselectTab(TubTalents_StagedTalentsFrame_CurrentPlanButton);
     else
-        PanelTemplates_SelectTab(TT_StagedTalentsFrame_CurrentPlanButton);
-        PanelTemplates_DeselectTab(TT_StagedTalentsFrame_StagedPlanButton);
+        PanelTemplates_SelectTab(TubTalents_StagedTalentsFrame_CurrentPlanButton);
+        PanelTemplates_DeselectTab(TubTalents_StagedTalentsFrame_StagedPlanButton);
     end
-    PanelTemplates_UpdateTabs(TT_StagedTalentsFrame)
-    TT_StagedTalentsFrame_Update()
+    PanelTemplates_UpdateTabs(TubTalents_StagedTalentsFrame)
+    TubTalents_StagedTalentsFrame_Update()
 end
 
-function TT_StagedTalentsFrame_SwitchTab()
-    TT_StagedTalentFrame_CurrentTab = this:GetID()
-    TT_StagedTalentsFrame_SetTab()
+function TubTalents_StagedTalentsFrame_SwitchTab()
+    TubTalents_StagedTalentFrame_CurrentTab = this:GetID()
+    TubTalents_StagedTalentsFrame_SetTab()
 end
 
-function TT_StagedTalentsFrame_Update()
+function TubTalents_StagedTalentsFrame_Update()
     local numDisplay, plansToDisplay
-    if TT_StagedTalentFrame_CurrentTab == 2 then
+    if TubTalents_StagedTalentFrame_CurrentTab == 2 then
         if TubTalent_Vars.CurrentLevellingPlan ~= 0 then
-            TT_StagedTalentsFrame_NoWorking:Hide()
-            numDisplay = TT_CurrentLevellingPlan.levellingPlanMaxLevel - TT_MINLEVEL
-            plansToDisplay = TT_CurrentLevellingPlan.plan
-            if TT_CurrentLevellingPlan == nil then
-                TT_Out("FAILED")
+            TubTalents_StagedTalentsFrame_NoWorking:Hide()
+            numDisplay = TubTalents_CurrentLevellingPlan.levellingPlanMaxLevel - TubTalents_MINLEVEL
+            plansToDisplay = TubTalents_CurrentLevellingPlan.plan
+            if TubTalents_CurrentLevellingPlan == nil then
+                TubTalents_Out("FAILED")
             end
         elseif TubTalent_Vars.CurrentLevellingPlan == 0 then
             numDisplay = 0 
-            TT_StagedTalentsFrame_NoWorking:Show()
-            TT_StagedTalentsFrame_NoWorking:SetText(TT_STAGEDTALENTS_NOPLANSELECTED)
+            TubTalents_StagedTalentsFrame_NoWorking:Show()
+            TubTalents_StagedTalentsFrame_NoWorking:SetText(TubTalents_STAGEDTALENTS_NOPLANSELECTED)
             for i=1, NUM_LVLPLAN_TALENTSSHOWN do
-                local lvlPlanFrame = _G["TT_StagedTalentsFrame_LvlPlanSpec"..i]
+                local lvlPlanFrame = _G["TubTalents_StagedTalentsFrame_LvlPlanSpec"..i]
                 lvlPlanFrame:Hide()
             end
         end
     else
-        if TT_SimMode and not TT_PresetLoaded then
-            numDisplay = TT_StagedEstimatedLevel - TT_MINLEVEL
-            plansToDisplay = TT_StagedLevellingPlan
+        if TubTalents_SimMode and not TubTalents_PresetLoaded then
+            numDisplay = TubTalents_StagedEstimatedLevel - TubTalents_MINLEVEL
+            plansToDisplay = TubTalents_StagedLevellingPlan
             if numDisplay == 0 then -- how I can tell if it's empty
-                TT_StagedTalentsFrame_NoWorking:Show()
-                TT_StagedTalentsFrame_NoWorking:SetText(TT_STAGEDTALENTS_STARTPLAN)
+                TubTalents_StagedTalentsFrame_NoWorking:Show()
+                TubTalents_StagedTalentsFrame_NoWorking:SetText(TubTalents_STAGEDTALENTS_STARTPLAN)
             else
-                TT_StagedTalentsFrame_NoWorking:Hide()
+                TubTalents_StagedTalentsFrame_NoWorking:Hide()
             end
         else
             numDisplay = 0 
-            TT_StagedTalentsFrame_NoWorking:Show()
-            if not TT_SimMode then
-                TT_StagedTalentsFrame_NoWorking:SetText(TT_STAGEDTALENTSERR)
-            elseif TT_SimMode and TT_PresetLoaded then
-                TT_StagedTalentsFrame_NoWorking:SetText(TT_STAGEDTALENTSNOPRESETS)
+            TubTalents_StagedTalentsFrame_NoWorking:Show()
+            if not TubTalents_SimMode then
+                TubTalents_StagedTalentsFrame_NoWorking:SetText(TubTalents_STAGEDTALENTSERR)
+            elseif TubTalents_SimMode and TubTalents_PresetLoaded then
+                TubTalents_StagedTalentsFrame_NoWorking:SetText(TubTalents_STAGEDTALENTSNOPRESETS)
             end
             for i=1, NUM_LVLPLAN_TALENTSSHOWN do
-                local lvlPlanFrame = _G["TT_StagedTalentsFrame_LvlPlanSpec"..i]
+                local lvlPlanFrame = _G["TubTalents_StagedTalentsFrame_LvlPlanSpec"..i]
                 lvlPlanFrame:Hide()
             end
         end
     end
 
-	local scrollOffset = FauxScrollFrame_GetOffset(TT_StagedTalentsFrame_PlanScrollFrame);
+	local scrollOffset = FauxScrollFrame_GetOffset(TubTalents_StagedTalentsFrame_PlanScrollFrame);
 	local index;
-    local minIndex = TT_MINLEVEL
+    local minIndex = TubTalents_MINLEVEL
     GameTooltip:Hide()
 	for i=1, NUM_LVLPLAN_TALENTSSHOWN do
-        local lvlPlanFrame = _G["TT_StagedTalentsFrame_LvlPlanSpec"..i]
+        local lvlPlanFrame = _G["TubTalents_StagedTalentsFrame_LvlPlanSpec"..i]
 		index = (scrollOffset) + i;
 		if ( index <= numDisplay) then
-            local lvlPlanLevel = _G["TT_StagedTalentsFrame_LvlPlanSpec"..i.."Level"]
-            local lvlPlanName = _G["TT_StagedTalentsFrame_LvlPlanSpec"..i.."Name"]
-            local lvlPlanRank = _G["TT_StagedTalentsFrame_LvlPlanSpec"..i.."Rank"]
-            local lvlPlanIcon = _G["TT_StagedTalentsFrame_LvlPlanSpec"..i.."Icon"]
+            local lvlPlanLevel = _G["TubTalents_StagedTalentsFrame_LvlPlanSpec"..i.."Level"]
+            local lvlPlanName = _G["TubTalents_StagedTalentsFrame_LvlPlanSpec"..i.."Name"]
+            local lvlPlanRank = _G["TubTalents_StagedTalentsFrame_LvlPlanSpec"..i.."Rank"]
+            local lvlPlanIcon = _G["TubTalents_StagedTalentsFrame_LvlPlanSpec"..i.."Icon"]
 			lvlPlanFrame:Show()
             lvlPlanName:SetText(plansToDisplay[index+minIndex].name)
             lvlPlanRank:SetText("Rank: " .. plansToDisplay[index+minIndex].rank .. " Tab: " .. plansToDisplay[index+minIndex].tabName)
@@ -501,50 +501,50 @@ function TT_StagedTalentsFrame_Update()
 		else
             lvlPlanFrame:Hide()
 		end
-        if MouseIsOver(lvlPlanFrame) and TT_StagedTalentsFrame:IsShown() then --Fixes jank when hiding the frame on show
-            TT_LvlPlanTooltip(lvlPlanFrame:GetID())
+        if MouseIsOver(lvlPlanFrame) and TubTalents_StagedTalentsFrame:IsShown() then --Fixes jank when hiding the frame on show
+            TubTalents_LvlPlanTooltip(lvlPlanFrame:GetID())
         end
 	end
 
 	-- Scrollbar stuff
-	FauxScrollFrame_Update(TT_StagedTalentsFrame_PlanScrollFrame, numDisplay , NUM_LVLPLAN_TALENTSSHOWN, 28);
+	FauxScrollFrame_Update(TubTalents_StagedTalentsFrame_PlanScrollFrame, numDisplay , NUM_LVLPLAN_TALENTSSHOWN, 28);
 end
 
 --Shift click link for levelling plan
-function TT_LvlPlan_OnClick()
+function TubTalents_LvlPlan_OnClick()
     if IsShiftKeyDown() then
         local id = this:GetID()
-        local scrollOffset = FauxScrollFrame_GetOffset(TT_StagedTalentsFrame_PlanScrollFrame);
-        local index = id + scrollOffset + TT_MINLEVEL
-        if TT_StagedTalentFrame_CurrentTab == 2 then
-            plansToDisplay = TT_CurrentLevellingPlan.plan
+        local scrollOffset = FauxScrollFrame_GetOffset(TubTalents_StagedTalentsFrame_PlanScrollFrame);
+        local index = id + scrollOffset + TubTalents_MINLEVEL
+        if TubTalents_StagedTalentFrame_CurrentTab == 2 then
+            plansToDisplay = TubTalents_CurrentLevellingPlan.plan
         else
-            plansToDisplay = TT_StagedLevellingPlan
+            plansToDisplay = TubTalents_StagedLevellingPlan
         end
         local spellId = plansToDisplay[index].spellID
         local txt = DEFAULT_CHAT_FRAME.editBox:GetText()
-        local link = format(TT_CHATLINKFORMAT,
+        local link = format(TubTalents_CHATLINKFORMAT,
         plansToDisplay[index].spellID, plansToDisplay[index].name, plansToDisplay[index].rank)
         txt = format("%s %s",txt, link)
         DEFAULT_CHAT_FRAME.editBox:SetText(txt)
     end
 end
 
-function TT_LvlPlanTooltip(cID)
-    local scrollOffset = FauxScrollFrame_GetOffset(TT_StagedTalentsFrame_PlanScrollFrame);
+function TubTalents_LvlPlanTooltip(cID)
+    local scrollOffset = FauxScrollFrame_GetOffset(TubTalents_StagedTalentsFrame_PlanScrollFrame);
     local id = this:GetID() -- Seems to get messy if I sent it object as paramater
     if this:GetID() == 0 then
         id = cID
-        this = _G["TT_StagedTalentsFrame_LvlPlanSpec"..cID]
+        this = _G["TubTalents_StagedTalentsFrame_LvlPlanSpec"..cID]
     end
-    local index = id + scrollOffset + TT_MINLEVEL
+    local index = id + scrollOffset + TubTalents_MINLEVEL
     GameTooltip:SetOwner(this, "ANCHOR_BOTTOMRIGHT");
-    if TT_StagedTalentFrame_CurrentTab == 2 then
-        if TT_CurrentLevellingPlan ~= nil then
-            plansToDisplay = TT_CurrentLevellingPlan.plan
+    if TubTalents_StagedTalentFrame_CurrentTab == 2 then
+        if TubTalents_CurrentLevellingPlan ~= nil then
+            plansToDisplay = TubTalents_CurrentLevellingPlan.plan
         end
     else
-        plansToDisplay = TT_StagedLevellingPlan
+        plansToDisplay = TubTalents_StagedLevellingPlan
     end
     local sID
     if plansToDisplay ~= nil and plansToDisplay[index] ~= nil then --prevents an issue mousing over frame b4 being shown
@@ -559,53 +559,53 @@ function TT_LvlPlanTooltip(cID)
     GameTooltip:SetPoint("TOPLEFT", this, "TOPRIGHT", 0, 0)
 end
 
-function TT_CheckSpellIds(plan)
+function TubTalents_CheckSpellIds(plan)
     for k,v in pairs(plan) do
         if v.spellID == 0 then
-            v.spellID, _ = TT_GetTalentSpellID(v.tab, v.btnID, v.rank)
+            v.spellID, _ = TubTalents_GetTalentSpellID(v.tab, v.btnID, v.rank)
         else break -- break loop early if there's a non zero spellID
         end
     end
 end
 
 -- uses standard talent tooltip, plenty appropriate
-function TT_LearnTalentPopup_TalentButtonOnEnter()
+function TubTalents_LearnTalentPopup_TalentButtonOnEnter()
     local cp1, cp2 = UnitCharacterPoints("player");
     local estLevel = UnitLevel("player")
     --estlevel = estLevel - cp1    
-    local btn = TT_CurrentLevellingPlan.plan[estLevel].btnID
-    local tab = TT_CurrentLevellingPlan.plan[estLevel].tab
+    local btn = TubTalents_CurrentLevellingPlan.plan[estLevel].btnID
+    local tab = TubTalents_CurrentLevellingPlan.plan[estLevel].tab
     GameTooltip:SetOwner(this, "ANCHOR_BOTTOMRIGHT");
     GameTooltip:SetTalent(tab, btn)
 end
 
-function TT_LearnTalentPopup_TalentButtonLoad()
+function TubTalents_LearnTalentPopup_TalentButtonLoad()
     local estLevel = UnitLevel("player")
-    local texture = TT_CurrentLevellingPlan.plan[estLevel].icon
-    local spellID = TT_CurrentLevellingPlan.plan[estLevel].spellID
-    local rank = TT_CurrentLevellingPlan.plan[estLevel].rank
-    local name = TT_CurrentLevellingPlan.plan[estLevel].name
-    TT_LearnTalentPopup.spellID=spellID
-    TT_Out(TT_LearnTalentPopup.spellID)
-    TT_LearnTalentPopupTalentButtonIcon:SetTexture(texture)
-    TT_LearnTalentPopupTalentButtonName:SetText(name)
-    TT_LearnTalentPopupTalentButtonRank:SetText("Rank: " .. rank)
+    local texture = TubTalents_CurrentLevellingPlan.plan[estLevel].icon
+    local spellID = TubTalents_CurrentLevellingPlan.plan[estLevel].spellID
+    local rank = TubTalents_CurrentLevellingPlan.plan[estLevel].rank
+    local name = TubTalents_CurrentLevellingPlan.plan[estLevel].name
+    TubTalents_LearnTalentPopup.spellID=spellID
+    --TubTalents_Out(TubTalents_LearnTalentPopup.spellID)
+    TubTalents_LearnTalentPopupTalentButtonIcon:SetTexture(texture)
+    TubTalents_LearnTalentPopupTalentButtonName:SetText(name)
+    TubTalents_LearnTalentPopupTalentButtonRank:SetText("Rank: " .. rank)
 end
 
-function TT_RegenPlansDropdown()
-    TT_PlanOpts[2]["plans"] = {} -- clear it out first
+function TubTalents_RegenPlansDropdown()
+    TubTalents_PlanOpts[2]["plans"] = {} -- clear it out first
     local count = 0 
-    if TT_TalentPresets ~= nil then
-        for k,v in pairs(TT_LevellingPlans) do
+    if TubTalents_TalentPresets ~= nil then
+        for k,v in pairs(TubTalents_LevellingPlans) do
             local pDisplay = ""
-            for i=1, 3 do
+            for i=1, TubTalents_MAX_TALENTS do
                 name, _, _ = GetTalentTabInfo(i)
                 pDisplay = format("%s%s in %s\n",pDisplay,v.points[i],name)
             end
             local t = {
                 name=v.name,
                 tooltipTitle=v.name,
-                tooltip=format(TT_PLANDROPTOOLTIP,
+                tooltip=format(TubTalents_PLANDROPTOOLTIP,
                 v.id, pDisplay, v.levellingPlanMinLevel, v.levellingPlanMaxLevel),
                 id=v.id,
                 arg1=v.id,
@@ -617,16 +617,16 @@ function TT_RegenPlansDropdown()
                         end
                     end return false  end,
                 func=function(id)
-                    TT_SelectPlan(id)
-                    TT_RegenPlansDropdown()
+                    TubTalents_SelectPlan(id)
+                    TubTalents_RegenPlansDropdown()
                 end,
                 value="plansmenu:"..v.id
             }
-            table.insert(TT_PlanOpts[2]["plans"],t)
+            table.insert(TubTalents_PlanOpts[2]["plans"],t)
             count = count + 1
         end
     end
     if count == 0 then
-        table.insert(TT_PlanOpts[2]["plans"],TT_PLANDEFAULTDROP)
+        table.insert(TubTalents_PlanOpts[2]["plans"],TubTalents_PLANDEFAULTDROP)
     end
 end

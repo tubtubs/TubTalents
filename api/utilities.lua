@@ -151,3 +151,31 @@ function TubTalents_PrintEachLine(s)
         DEFAULT_CHAT_FRAME:AddMessage(w,1,1,1)
     end
 end
+
+function TubTalents_ToolTipAddLines(tooltip, index, num)
+    for i=1, num do
+        tooltip:AddLine("Error") -- just needs to be something so it doesn't get removed
+
+        -- Shift all lines but title down addedLines times
+        for i=tooltip:NumLines(), index,-1 do
+            _G[tooltip:GetName() .. "TextLeft"..i]:SetFontObject(TubTalents_TooltipTextSmall)
+            _G[tooltip:GetName() .. "TextLeft"..i]:SetTextColor(_G[tooltip:GetName() .. "TextLeft"..i-1]:GetTextColor())
+            _G[tooltip:GetName() .. "TextLeft"..i]:SetText(_G[tooltip:GetName() .. "TextLeft"..i-1]:GetText())
+            _G[tooltip:GetName() .. "TextLeft"..i]:SetWidth(_G[tooltip:GetName() .. "TextLeft"..i-1]:GetWidth())
+            --Carefully check right texts
+            if _G[tooltip:GetName() .. "TextRight"..i-1]:GetText() ~= nil then
+                _G[tooltip:GetName() .. "TextRight"..i]:SetFontObject(TubTalents_TooltipTextSmall)
+                _G[tooltip:GetName() .. "TextRight"..i]:SetTextColor(_G[tooltip:GetName() .. "TextRight"..i-1]:GetTextColor())
+                _G[tooltip:GetName() .. "TextRight"..i]:SetText(_G[tooltip:GetName() .. "TextRight"..i-1]:GetText())
+                _G[tooltip:GetName() .. "TextRight"..i]:SetWidth(_G[tooltip:GetName() .. "TextRight"..i-1]:GetWidth())
+                _G[tooltip:GetName() .. "TextRight"..i]:Show()
+                _G[tooltip:GetName() .. "TextRight"..i-1]:Hide()
+                _G[tooltip:GetName() .. "TextRight"..i]:SetWidth(_G[tooltip:GetName() .. "TextRight"..i]:GetStringWidth())
+            else
+                _G[tooltip:GetName() .. "TextRight"..i]:SetText(nil)
+                _G[tooltip:GetName() .. "TextRight"..i]:SetWidth(0)
+                _G[tooltip:GetName() .. "TextRight"..i]:Hide()
+            end
+        end
+    end
+end

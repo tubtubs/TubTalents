@@ -27,6 +27,18 @@ TubTalents_SettingsOpts = {
             value=""
         },
         {   
+            name="Show SpellIDs",
+            tooltip="Shows SpellIDs in tooltips.\nCan also be enabled by holding Ctrl on hover",
+            notCheckable=false,
+            checked=function() 
+                return TubTalent_Vars.ShowSpellIDs
+            end,
+            func=function() 
+                TubTalent_Vars.ShowSpellIDs = not TubTalent_Vars.ShowSpellIDs
+            end,
+            value=""
+        },
+        {   
             name="Reset Addon",
             tooltip="Resets all presets, plans, configurations\nHas a popup warning",
             notCheckable=true,

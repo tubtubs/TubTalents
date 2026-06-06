@@ -112,6 +112,7 @@ function TubTalents_Init()
             for k,v in pairs(TubTalent_Vars.LevellingPlans) do
                 v.class = UnitClass("player")
             end
+            TubTalent_Vars.ShowSpellIDs = false
             TubTalent_Vars.MaxTalentPoints = TubTalents_MAX_TALENTPOINTS
             TubTalent_Vars.ShowLevellingPlanFrame = true
             TubTalent_Vars.AddonSharing = true
@@ -179,6 +180,7 @@ function TubTalents_ResetSettings()
         TalentPresetIDMax = 0,
         AutoLearnPlans=TubTalents_AUTOLEARN.Prompt,
     }
+    TubTalent_Vars.ShowSpellIDs = false
     TubTalent_Vars.MaxTalentPoints = TubTalents_MAX_TALENTPOINTS
     TubTalent_Vars.ShowLevellingPlanFrame = true
     TubTalent_Vars.AddonSharing = true

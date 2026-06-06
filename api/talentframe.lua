@@ -731,6 +731,7 @@ end
 function TubTalents_TalentTooltip_OnLeave()
     for i=1, TubTalents_TalentTooltipFrame:NumLines() do --Wipe right text, since it doesnt by default
         _G["TubTalents_TalentTooltipFrameTextRight"..i]:SetText(nil)
+        _G["TubTalents_TalentTooltipFrameTextLeft"..i]:SetText(nil)
     end
     TubTalents_TalentTooltipFrame:Hide();
     TubTalents_NextTalentTooltipFrame:Hide();
@@ -752,6 +753,9 @@ function TubTalents_TalentTooltip()
     TubTalents_TalentTooltipFrame:SetHyperlink("enchant:"..spellId1);
     --staging rank
     local addlines = {format(TubTalents_TalentTipRank,rank,maxRank)}
+    if IsControlKeyDown() or TubTalent_Vars.ShowSpellIDs then
+        table.insert(addlines, format(TubTalents_TalentTipSpellID, spellId1))
+    end
     --staging tooltip for tier requirement
     local pointsReq = (tier-1)*5
     if ( ( pointsReq <= TalentFrame.pointsSpent ) ) then
@@ -770,31 +774,7 @@ function TubTalents_TalentTooltip()
         table.insert(addlines, format(TubTalents_TalentTipPreReq,preReqMaxRank,preReqName))
     end
     _G["TubTalents_TalentTooltipFrameTextLeft1"]:SetFontObject(TubTalents_TooltipText)
-    for i=1, getn(addlines) do
-        TubTalents_TalentTooltipFrame:AddLine("Error") -- just needs to be something so it doesn't get removed
-
-        -- Shift all lines but title down addedLines times
-        for i=TubTalents_TalentTooltipFrame:NumLines(), 2,-1 do
-            _G["TubTalents_TalentTooltipFrameTextLeft"..i]:SetFontObject(TubTalents_TooltipTextSmall)
-            _G["TubTalents_TalentTooltipFrameTextLeft"..i]:SetTextColor(_G["TubTalents_TalentTooltipFrameTextLeft"..i-1]:GetTextColor())
-            _G["TubTalents_TalentTooltipFrameTextLeft"..i]:SetText(_G["TubTalents_TalentTooltipFrameTextLeft"..i-1]:GetText())
-            _G["TubTalents_TalentTooltipFrameTextLeft"..i]:SetWidth(_G["TubTalents_TalentTooltipFrameTextLeft"..i-1]:GetWidth())
-            --Carefully check right texts
-            if _G["TubTalents_TalentTooltipFrameTextRight"..i-1]:GetText() ~= nil then
-                _G["TubTalents_TalentTooltipFrameTextRight"..i]:SetFontObject(TubTalents_TooltipTextSmall)
-                _G["TubTalents_TalentTooltipFrameTextRight"..i]:SetTextColor(_G["TubTalents_TalentTooltipFrameTextRight"..i-1]:GetTextColor())
-                _G["TubTalents_TalentTooltipFrameTextRight"..i]:SetText(_G["TubTalents_TalentTooltipFrameTextRight"..i-1]:GetText())
-                _G["TubTalents_TalentTooltipFrameTextRight"..i]:SetWidth(_G["TubTalents_TalentTooltipFrameTextRight"..i-1]:GetWidth())
-                _G["TubTalents_TalentTooltipFrameTextRight"..i]:Show()
-                _G["TubTalents_TalentTooltipFrameTextRight"..i-1]:Hide()
-                _G["TubTalents_TalentTooltipFrameTextRight"..i]:SetWidth(_G["TubTalents_TalentTooltipFrameTextRight"..i]:GetStringWidth())
-            else
-                _G["TubTalents_TalentTooltipFrameTextRight"..i]:SetText(nil)
-                _G["TubTalents_TalentTooltipFrameTextRight"..i]:SetWidth(0)
-                _G["TubTalents_TalentTooltipFrameTextRight"..i]:Hide()
-            end
-        end
-    end
+    TubTalents_ToolTipAddLines(_G["TubTalents_TalentTooltipFrame"], 2, getn(addlines))
     -- Add staged newlines to the tooltip, after the talent name
     for i=2, getn(addlines)+1 do
         _G["TubTalents_TalentTooltipFrameTextLeft"..i]:SetText(addlines[i-1])
@@ -804,8 +784,11 @@ function TubTalents_TalentTooltip()
     end
 
     --Setup next rank tooltip (if relevant)
+    addlines = {}
     if rank ~=0 and rank ~= maxRank then
-        t=""
+        if IsControlKeyDown() or TubTalent_Vars.ShowSpellIDs then
+            table.insert(addlines, format(TubTalents_TalentTipSpellID, spellId2))
+        end
         TubTalents_NextTalentTooltipFrame:SetOwner(TubTalents_TalentTooltipFrame, "ANCHOR_BOTTOM");
         TubTalents_NextTalentTooltipFrame:SetHyperlink("enchant:"..spellId2);
         for i=2, 8 do
@@ -813,6 +796,13 @@ function TubTalents_TalentTooltip()
         end
         TubTalents_NextTalentTooltipFrameTextLeft1:SetFontObject(TubTalents_TooltipTextSmall)
         TubTalents_NextTalentTooltipFrameTextLeft1:SetText(TubTalents_TalentTipNextRank)
+        TubTalents_ToolTipAddLines(_G["TubTalents_NextTalentTooltipFrame"], 2, getn(addlines))
+        for i=2, getn(addlines)+1 do
+            _G["TubTalents_NextTalentTooltipFrameTextLeft"..i]:SetText(addlines[i-1])
+            _G["TubTalents_NextTalentTooltipFrameTextLeft"..i]:SetWidth(
+                _G["TubTalents_NextTalentTooltipFrameTextLeft"..i]:GetStringWidth()
+            )
+        end
     end
     -- Add click to stage/remove tooltips
     if TubTalents_TalentFrameTalentIsLeftClickable() then
@@ -837,17 +827,16 @@ function TubTalents_TalentTooltip()
             _G["TubTalents_TalentTooltipFrameTextLeft"..n]:SetFontObject(TubTalents_TooltipTextSmall)
         end
     end
-    TubTalents_TalentTooltipFrame:Show()
-    TubTalents_NextTalentTooltipFrame:Show()
-    local widthA, heightA = TubTalents_TalentTooltipFrame:GetWidth(), TubTalents_TalentTooltipFrame:GetHeight()
-    local widthB, heightB = TubTalents_NextTalentTooltipFrame:GetWidth(), TubTalents_NextTalentTooltipFrame:GetHeight()
-    local maxWidth = math.max(widthA, widthB)
-    local maxHeight = math.max(heightA, heightB)
-    TubTalents_NextTalentTooltipFrame:ClearAllPoints()
-    TubTalents_NextTalentTooltipFrame:SetPoint("TOPLEFT", TubTalents_TalentTooltipFrame, "BOTTOMLEFT", 0, 0)
-    TubTalents_TalentTooltipFrame:SetWidth(maxWidth)
-    TubTalents_TalentTooltipFrame:SetHeight(maxHeight)
-    
-    TubTalents_NextTalentTooltipFrame:SetWidth(maxWidth)
-    TubTalents_NextTalentTooltipFrame:SetHeight(maxHeight)
+    if TubTalents_TalentFrameTalentIsLeftClickable() then
+        TubTalents_TalentTooltipFrame:Show()
+        TubTalents_NextTalentTooltipFrame:Show()
+        local widthA, widthB = TubTalents_TalentTooltipFrame:GetWidth(), TubTalents_NextTalentTooltipFrame:GetWidth()
+        local maxWidth = math.max(widthA, widthB)
+        TubTalents_NextTalentTooltipFrame:ClearAllPoints()
+        TubTalents_NextTalentTooltipFrame:SetPoint("TOPLEFT", TubTalents_TalentTooltipFrame, "BOTTOMLEFT", 0, 0)
+        TubTalents_TalentTooltipFrame:SetWidth(maxWidth)
+        TubTalents_NextTalentTooltipFrame:SetWidth(maxWidth) -- Max the widest one...
+    else
+        TubTalents_TalentTooltipFrame:Show()
+    end
 end

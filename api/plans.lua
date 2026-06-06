@@ -69,8 +69,7 @@ TubTalents_PlanOpts = {
         ["plansoptions"] = {
             {
                 name="Auto Learn Talents",
-                tooltipTitle="",
-                tooltip="Auto learn talents as you level",
+                tooltip="Auto learn talents as you level\nWill attempt to spend points anytime free points are noticed\nOn login, after resets, while spending, etc",
                 notCheckable=true,
                 value="plansoptionsautolearn"
             },
@@ -80,7 +79,7 @@ TubTalents_PlanOpts = {
         ["plansoptionsautolearn"] = {
             {
                 name="Never",
-                tooltip="Never automatically learn talents\nLevelling plans are just for reference",
+                tooltip="Never automatically learn talents\nLevelling plans are just for reference\nCan still use the catchup function to show a popup",
                 notCheckable=false,
                 isRadio=true,
                 checked=function() 
@@ -95,7 +94,7 @@ TubTalents_PlanOpts = {
             },
             {
                 name="Prompt",
-                tooltip="Displays a popup to learn latest talent in levelling plans on levelup",
+                tooltip="Displays a popup to learn latest talent(s) in levelling plans",
                 notCheckable=false,
                 isRadio=true,
                 checked=function() 
@@ -111,7 +110,7 @@ TubTalents_PlanOpts = {
             },
             {
                 name="Full Auto",
-                tooltip="Auto learn new talents aggressively\n!!USE WITH CAUTION!!",
+                tooltip="Auto learns new talents aggressively\n!!USE WITH CAUTION!!",
                 notCheckable=false,
                 isRadio=true,
                 checked=function() 
@@ -638,7 +637,17 @@ function TubTalents_LvlPlanTooltip(cID)
     end
     if sID ~= 0 then
         GameTooltip:SetHyperlink(format("enchant:%s",sID))
+        if IsControlKeyDown() or TubTalent_Vars.ShowSpellIDs then
+            TubTalents_ToolTipAddLines(GameTooltip, 2, 1)
+            _G["GameTooltipTextLeft2"]:SetText(
+                format(TubTalents_TalentTipSpellID, sID)
+            )
+            _G["GameTooltipTextLeft2"]:SetWidth(
+                _G["GameTooltipTextLeft2"]:GetStringWidth()
+            )
+        end
     end
+    GameTooltip:Show()
     GameTooltip:ClearAllPoints()
     GameTooltip:SetPoint("TOPLEFT", this, "TOPRIGHT", 0, 0)
 end

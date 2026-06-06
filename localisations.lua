@@ -79,6 +79,7 @@ TubTalents_TalentTipPreReq = "|cFFFF2020Requires %s points in %s|r"
 TubTalents_TalentTipNextRank = "Next Rank:"
 TubTalents_TalentTipLeftClick = "|cff00ff00Click to stage|r"
 TubTalents_TalentTipRightClick = "|cff00ff00Right click to remove points|r"
+TubTalents_TalentTipSpellID = "SpellID: |cff87CEEB%s|r"
 
 --Import/Export
 TubTalents_ExportPreset = "Export Preset"
@@ -131,8 +132,6 @@ TubTalents_STAGEDTALENTTABS = {
 }
 
 TubTalents_DELETEPLANPROMPT = [[Are you sure you want to delete the plan %s?]]
-
-
 
 --Presets
 TubTalents_PRESETDEFAULTDROP = {

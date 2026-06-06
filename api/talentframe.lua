@@ -120,7 +120,7 @@ function TubTalents_InitFrameAdditions()
     myButton = _G["TalentFrameCancelButton"]
     myButton:Show()
     myButton:SetText(TubTalents_SETTINGS)
-    --myButton:SetPoint("CENTER", TalentFrame, "TOPLEFT", 285, -42)
+    myButton:SetPoint("CENTER", TalentFrame, "TOPLEFT", 305, -420)
     myButton:SetScript("OnClick",function() 
         if TubTalents_Settings_DewDrop:IsOpen() then
             TubTalents_Settings_DewDrop:Close();
@@ -128,6 +128,11 @@ function TubTalents_InitFrameAdditions()
             TubTalents_Settings_DewDrop:Open(this);
         end
     end)
+
+    prompt = _G["TalentFrameTalentPointsText"]
+    prompt:SetPoint("BOTTOMRIGHT", TalentFrame, "BOTTOMLEFT", 252, 87)
+    prompt = _G["TalentFrameTalentPoints"]
+    prompt:SetPoint("RIGHT", TalentFrameTalentPointsText, "LEFT", -3, 0)
 end
 
 function TubTalents_FunctionOverloads()
@@ -834,6 +839,15 @@ function TubTalents_TalentTooltip()
     end
     TubTalents_TalentTooltipFrame:Show()
     TubTalents_NextTalentTooltipFrame:Show()
+    local widthA, heightA = TubTalents_TalentTooltipFrame:GetWidth(), TubTalents_TalentTooltipFrame:GetHeight()
+    local widthB, heightB = TubTalents_NextTalentTooltipFrame:GetWidth(), TubTalents_NextTalentTooltipFrame:GetHeight()
+    local maxWidth = math.max(widthA, widthB)
+    local maxHeight = math.max(heightA, heightB)
     TubTalents_NextTalentTooltipFrame:ClearAllPoints()
     TubTalents_NextTalentTooltipFrame:SetPoint("TOPLEFT", TubTalents_TalentTooltipFrame, "BOTTOMLEFT", 0, 0)
+    TubTalents_TalentTooltipFrame:SetWidth(maxWidth)
+    TubTalents_TalentTooltipFrame:SetHeight(maxHeight)
+    
+    TubTalents_NextTalentTooltipFrame:SetWidth(maxWidth)
+    TubTalents_NextTalentTooltipFrame:SetHeight(maxHeight)
 end

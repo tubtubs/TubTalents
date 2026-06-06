@@ -30,6 +30,9 @@ TubTalents_PROFILEMODES = {
 TubTalents_TEST = "ERROR" --if a widget has this text it's probably getting filled in later
 TubTalents_MINIMAPICON = "Interface\\Icons\\ability_marksmanship"
 
+--Compat
+TubTalents_COMPATSHIFTCLICK = "Shift click links require SuperWoW+Reliquary client mods."
+
 --Chat Commands
 TubTalents_CHATABOUT = "about"
 TubTalents_CHATABOUTDESC = "Credits and misc info"
@@ -38,7 +41,7 @@ TubTalents_CHATCATCHUPDESC = "Prompts to catch up on your levelling plan"
 TubTalents_CHATMINIMAP = "minimap"
 TubTalents_CHATMINIMAPDESC = "Toggles minimap button"
 TubTalents_CHATRESET = "reset"
-TubTalents_CHATRESETDESC = "Resets all settings, plans and presets. Asks for confirmation first"
+TubTalents_CHATRESETDESC = "Resets all settings, plans and presets. Asks for confirmation"
 TubTalents_CHATTOGGLE = "toggle"
 TubTalents_CHATTOGGLEDESC = "Opens/closes talent frame"
 TubTalents_CHATHELP = format(
@@ -62,6 +65,12 @@ TubTalents_ERRLevelPlan = "ERROR WITH LEVELLING PLAN - DESELECTING"
 TubTalents_ERRDeleteSelctedPlan = "Can't delete currently selected levelling plan."
 TubTalents_ERRStagedPresetsLearnedConflict = "Learned ranks conflict, can't stage preset. Reset, or enable Sim mode."
 TubTalents_ERRStagedPresetsPoints = "Not enough points, can't stage preset. Reset, or enable Sim mode."
+TubTalents_ERRAddonMessage = "Addon Message Error"
+TubTalents_ERRAddonMessageBadMode = "Addon Message Error Bad Mode"
+TubTalents_ERRAddonMessageBadType = "Addon Message Error Bad Type"
+TubTalents_ERRAddonMessageShort = "Addon Message Error, received message is short"
+TubTalents_ERRAddonMessageReset = "Addon Message Error, Resetting Cache"
+TubTalents_ERRAddonMessageBadClass = "Addon Message Error, plan or preset isnt for your class, resetting cache"
 
 --Talent Tooltips
 TubTalents_TalentTipRank = "|cFFffffffRank %s/%s|r"
@@ -121,6 +130,10 @@ TubTalents_STAGEDTALENTTABS = {
     CurrentPlan = 2
 }
 
+TubTalents_DELETEPLANPROMPT = [[Are you sure you want to delete the plan %s?]]
+
+
+
 --Presets
 TubTalents_PRESETDEFAULTDROP = {
     name="Create or import a preset",
@@ -128,6 +141,8 @@ TubTalents_PRESETDEFAULTDROP = {
     notCheckable=true,
     value=""
 }
+
+TubTalents_DELETEPRESETPROMPT = [[Are you sure you want to delete the preset %s?]]
 
 -- Sharing
 TubTalents_AMCHANNELS = {
@@ -142,6 +157,7 @@ TubTalents_SUBMIT = SUBMIT or "Submit" -- global string too
 TubTalents_CHECK = "Checking %s..."
 TubTalents_AMPREFIX = "TTA"
 TubTalents_NOSPAM = "On cooldown. Please don't spam share presets or plans."
+TubTalents_ShareDelay = 2
 
 --Talent Frame
 TubTalents_ESTIMATEDLEVEL = "Estimated Level: %s"

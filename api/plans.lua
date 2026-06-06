@@ -156,7 +156,12 @@ TubTalents_PlanOpts = {
                 else 
                     return false
                 end end,
-            func=function(arg1)  TubTalents_DeletePlan(arg1) end,
+            func=function(arg1)  
+                _ , v = TubTalents_FindPlan(arg1)
+                StaticPopupDialogs["TUBTALENTS_DELETEPLAN_POPUP"].text = 
+                format(TubTalents_DELETEPLANPROMPT, v.name)
+                StaticPopup_Show("TUBTALENTS_DELETEPLAN_POPUP")   
+            end,
             value=""
             },
             {
@@ -374,6 +379,7 @@ function TubTalents_StagePlan(arg)
 end
 
 function TubTalents_DeletePlan(arg)
+    if arg == nil then arg = TT_CurrentSelectedDropID end
     k, v = TubTalents_FindPlan(arg)
     if v.id == TubTalent_Vars.CurrentLevellingPlan then
         TubTalents_Out(TubTalents_ERRDeleteSelctedPlan)
@@ -383,6 +389,17 @@ function TubTalents_DeletePlan(arg)
     TubTalents_RegenPlansDropdown()
     TubTalents_LevellingPlans_DewDrop:Close()
 end
+
+StaticPopupDialogs["TUBTALENTS_DELETEPLAN_POPUP"] = {
+    text = TubTalents_TEST,
+    button1 = "Yes",
+    button2 = "No",
+    OnAccept = TubTalents_DeletePlan,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
+}
 
 function TubTalents_NewPlan(name,preset) 
     local planMinLevel = TubTalents_MINLEVEL + 1
@@ -511,9 +528,9 @@ function TubTalents_StagedTalentsFrame_Update()
             TubTalents_StagedTalentsFrame_NoWorking:Hide()
             numDisplay = TubTalents_CurrentLevellingPlan.levellingPlanMaxLevel - TubTalents_MINLEVEL
             plansToDisplay = TubTalents_CurrentLevellingPlan.plan
-            if TubTalents_CurrentLevellingPlan == nil then
-                TubTalents_Out("FAILED")
-            end
+            --if TubTalents_CurrentLevellingPlan == nil then
+            --    TubTalents_Out("FAILED")
+            --end
         elseif TubTalent_Vars.CurrentLevellingPlan == 0 then
             numDisplay = 0 
             TubTalents_StagedTalentsFrame_NoWorking:Show()

@@ -313,10 +313,9 @@ TubTalents_AMPFormat4 = "%s:%s:%s:%s" --only safe for numeric data
 TubTalents_AMPFormat5 = "%s:%s:%s:%s:%s" --only safe for numeric data
 function TubTalents_TalentPlanShare(arg1, ch)
     local CURRENT_TIME = GetTime()
-    if TubTalents_LastAMShare = 0 or
-    TubTalents_LastAMShare + 5 < CURRENT_TIME then
+    if TubTalents_LastAMShare == 0 or
+        TubTalents_LastAMShare + TubTalents_ShareDelay < CURRENT_TIME then
         _, p = TubTalents_FindPlan(arg1)
-        TubTalents_Out(ch)
         local CHANNEL = ch
         local PREFIX = TubTalents_AMPREFIX
         local MESSAGE = ""
@@ -387,8 +386,8 @@ end
 
 function TubTalents_TalentPresetShare(arg1, ch)
     local CURRENT_TIME = GetTime()
-    if TubTalents_LastAMShare = 0 or
-    TubTalents_LastAMShare + 5 < CURRENT_TIME then
+    if TubTalents_LastAMShare == 0 or
+        TubTalents_LastAMShare + TubTalents_ShareDelay < CURRENT_TIME then
         _, p = TubTalents_FindTalentPreset(arg1)
         local CHANNEL = ch
         local PREFIX = TubTalents_AMPREFIX
@@ -542,7 +541,7 @@ end
 function TubTalents_AMHANDLER(arg2,arg3,arg4) 
     --TubTalents_Out(format("arg2: %s", arg2))
     -- parse the args...
-    TubTalents_Out(arg3)
+    --TubTalents_Out(arg3 .. arg4)
     local parsed_args = {}
     local a = string.gfind(arg2, '([^:]+)') --parses info after :
     for i in a do --need to translate it to a table, a is a function
@@ -551,7 +550,9 @@ function TubTalents_AMHANDLER(arg2,arg3,arg4)
     end 
     local len = getn(parsed_args)
     if len <= 1 then -- error expecting at least 2 arguments
-        TubTalents_Out("Addon Message Error1")
+        if TubTalents_DebugMode then
+            TubTalents_Out(TubTalents_ERRAddonMessageShort)
+        end
         TubTalents_AMPError = true
     elseif len == 2 then -- EOL
         local MODE = tonumber(parsed_args[1])
@@ -566,11 +567,13 @@ function TubTalents_AMHANDLER(arg2,arg3,arg4)
                         StaticPopupDialogs["TUBTALENTS_AMIMPORTPRESET"].text = MESSAGE
                         StaticPopup_Show("TUBTALENTS_AMIMPORTPRESET")
                     else
-                        TubTalents_Out("Shared preset isn't for your class")
+                        if TubTalents_DebugMode then
+                            TubTalents_Out(TubTalents_ERRAddonMessageBadClass)
+                        end
                         TubTalent_AMResetTemp()
                     end
                 else
-                    TubTalents_Out("Addon Message Error4")
+                    TubTalents_Out(TubTalents_ERRAddonMessageReset)
                     TubTalent_AMResetTemp()
                 end
             end
@@ -584,11 +587,13 @@ function TubTalents_AMHANDLER(arg2,arg3,arg4)
                         StaticPopupDialogs["TUBTALENTS_AMIMPORTPLAN"].text = MESSAGE
                         StaticPopup_Show("TUBTALENTS_AMIMPORTPLAN")
                     else
-                        TubTalents_Out("Shared plan isn't for your class")
+                        if TubTalents_DebugMode then
+                            TubTalents_Out(TubTalents_ERRAddonMessageBadClass)
+                        end
                         TubTalent_AMResetTemp()
                     end
                 else
-                    TubTalents_Out("Addon Message Error4")
+                    TubTalents_Out(TubTalents_ERRAddonMessageReset)
                     TubTalent_AMResetTemp()
                 end
             end
@@ -615,7 +620,9 @@ function TubTalents_AMHANDLER(arg2,arg3,arg4)
                 --TubTalents_Out(format("Tab: %s Btn:%s Rank: %s", parsed_args[3], parsed_args[4], parsed_args[5]))
                 TubTalents_AMP_preset.talents[tonumber(parsed_args[3])][tonumber(parsed_args[4])] = tonumber(parsed_args[5])
             else
-                --TubTalents_Out("Addon Message Error2")
+                if TubTalents_DebugMode then
+                    TubTalents_Out(TubTalents_ERRAddonMessageBadType)
+                end
                 TubTalents_AMPError = true
             end
         elseif MODE == TubTalents_AMPMODES.Plan then
@@ -672,11 +679,15 @@ function TubTalents_AMHANDLER(arg2,arg3,arg4)
                 TubTalents_AMP_plan.plan[i]=TT_AMPNilCheck(TubTalents_AMP_plan.plan[i])
                 TubTalents_AMP_plan.plan[i].name = parsed_args[4]
             else
-                TubTalents_Out("Addon Message Error2")
+                if TubTalents_DebugMode then
+                    TubTalents_Out(TubTalents_ERRAddonMessageBadType)
+                end
                 TubTalents_AMPError = true
             end
         else
-            TubTalents_Out("Addon Message Error3")
+            if TubTalents_DebugMode then
+                TubTalents_Out(TubTalents_ERRAddonMessageBadMode)
+            end
             TubTalents_AMPError = true
         end
     end

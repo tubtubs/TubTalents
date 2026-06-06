@@ -69,15 +69,19 @@ TubTalents_PresetOpts = {
             name="Delete Preset",
             tooltip="Deletes the selected preset",
             notCheckable=true,
-            func=function(arg1)  TubTalents_TalentPresetDelete(arg1) end,
+            func=function(arg1) 
+                _ , v = TubTalents_FindTalentPreset(arg1)
+                StaticPopupDialogs["TUBTALENTS_DELETEPRESET_POPUP"].text = 
+                format(TubTalents_DELETEPRESETPROMPT, v.name)
+                StaticPopup_Show("TUBTALENTS_DELETEPRESET_POPUP")   
+            end,
             value=""
             },
             {
             name="Share Preset",
-            tooltip="Share the selected preset with party",
+            tooltip="Share the selected preset",
             notCheckable=true,
-            func=function(arg1)  TubTalents_TalentPresetShare(arg1) end,
-            value=""
+            value="sharemenu"
             },
             {
             name="Rename Preset",
@@ -181,12 +185,26 @@ function TubTalents_FindTalentPreset(presetID)
     return nil
 end
 
+
 function TubTalents_TalentPresetDelete(presetID)
+    if presetID == nil then presetID = TT_CurrentSelectedDropID end
     k, _ = TubTalents_FindTalentPreset(presetID) 
     TubTalents_TalentPresets[k] = nil
     TubTalents_RegenPresetDropdown()
     TubTalents_TalentPresets_Dewdrop:Close()
 end
+
+StaticPopupDialogs["TUBTALENTS_DELETEPRESET_POPUP"] = {
+    text = TubTalents_TEST,
+    button1 = "Yes",
+    button2 = "No",
+    OnAccept = TubTalents_TalentPresetDelete,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
+}
+
 
 function TubTalents_StageCurrentSpec()
     TubTalents_TalentPresetStage(0)

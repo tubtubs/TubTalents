@@ -37,7 +37,7 @@ TubTalents_SettingsOpts = {
         },
         {
             name="Debug Flags",
-            tooltip="Under utilized debug flags",
+            tooltip="Under utilized debug flags\nWiped on reload or login",
             notCheckable=true,
             value="debugflags"
         },

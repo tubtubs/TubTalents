@@ -14,7 +14,7 @@ end
 
 function TubTalents_TalentFrameTalent_OnShiftClickNoMods()
     if IsShiftKeyDown() then
-        TubTalents_Out("Shift click links require SuperWoW+Reliquary client mods.")
+        TubTalents_Out(TubTalents_COMPATSHIFTCLICK)
     end
 end
 

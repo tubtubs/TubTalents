@@ -28,7 +28,7 @@ TubTalents_TalentPresets_Dewdrop = AceLibrary("Dewdrop-2.0");
 TubTalents_LevellingPlans_DewDrop = AceLibrary("Dewdrop-2.0");
 TubTalents_Settings_DewDrop = AceLibrary("Dewdrop-2.0");
 --Testing
-TubTalents_DebugMode = true -- actually un-used, only used when debugging during dev
+TubTalents_DebugMode = false -- actually un-used, only used when debugging during dev
 TubTalents_FakeNoMods = false --quicker than disabling mods, but client mod functionality will still work ofc
 
 TubTalents_StagedTalentFrame_CurrentTab = TubTalents_STAGEDTALENTTABS.StagedPlan
@@ -158,12 +158,11 @@ function TubTalents_Init()
             TubTalents_FunctionOverloads()
             TubTalents_TalentFramePreferences_DewdropRegister()
         end
-    elseif event == "CHAT_MSG_ADDON" 
-    and (arg4 ~= UnitName("PLAYER") or TubTalents_DebugMode)
-    --Filter out your own messages, unless you're in debug mode
-    and TubTalent_Vars.AddonSharing then --Added a toggle...
-        if arg1==TubTalents_AMPREFIX then
-            TubTalents_AMHANDLER(arg2,arg3,arg4) 
+    elseif event == "CHAT_MSG_ADDON" and TubTalent_Vars.AddonSharing then
+        if (arg4 ~= UnitName("PLAYER") or TubTalents_DebugMode) then --Filter out your own messages unless debugging
+            if arg1==TubTalents_AMPREFIX then
+                TubTalents_AMHANDLER(arg2,arg3,arg4) 
+            end
         end
     end
 end

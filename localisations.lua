@@ -10,8 +10,13 @@ TubTalents_MAX_TALENTPOINTS = 51
 TubTalents_MINLEVEL = 9
 TubTalents_ABOUT = format(
 [[%s by %s
-Special Thanks to SuperWoW, Reliquary, Shagu,
-and %s, yes you the beautiful end user!]]
+|cFFFFD100Special Thanks to|r:
+|cFF1EFF00The-Kludge-Bureau|r|cFFFFD100 for Reliquary,|r 
+|cFF1EFF00balakethelock|r|cFFFFD100 for SuperWoW,|r
+|cFF1EFF00Shagu|r|cFFFFD100,|r |cFF1EFF00Wall|r|cFFFFD100,|r |cFFFF8000Brotalnia|r|cFFFFD100, and|r
+|cFFE6CC80%s|r|cFFFFD100, yes you the beautiful end user!|r
+|cFFF48CBAThis addon does not have secret tub powers|r]]
+--TubTalents_TalentTipRank = "|cFFffffffRank %s/%s|r"
 ,TubTalents_ADDONFULLNAME, TubTalents_AUTHOR, UnitName("PLAYER"))
 
 TubTalents_AUTOLEARN = {
@@ -43,7 +48,7 @@ TubTalents_CHATMINIMAPDESC = "Toggles minimap button"
 TubTalents_CHATRESET = "reset"
 TubTalents_CHATRESETDESC = "Resets all settings, plans and presets. Asks for confirmation"
 TubTalents_CHATTOGGLE = "toggle"
-TubTalents_CHATTOGGLEDESC = "Opens/closes talent frame"
+TubTalents_CHATTOGGLEDESC = "Opens/closes talent frame, even if under level 10"
 TubTalents_CHATHELP = format(
 [[|cFF00FF00%s by %s commands:|r
 /%s %s - %s

@@ -310,9 +310,10 @@ TubTalents_AMPFormat2= "%s:%s" -- mostly EOL
 TubTalents_AMPFormat3= "%s:%s:%s"
 TubTalents_AMPFormat4 = "%s:%s:%s:%s" --only safe for numeric data
 TubTalents_AMPFormat5 = "%s:%s:%s:%s:%s" --only safe for numeric data
-function TubTalents_TalentPlanShare(arg1)
+function TubTalents_TalentPlanShare(arg1, ch)
     _, p = TubTalents_FindPlan(arg1)
-    local CHANNEL = "PARTY"
+    TubTalents_Out(ch)
+    local CHANNEL = ch
     local PREFIX = TubTalents_AMPREFIX
     local MESSAGE = ""
     local MODE = TubTalents_AMPMODES.Plan
@@ -376,9 +377,9 @@ function TubTalents_TalentPlanShare(arg1)
     SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
 end
 
-function TubTalents_TalentPresetShare(arg1)
+function TubTalents_TalentPresetShare(arg1, ch)
     _, p = TubTalents_FindTalentPreset(arg1)
-    local CHANNEL = "PARTY"
+    local CHANNEL = ch
     local PREFIX = TubTalents_AMPREFIX
     local MESSAGE = ""
     local MODE = TubTalents_AMPMODES.Preset
@@ -509,9 +510,15 @@ function TubTalent_AMResetTemp()
     }
 end
 
+function TT_AMPNilCheck(n)
+    if n == nil then return {} else return n end
+end
+
+-- message, channel, sender
 function TubTalents_AMHANDLER(arg2,arg3,arg4) 
     --TubTalents_Out(format("arg2: %s", arg2))
     -- parse the args...
+    TubTalents_Out(arg3)
     local parsed_args = {}
     local a = string.gfind(arg2, '([^:]+)') --parses info after :
     for i in a do --need to translate it to a table, a is a function
@@ -593,40 +600,53 @@ function TubTalents_AMHANDLER(arg2,arg3,arg4)
                 TubTalent_AMResetTemp()
                 --TubTalents_Out(format("Class: %s", parsed_args[3]))
                 TubTalents_AMP_plan.class = parsed_args[3]
+                return
             elseif len == 3 and TYPE == TubTalents_AMPTYPES[MODE].Name then
                 --TubTalents_Out(format("Name: %s", parsed_args[3]))
                 TubTalents_AMP_plan.name = parsed_args[3]
+                return
             elseif len == 4 and TYPE == TubTalents_AMPTYPES[MODE].Points then
                 --TubTalents_Out(format("Tab: %s Points:%s", parsed_args[3], parsed_args[4]))
                 TubTalents_AMP_plan.points[tonumber(parsed_args[3])] = tonumber(parsed_args[4])
+                return
             elseif len == 3 and TYPE == TubTalents_AMPTYPES[MODE].levellingPlanMinLevel then
                 --TubTalents_Out(format("levellingPlanMinLevel: %s", parsed_args[3]))
                 TubTalents_AMP_plan.levellingPlanMinLevel = tonumber(parsed_args[3])
+                return
             elseif len == 3 and TYPE == TubTalents_AMPTYPES[MODE].levellingPlanMaxLevel then
                 --TubTalents_Out(format("levellingPlanMaxLevel: %s", parsed_args[3]))
                 TubTalents_AMP_plan.levellingPlanMaxLevel = tonumber(parsed_args[3])
-            elseif len == 4 and TYPE == TubTalents_AMPTYPES[MODE].planTab then
+                return -- slight performance improvement
+            end
+            local i = tonumber(parsed_args[3]) -- having gotten this far, the rest are levels here
+            if len == 4 and TYPE == TubTalents_AMPTYPES[MODE].planTab then
                 --TubTalents_Out(format("Level: %s Tab:%s", parsed_args[3], parsed_args[4]))
-                TubTalents_AMP_plan.plan[tonumber(parsed_args[3])] = {}
-                TubTalents_AMP_plan.plan[tonumber(parsed_args[3])].tab = tonumber(parsed_args[4])
+                TubTalents_AMP_plan.plan[i]=TT_AMPNilCheck(TubTalents_AMP_plan.plan[i])
+                TubTalents_AMP_plan.plan[i].tab = tonumber(parsed_args[4])
             elseif len == 4 and TYPE == TubTalents_AMPTYPES[MODE].planTabName then
                 --TubTalents_Out(format("Level: %s TabName:%s", parsed_args[3], parsed_args[4]))
-                TubTalents_AMP_plan.plan[tonumber(parsed_args[3])].tabName = parsed_args[4]
+                TubTalents_AMP_plan.plan[i]=TT_AMPNilCheck(TubTalents_AMP_plan.plan[i])
+                TubTalents_AMP_plan.plan[i].tabName = parsed_args[4]
             elseif len == 4 and TYPE == TubTalents_AMPTYPES[MODE].planBtn then
                 --TubTalents_Out(format("Level: %s Btn:%s", parsed_args[3], parsed_args[4]))
-                TubTalents_AMP_plan.plan[tonumber(parsed_args[3])].btnID = tonumber(parsed_args[4])
+                TubTalents_AMP_plan.plan[i]=TT_AMPNilCheck(TubTalents_AMP_plan.plan[i])
+                TubTalents_AMP_plan.plan[i].btnID = tonumber(parsed_args[4])
             elseif len == 4 and TYPE == TubTalents_AMPTYPES[MODE].planRank then
                 --TubTalents_Out(format("Level: %s Rank:%s", parsed_args[3], parsed_args[4]))
-                TubTalents_AMP_plan.plan[tonumber(parsed_args[3])].rank = tonumber(parsed_args[4])
+                TubTalents_AMP_plan.plan[i]=TT_AMPNilCheck(TubTalents_AMP_plan.plan[i])
+                TubTalents_AMP_plan.plan[i].rank = tonumber(parsed_args[4])
             elseif len == 4 and TYPE == TubTalents_AMPTYPES[MODE].planIcon then
                 --TubTalents_Out(format("Level: %s Icon:%s", parsed_args[3], parsed_args[4]))
-                TubTalents_AMP_plan.plan[tonumber(parsed_args[3])].icon = parsed_args[4]
+                TubTalents_AMP_plan.plan[i]=TT_AMPNilCheck(TubTalents_AMP_plan.plan[i])
+                TubTalents_AMP_plan.plan[i].icon = parsed_args[4]
             elseif len == 4 and TYPE == TubTalents_AMPTYPES[MODE].planSpellID then
                 --TubTalents_Out(format("Level: %s SpellID:%s", parsed_args[3], parsed_args[4]))
-                TubTalents_AMP_plan.plan[tonumber(parsed_args[3])].spellID = tonumber(parsed_args[4])
+                TubTalents_AMP_plan.plan[i]=TT_AMPNilCheck(TubTalents_AMP_plan.plan[i])
+                TubTalents_AMP_plan.plan[i].spellID = tonumber(parsed_args[4])
             elseif len == 4 and TYPE == TubTalents_AMPTYPES[MODE].planName then
                 --TubTalents_Out(format("Level: %s Name:%s", parsed_args[3], parsed_args[4]))
-                TubTalents_AMP_plan.plan[tonumber(parsed_args[3])].name = parsed_args[4]
+                TubTalents_AMP_plan.plan[i]=TT_AMPNilCheck(TubTalents_AMP_plan.plan[i])
+                TubTalents_AMP_plan.plan[i].name = parsed_args[4]
             else
                 TubTalents_Out("Addon Message Error2")
                 TubTalents_AMPError = true

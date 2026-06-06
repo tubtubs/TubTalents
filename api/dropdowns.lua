@@ -13,6 +13,7 @@ end
 -- Can pass a value up to the next level with a value
 -- value = "value:arg1:arg2:arg3:arg4:arg5"
 -- inner element args overwrite the value args
+TT_CurrentSelectedDropID = 0
 function TubTalents_TalentPresets_DewdropGen(level, value, opts)
     if value ~= nil then
         if string.find(value,":") then --accepts values after colons as arguments. Used to pass arguments a level up
@@ -23,6 +24,9 @@ function TubTalents_TalentPresets_DewdropGen(level, value, opts)
             end 
             -- sub out the arguments for the real value
             value = string.gsub(value, ":.*", "")
+            if parsed_args[1] ~= nil then --probably more logical way to pass up args?
+                TT_CurrentSelectedDropID = tonumber(parsed_args[1])
+            end
             TubTalents_TalentPresets_DewdropLevelGen(opts[level][value],parsed_args)
         else
             TubTalents_TalentPresets_DewdropLevelGen(opts[level][value])

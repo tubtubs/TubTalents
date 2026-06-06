@@ -12,6 +12,9 @@
 
 -- TODO: Polish
 -- Refine Chat commands
+-- AddonMessages
+---- Need to be able to select channel
+---- Need to be able to disable/enable it
 
 -- TODO: Bugs
 -- Stage current build is broken
@@ -24,7 +27,7 @@ local libData = LibStub("LibDataBroker-1.1");
 TubTalents_TalentPresets_Dewdrop = AceLibrary("Dewdrop-2.0");
 TubTalents_LevellingPlans_DewDrop = AceLibrary("Dewdrop-2.0");
 --Testing
-TubTalents_DebugMode = false -- actually un-used, only used when debugging during dev
+TubTalents_DebugMode = true -- actually un-used, only used when debugging during dev
 TubTalents_FakeNoMods = false --quicker than disabling mods, but client mod functionality will still work ofc
 
 TubTalents_StagedTalentFrame_CurrentTab = TubTalents_STAGEDTALENTTABS.StagedPlan
@@ -119,7 +122,6 @@ function TubTalents_Init()
                 v.class = UnitClass("player")
             end
             TubTalent_Vars.ShowLevellingPlanFrame = true
-            TubTalent_Vars.EnableInGameSharing = false 
             TubTalent_Vars.Version = 2
         end
         --Convenient shorthand names for the saved variable lists
@@ -162,7 +164,7 @@ function TubTalents_Init()
             TubTalents_TalentFramePreferences_DewdropRegister()
         end
     --elseif event == "CHAT_MSG_ADDON" then
-    elseif event == "CHAT_MSG_ADDON" and arg4 ~= UnitName("PLAYER") then
+    elseif event == "CHAT_MSG_ADDON" and (arg4 ~= UnitName("PLAYER") or TubTalents_DebugMode) then
         if arg1==TubTalents_AMPREFIX then
             TubTalents_AMHANDLER(arg2,arg3,arg4) 
         end

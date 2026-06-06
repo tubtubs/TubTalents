@@ -94,7 +94,44 @@ TubTalents_PresetOpts = {
         }
     },
     [4] = {
-
+        ["sharemenu"] = {
+            {
+            name="Party",
+            tooltip="Shares the selected preset with Party",
+            notCheckable=true,
+            func=function()  
+                TubTalents_TalentPresetShare(TT_CurrentSelectedDropID, TubTalents_AMCHANNELS.Party) 
+            end,
+            value=""
+            },
+            {
+            name="Guild",
+            tooltip="Shares the selected preset with Guild",
+            notCheckable=true,
+            func=function()  
+                TubTalents_TalentPresetShare(TT_CurrentSelectedDropID, TubTalents_AMCHANNELS.Guild) 
+            end,
+            value=""
+            },
+            {
+            name="Raid",
+            tooltip="Shares the selected preset with Raid",
+            notCheckable=true,
+            func=function()  
+                TubTalents_TalentPresetShare(TT_CurrentSelectedDropID, TubTalents_AMCHANNELS.Raid) 
+            end,
+            value=""
+            },
+            {
+            name="Battleground",
+            tooltip="Shares the selected preset with Battleground Group",
+            notCheckable=true,
+            func=function()  
+                TubTalents_TalentPresetShare(TT_CurrentSelectedDropID, TubTalents_AMCHANNELS.BG) 
+            end,
+            value=""
+            },
+        },
     },
     --specials
     --close menu

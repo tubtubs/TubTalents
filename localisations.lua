@@ -117,6 +117,13 @@ TubTalents_PRESETDEFAULTDROP = {
 }
 
 -- Sharing
+TubTalents_AMCHANNELS = {
+    Party="PARTY",
+    Guild="GUILD",
+    BG="BATTLEGROUND",
+    Raid="RAID",
+    --whisper="WHISPER", --Whisper isn't actually implemented in Vanilla
+}
 TubTalents_OKAY = OKAY or "Okay" -- uses the global string, not sure how it localises tho tbh
 TubTalents_SUBMIT = SUBMIT or "Submit" -- global string too
 TubTalents_CHECK = "Checking %s..."

@@ -163,8 +163,8 @@ TubTalents_PlanOpts = {
             name="Share Plan",
             tooltip="Shares the selected plan",
             notCheckable=true,
-            func=function(arg1)  TubTalents_TalentPlanShare(arg1) end,
-            value=""
+            --func=function(arg1)  TubTalents_TalentPlanShare(arg1) end,
+            value="sharemenu"
             },
             {
             name="Rename Plan",
@@ -179,6 +179,46 @@ TubTalents_PlanOpts = {
             value=""
             },
         }
+    },
+    [4] = {
+        ["sharemenu"] = {
+            {
+            name="Party",
+            tooltip="Shares the selected plan with Party",
+            notCheckable=true,
+            func=function()  
+                TubTalents_TalentPlanShare(TT_CurrentSelectedDropID, TubTalents_AMCHANNELS.Party) 
+            end,
+            value=""
+            },
+            {
+            name="Guild",
+            tooltip="Shares the selected plan with Guild",
+            notCheckable=true,
+            func=function()  
+                TubTalents_TalentPlanShare(TT_CurrentSelectedDropID, TubTalents_AMCHANNELS.Guild) 
+            end,
+            value=""
+            },
+            {
+            name="Raid",
+            tooltip="Shares the selected plan with Raid",
+            notCheckable=true,
+            func=function()  
+                TubTalents_TalentPlanShare(TT_CurrentSelectedDropID, TubTalents_AMCHANNELS.Raid) 
+            end,
+            value=""
+            },
+            {
+            name="Battleground",
+            tooltip="Shares the selected plan with Battleground Group",
+            notCheckable=true,
+            func=function()  
+                TubTalents_TalentPlanShare(TT_CurrentSelectedDropID, TubTalents_AMCHANNELS.BG) 
+            end,
+            value=""
+            },
+        },
     },
 }
 
@@ -375,7 +415,6 @@ function TubTalents_NewPlan(name,preset)
         for i=1, TubTalents_MAX_TALENTS do
             tp[i] = preset.points[i]
             for k, v in pairs(preset.plan) do
-                TubTalents_Out("LOL "..k)
                 local n = {
                     tab = v.tab,
                     tabName = v.tabName,

@@ -145,3 +145,9 @@ function TubTalents_GetTalentPrereqs(tab, btn)
         end
     end    return tier, column, isLearnable
 end
+
+function TubTalents_PrintEachLine(s)
+    for w in string.gfind(s, "([^\r\n]+)") do
+        DEFAULT_CHAT_FRAME:AddMessage(w,1,1,1)
+    end
+end

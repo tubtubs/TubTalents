@@ -115,6 +115,19 @@ function TubTalents_InitFrameAdditions()
     f.text:SetFontObject("GameFontNormal")
     f:SetFrameStrata("HIGH")
     TalentFrameTitleText:SetText("") -- Blank out old title...
+
+    --Overloading Close Button...
+    myButton = _G["TalentFrameCancelButton"]
+    myButton:Show()
+    myButton:SetText(TubTalents_SETTINGS)
+    --myButton:SetPoint("CENTER", TalentFrame, "TOPLEFT", 285, -42)
+    myButton:SetScript("OnClick",function() 
+        if TubTalents_Settings_DewDrop:IsOpen() then
+            TubTalents_Settings_DewDrop:Close();
+        else
+            TubTalents_Settings_DewDrop:Open(this);
+        end
+    end)
 end
 
 function TubTalents_FunctionOverloads()

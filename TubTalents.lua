@@ -26,6 +26,7 @@ local libIcon = LibStub("LibDBIcon-1.0");
 local libData = LibStub("LibDataBroker-1.1");
 TubTalents_TalentPresets_Dewdrop = AceLibrary("Dewdrop-2.0");
 TubTalents_LevellingPlans_DewDrop = AceLibrary("Dewdrop-2.0");
+TubTalents_Settings_DewDrop = AceLibrary("Dewdrop-2.0");
 --Testing
 TubTalents_DebugMode = true -- actually un-used, only used when debugging during dev
 TubTalents_FakeNoMods = false --quicker than disabling mods, but client mod functionality will still work ofc
@@ -54,27 +55,22 @@ SLASH_TUBTALENTS1 = "/"..TubTalents_ADDONAME
 
 function TubTalents_TextCommands(arg)
     if arg == nil or arg == "" then
-        DEFAULT_CHAT_FRAME:AddMessage(TubTalents_CHATHELP)
+        TubTalents_PrintEachLine(TubTalents_CHATHELP)
+    elseif arg==TubTalents_CHATABOUT then
+        TubTalents_PrintEachLine(TubTalents_ABOUT)
+    elseif arg==TubTalents_CHATRESET then
+        StaticPopup_Show("TUBTALENTS_RESETSETTINGS_POPUP")
     elseif arg==TubTalents_CHATCATCHUP then
         TubTalents_CatchUpPlan(true)
     elseif arg==TubTalents_CHATMINIMAP then
-        if TubTalents_Icon.hide then
-            TubTalents_ShowMinimap()
-        else
-            TubTalents_HideMinimap()
-        end
+        TubTalents_MinimapIconToggle()
     elseif arg==TubTalents_CHATTOGGLE then
         TalentFrame_Toggle();
     end
 end
 
 function TubTalents_Init()
-    if event == "PLAYER_LEVEL_UP" then
-        --if it's in points changed too its not really needed here
-        --if TubTalent_Vars.AutoLearnPlans ~= TubTalents_AUTOLEARN.Never then
-            --TubTalents_CatchUpPlan()
-        --end
-    elseif event=="CHARACTER_POINTS_CHANGED" then
+    if event=="CHARACTER_POINTS_CHANGED" then
         -- check plan viability... But only if points have been spent, not gained.
         -- Unless spent by the addon
         if (arg1 < 0) then --indicates learned talents...
@@ -99,29 +95,27 @@ function TubTalents_Init()
             end
         end 
     elseif event=="PLAYER_LOGIN" then --INIT
-        if TubTalent_Vars == nil then
+        if TubTalent_Vars == nil or TubTalents_DebugMode then
             TubTalent_Vars = {
                 Version = 1,
-                MaxTalentPoints = TubTalents_MAX_TALENTPOINTS,
                 TalentPresets = {},
                 LevellingPlans = {},
                 CurrentLevellingPlan = 0,
                 LevellingPlanIDMax = 0,
                 TalentPresetIDMax = 0
             }
-        elseif TubTalent_Vars.AutoLearnPlans == nil then
-            TubTalent_Vars.AutoLearnPlans = 0
-        elseif TubTalent_Vars.MaxTalentPoints == nil then
-            TubTalent_Vars.MaxTalentPoints = TubTalents_MAX_TALENTPOINTS
         end
-        if TubTalent_Vars.Version < 2 then --Upgrading Saved variables
+        if TubTalent_Vars.Version < 2 or TubTalents_DebugMode then --Upgrading Saved variables
             for k,v in pairs(TubTalent_Vars.TalentPresets) do
                 v.class = UnitClass("player")
             end
             for k,v in pairs(TubTalent_Vars.LevellingPlans) do
                 v.class = UnitClass("player")
             end
+            TubTalent_Vars.MaxTalentPoints = TubTalents_MAX_TALENTPOINTS
             TubTalent_Vars.ShowLevellingPlanFrame = true
+            TubTalent_Vars.AddonSharing = true
+            TubTalent_Vars.AutoLearnPlans = TubTalents_AUTOLEARN.Prompt
             TubTalent_Vars.Version = 2
         end
         --Convenient shorthand names for the saved variable lists
@@ -148,6 +142,7 @@ function TubTalents_Init()
         TubTalents_StagedTalentsFrame_SetTab()
         TubTalents_MinimapIconRegister()
         TubTalents_StagedTalentsFramePlans_DewdropRegister()
+        TubTalents_Settings_DewDropRegister()
         --Detecting client mods, and adjusting functionality...
         if (not (RQ_GetVersion and SUPERWOW_STRING)) or TubTalents_FakeNoMods then
             TubTalents_NoClientMods()
@@ -163,13 +158,48 @@ function TubTalents_Init()
             TubTalents_FunctionOverloads()
             TubTalents_TalentFramePreferences_DewdropRegister()
         end
-    --elseif event == "CHAT_MSG_ADDON" then
-    elseif event == "CHAT_MSG_ADDON" and (arg4 ~= UnitName("PLAYER") or TubTalents_DebugMode) then
+    elseif event == "CHAT_MSG_ADDON" 
+    and (arg4 ~= UnitName("PLAYER") or TubTalents_DebugMode)
+    --Filter out your own messages, unless you're in debug mode
+    and TubTalent_Vars.AddonSharing then --Added a toggle...
         if arg1==TubTalents_AMPREFIX then
             TubTalents_AMHANDLER(arg2,arg3,arg4) 
         end
     end
 end
+
+--Zeroes out any saved variables
+function TubTalents_ResetSettings()
+    TubTalent_Vars = {
+        Version = 1,
+        MaxTalentPoints = TubTalents_MAX_TALENTPOINTS,
+        TalentPresets = {},
+        LevellingPlans = {},
+        CurrentLevellingPlan = 0,
+        LevellingPlanIDMax = 0,
+        TalentPresetIDMax = 0,
+        AutoLearnPlans=TubTalents_AUTOLEARN.Prompt,
+    }
+    TubTalent_Vars.MaxTalentPoints = TubTalents_MAX_TALENTPOINTS
+    TubTalent_Vars.ShowLevellingPlanFrame = true
+    TubTalent_Vars.AddonSharing = true
+    TubTalent_Vars.AutoLearnPlans = TubTalents_AUTOLEARN.Prompt
+    TubTalent_Vars.Version = 2
+    TubTalents_ShowMinimap()
+    ReloadUI()
+end
+--StaticPopup_Show("TUBTALENTS_RESETSETTINGS_POPUP")
+StaticPopupDialogs["TUBTALENTS_RESETSETTINGS_POPUP"] = {
+    text = TubTalents_CATCHUPPROMPT,
+    button1 = "Yes",
+    button2 = "No",
+    OnAccept = TubTalents_ResetSettings,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
+}
+
 
 -- Minimap Icon Setup
 function TubTalents_HideMinimap()
@@ -205,4 +235,12 @@ function TubTalents_MinimapIconRegister()
 
 		libIcon:Register("TubTalents icon", iconData, TubTalents_Icon);
 	end
+end
+
+function TubTalents_MinimapIconToggle()
+    if TubTalents_Icon.hide then
+        TubTalents_ShowMinimap()
+    else
+        TubTalents_HideMinimap()
+    end
 end

@@ -193,7 +193,25 @@ function TubTalents_TalentPresets_DewdropLevelGen(opts,args)
                 'value', j.value,
                 'hasArrow', false,
                 'notCheckable', j.notCheckable
-            )                    
+            )  
+        elseif not j.notCheckable and j.func ~= nil then -- toggle functions
+            TubTalents_TalentPresets_Dewdrop:AddLine(
+                'text', j.name,
+                'tooltipTitle', j.tooltipTitle or nil,
+                'tooltipText', j.tooltip or nil,   
+                'textR', 1,
+                'textG', 0.82,
+                'textB', 0,
+                'func', j.func,
+                'arg1', j.arg1 or args1 or nil,
+                'arg2', j.arg2 or args2 or nil,
+                'arg3', j.arg3 or args3 or nil,
+                'arg4', j.arg4 or args4 or nil,
+                'value', j.value,
+                'hasArrow', false,
+                'checked', j.checked(j.id) or nil,
+                'notCheckable', j.notCheckable
+            )                     
         elseif j.isRadio then
             TubTalents_TalentPresets_Dewdrop:AddLine(
                 'text', j.name,

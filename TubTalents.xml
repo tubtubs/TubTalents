@@ -8,6 +8,7 @@
 	<Include file="api\plans.lua" />
 	<Include file="api\sharing.lua" />
 	<Include file="api\compat.lua" />
+	<Include file="api\settings.lua" />
 
     <Frame name="TubTalents_Listener" hidden="false">
         <Scripts>

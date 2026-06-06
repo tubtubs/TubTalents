@@ -275,6 +275,7 @@ end
 -- Always broadcast, but attempt to send to a specific user?
 -- If your name is mentioned, just start staging it?
 -- When complete, ask if you'd like to save it. If not, discard it.
+TubTalents_LastAMShare = 0
 TubTalents_AMPMODES = {
     Preset=1,
     Plan=2,
@@ -311,108 +312,121 @@ TubTalents_AMPFormat3= "%s:%s:%s"
 TubTalents_AMPFormat4 = "%s:%s:%s:%s" --only safe for numeric data
 TubTalents_AMPFormat5 = "%s:%s:%s:%s:%s" --only safe for numeric data
 function TubTalents_TalentPlanShare(arg1, ch)
-    _, p = TubTalents_FindPlan(arg1)
-    TubTalents_Out(ch)
-    local CHANNEL = ch
-    local PREFIX = TubTalents_AMPREFIX
-    local MESSAGE = ""
-    local MODE = TubTalents_AMPMODES.Plan
-    -- data fields first
-    --class
-    MESSAGE = format(TubTalents_AMPFormat3,
-    MODE, TubTalents_AMPTYPES[MODE].Class, p.class)
-    SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
-    --name
-    MESSAGE = format(TubTalents_AMPFormat3,
-    MODE, TubTalents_AMPTYPES[MODE].Name, p.name)
-    SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
-    --points
-    for i=1, TubTalents_MAX_TALENTS do
-        MESSAGE = format(TubTalents_AMPFormat4,
-        MODE, TubTalents_AMPTYPES[MODE].Points, i, p.points[i])
+    local CURRENT_TIME = GetTime()
+    if TubTalents_LastAMShare = 0 or
+    TubTalents_LastAMShare + 5 < CURRENT_TIME then
+        _, p = TubTalents_FindPlan(arg1)
+        TubTalents_Out(ch)
+        local CHANNEL = ch
+        local PREFIX = TubTalents_AMPREFIX
+        local MESSAGE = ""
+        local MODE = TubTalents_AMPMODES.Plan
+        -- data fields first
+        --class
+        MESSAGE = format(TubTalents_AMPFormat3,
+        MODE, TubTalents_AMPTYPES[MODE].Class, p.class)
         SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
+        --name
+        MESSAGE = format(TubTalents_AMPFormat3,
+        MODE, TubTalents_AMPTYPES[MODE].Name, p.name)
+        SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
+        --points
+        for i=1, TubTalents_MAX_TALENTS do
+            MESSAGE = format(TubTalents_AMPFormat4,
+            MODE, TubTalents_AMPTYPES[MODE].Points, i, p.points[i])
+            SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
+        end
+        --minlevel
+        MESSAGE = format(TubTalents_AMPFormat3,
+        MODE, TubTalents_AMPTYPES[MODE].levellingPlanMinLevel, p.levellingPlanMinLevel)
+        SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
+        --maxlevel
+        MESSAGE = format(TubTalents_AMPFormat3,
+        MODE, TubTalents_AMPTYPES[MODE].levellingPlanMaxLevel, p.levellingPlanMaxLevel)
+        SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
+        --plan
+        for k,v in p.plan do
+            --mode:type:level:tab
+            MESSAGE = format(TubTalents_AMPFormat4,
+            MODE, TubTalents_AMPTYPES[MODE].planTab, k, v.tab)
+            SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
+            --mode:type:level:tabName
+            MESSAGE = format(TubTalents_AMPFormat4,
+            MODE, TubTalents_AMPTYPES[MODE].planTabName, k, v.tabName)
+            SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
+            --mode:type:level:btnID
+            MESSAGE = format(TubTalents_AMPFormat4,
+            MODE, TubTalents_AMPTYPES[MODE].planBtn, k, v.btnID)
+            SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
+            --mode:type:level:rank
+            MESSAGE = format(TubTalents_AMPFormat4,
+            MODE, TubTalents_AMPTYPES[MODE].planRank, k, v.rank)
+            SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
+            --mode:type:level:icon
+            MESSAGE = format(TubTalents_AMPFormat4,
+            MODE, TubTalents_AMPTYPES[MODE].planIcon, k, v.icon)
+            SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
+            --mode:type:level:spellID
+            MESSAGE = format(TubTalents_AMPFormat4,
+            MODE, TubTalents_AMPTYPES[MODE].planSpellID, k, v.spellID)
+            SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
+            --mode:type:level:name
+            MESSAGE = format(TubTalents_AMPFormat4,
+            MODE, TubTalents_AMPTYPES[MODE].planName, k, v.name)
+            SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
+        end
+        --EOL
+        MESSAGE = format(TubTalents_AMPFormat2,
+        MODE, TubTalents_AMPTYPES[MODE].EOL)
+        SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
+        TubTalents_LastAMShare = GetTime()
+    else
+        TubTalents_Out(TubTalents_NOSPAM)
     end
-    --minlevel
-    MESSAGE = format(TubTalents_AMPFormat3,
-    MODE, TubTalents_AMPTYPES[MODE].levellingPlanMinLevel, p.levellingPlanMinLevel)
-    SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
-    --maxlevel
-    MESSAGE = format(TubTalents_AMPFormat3,
-    MODE, TubTalents_AMPTYPES[MODE].levellingPlanMaxLevel, p.levellingPlanMaxLevel)
-    SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
-    --plan
-    for k,v in p.plan do
-        --mode:type:level:tab
-        MESSAGE = format(TubTalents_AMPFormat4,
-        MODE, TubTalents_AMPTYPES[MODE].planTab, k, v.tab)
-        SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
-        --mode:type:level:tabName
-        MESSAGE = format(TubTalents_AMPFormat4,
-        MODE, TubTalents_AMPTYPES[MODE].planTabName, k, v.tabName)
-        SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
-        --mode:type:level:btnID
-        MESSAGE = format(TubTalents_AMPFormat4,
-        MODE, TubTalents_AMPTYPES[MODE].planBtn, k, v.btnID)
-        SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
-        --mode:type:level:rank
-        MESSAGE = format(TubTalents_AMPFormat4,
-        MODE, TubTalents_AMPTYPES[MODE].planRank, k, v.rank)
-        SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
-        --mode:type:level:icon
-        MESSAGE = format(TubTalents_AMPFormat4,
-        MODE, TubTalents_AMPTYPES[MODE].planIcon, k, v.icon)
-        SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
-        --mode:type:level:spellID
-        MESSAGE = format(TubTalents_AMPFormat4,
-        MODE, TubTalents_AMPTYPES[MODE].planSpellID, k, v.spellID)
-        SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
-        --mode:type:level:name
-        MESSAGE = format(TubTalents_AMPFormat4,
-        MODE, TubTalents_AMPTYPES[MODE].planName, k, v.name)
-        SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
-    end
-    --EOL
-    MESSAGE = format(TubTalents_AMPFormat2,
-    MODE, TubTalents_AMPTYPES[MODE].EOL)
-    SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
 end
 
 function TubTalents_TalentPresetShare(arg1, ch)
-    _, p = TubTalents_FindTalentPreset(arg1)
-    local CHANNEL = ch
-    local PREFIX = TubTalents_AMPREFIX
-    local MESSAGE = ""
-    local MODE = TubTalents_AMPMODES.Preset
+    local CURRENT_TIME = GetTime()
+    if TubTalents_LastAMShare = 0 or
+    TubTalents_LastAMShare + 5 < CURRENT_TIME then
+        _, p = TubTalents_FindTalentPreset(arg1)
+        local CHANNEL = ch
+        local PREFIX = TubTalents_AMPREFIX
+        local MESSAGE = ""
+        local MODE = TubTalents_AMPMODES.Preset
 
-    -- Send packet with class, and name first...
-    -- 1:1:class
-    MESSAGE = format(TubTalents_AMPFormat3,
-    MODE, TubTalents_AMPTYPES[MODE].Class, p.class)
-    SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
-    -- Send name
-    -- 1:2:name
-    MESSAGE = format(TubTalents_AMPFormat3,
-    MODE, TubTalents_AMPTYPES[MODE].Name, p.name)
-    SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
-    -- Send points
-    -- 1:3:tabindex:points
-    for i=1, TubTalents_MAX_TALENTS do
-        MESSAGE = format(TubTalents_AMPFormat4,
-        MODE, TubTalents_AMPTYPES[MODE].Points, i, p.points[i])
+        -- Send packet with class, and name first...
+        -- 1:1:class
+        MESSAGE = format(TubTalents_AMPFormat3,
+        MODE, TubTalents_AMPTYPES[MODE].Class, p.class)
         SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
-    end
-    -- Finally send talents
-    -- 1:4:tabindex:btnindex:rank
-    for i=1, TubTalents_MAX_TALENTS do
-        for k,v in pairs(p.talents[i]) do
-        MESSAGE = format(TubTalents_AMPFormat5,
-        MODE, TubTalents_AMPTYPES[MODE].Talent, i, k, v)
+        -- Send name
+        -- 1:2:name
+        MESSAGE = format(TubTalents_AMPFormat3,
+        MODE, TubTalents_AMPTYPES[MODE].Name, p.name)
         SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
+        -- Send points
+        -- 1:3:tabindex:points
+        for i=1, TubTalents_MAX_TALENTS do
+            MESSAGE = format(TubTalents_AMPFormat4,
+            MODE, TubTalents_AMPTYPES[MODE].Points, i, p.points[i])
+            SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
         end
+        -- Finally send talents
+        -- 1:4:tabindex:btnindex:rank
+        for i=1, TubTalents_MAX_TALENTS do
+            for k,v in pairs(p.talents[i]) do
+            MESSAGE = format(TubTalents_AMPFormat5,
+            MODE, TubTalents_AMPTYPES[MODE].Talent, i, k, v)
+            SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
+            end
+        end
+        MESSAGE = format(TubTalents_AMPFormat2,
+        MODE, TubTalents_AMPTYPES[MODE].EOL)
+        SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
+    else
+        TubTalents_Out(TubTalents_NOSPAM)
     end
-    MESSAGE = format(TubTalents_AMPFormat2,
-    MODE, TubTalents_AMPTYPES[MODE].EOL)
-    SendAddonMessage(PREFIX,MESSAGE,CHANNEL)
 end
 
 TubTalents_AMP_preset = {
@@ -453,6 +467,11 @@ StaticPopupDialogs["TUBTALENTS_AMIMPORTPRESET"] = {
     button2 = "No",
     OnAccept = function()
         TubTalents_NewPreset(TubTalents_AMP_preset.name, TubTalents_AMP_preset)
+        if TubTalents_CheckPresetName(TubTalents_AMP_preset) then            
+            --offer to rename it if there's another named the same
+            -- Doesn't matter if they have the same name, thought I'd offer though.
+            StaticPopup_Show("TUBTALENTS_RENAMEIMPORTEDPRESET")
+        end
         TubTalent_AMResetTemp()
     end,
     OnCancel = function()
@@ -470,6 +489,11 @@ StaticPopupDialogs["TUBTALENTS_AMIMPORTPLAN"] = {
     button2 = "No",
     OnAccept = function()
         TubTalents_NewPlan(TubTalents_AMP_plan.name, TubTalents_AMP_plan)
+        if TubTalents_CheckPlanName(TubTalents_AMP_plan) then            
+            --offer to rename it if there's another named the same
+            -- Doesn't matter if they have the same name, thought I'd offer though.
+            StaticPopup_Show("TUBTALENTS_RENAMEIMPORTEDPLAN")
+        end
         TubTalent_AMResetTemp()
     end,
     OnCancel = function()
